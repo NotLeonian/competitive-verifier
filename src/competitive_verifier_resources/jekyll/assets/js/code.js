@@ -7,22 +7,11 @@ for (const code of document.querySelectorAll('.hljs code')) {
 for (const btn of document.getElementsByClassName('code-copy-btn')) {
     btn.addEventListener('click', async function () {
         const preText = this.closest('.code').querySelector('.hljs:not(.disable) code').innerText
-        navigator.clipboard.writeText(preText)
+        await navigator.clipboard.writeText(preText)
 
-        this.classList.remove("hint--disable")
+        this.classList.remove('hint--disable')
         await new Promise(r => setTimeout(r, 700))
-        this.classList.add("hint--disable")
-    })
-}
-
-for (const btn of document.getElementsByClassName('code-copy-btn')) {
-    btn.addEventListener('click', async function () {
-        const preText = this.closest('.code').querySelector('.hljs:not(.disable) code').innerText
-        navigator.clipboard.writeText(preText)
-
-        this.classList.remove("hint--disable")
-        await new Promise(r => setTimeout(r, 700))
-        this.classList.add("hint--disable")
+        this.classList.add('hint--disable')
     })
 }
 
@@ -35,9 +24,27 @@ for (const btn of document.getElementsByClassName('code-toggle-btn')) {
 
         const targetId = this.dataset.target
         for (const hljs of document.getElementsByClassName('hljs')) {
-            if (hljs.tagName.toLowerCase() === 'pre')
+            if (hljs.tagName.toLowerCase() === 'pre') {
                 hljs.classList.add('disable')
+            }
         }
         document.getElementById(targetId).classList.remove('disable')
+    })
+}
+
+const includeDirectiveAnchor = document.getElementById('include-directive-anchor')
+const includeDirectiveCode = document.getElementById('include-directive-code')
+
+if (includeDirectiveAnchor !== null && includeDirectiveCode !== null) {
+    includeDirectiveAnchor.addEventListener('click', async () => {
+        const textContent = includeDirectiveCode.textContent
+
+        if (textContent === null) return
+
+        await navigator.clipboard.writeText(textContent)
+
+        includeDirectiveCode.textContent = 'Copied!'
+        await new Promise(r => setTimeout(r, 300))
+        includeDirectiveCode.textContent = textContent
     })
 }
