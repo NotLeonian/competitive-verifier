@@ -131,3 +131,9 @@ def test_jekyll_resources_do_not_reference_external_js_or_css() -> None:
             )
 
     assert not offenders, "\n".join(offenders)
+
+
+def test_required_layouts_are_available_from_jekyll_files() -> None:
+    files = jekyll_files()
+
+    assert "_layouts/default.html" in files
