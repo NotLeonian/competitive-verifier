@@ -22,21 +22,3 @@
     {%- endif -%}
     {%- endfor -%}
 </ul>
-
-{% if include.data.pathExtension == "hpp" %}
-<script defer type="text/javascript">
-    // make the include directive clickable
-    (function() {
-        const anchor = document.getElementById('include-directive-anchor');
-        const code = document.getElementById('include-directive-code');
-        anchor.addEventListener('click', async function() {
-            const textContent = code.textContent;
-            navigator.clipboard.writeText(textContent)
-
-            code.textContent = "Copied!";
-            await new Promise(r => setTimeout(r, 300))
-            code.textContent = textContent;
-        });
-    })();
-</script>
-{%- endif -%}
