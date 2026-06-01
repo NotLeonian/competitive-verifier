@@ -20,6 +20,7 @@ REQUIRED_WHEEL_FILES: tuple[str, ...] = (
     "competitive_verifier_resources/jekyll/assets/vendor/highlight/styles/default.min.css",
     "competitive_verifier_resources/jekyll/assets/vendor/hint/LICENSE.txt",
     "competitive_verifier_resources/jekyll/assets/vendor/hint/hint.min.css",
+    "competitive_verifier_resources/jekyll_theme_overrides/jekyll-theme-minimal/_layouts/default.html",
 )
 
 

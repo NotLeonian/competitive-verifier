@@ -67,6 +67,7 @@ class ConfigYaml(BaseModel):
     )
 
     theme: str = "jekyll-theme-minimal"
+    remote_theme: str | None = None
     mathjax: str | int = 3
     highlightjs_style: str = Field(
         default="default",

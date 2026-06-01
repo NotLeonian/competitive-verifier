@@ -58,3 +58,12 @@ def _walk_files(
 def jekyll_files() -> dict[str, bytes]:
     root = _ROOT / "jekyll"
     return {path: resource.read_bytes() for path, resource in _walk_files(root)}
+
+
+def jekyll_theme_override_files(theme_name: str) -> dict[str, bytes]:
+    root = _ROOT / "jekyll_theme_overrides" / theme_name
+
+    if not root.is_dir():
+        return {}
+
+    return {path: resource.read_bytes() for path, resource in _walk_files(root)}

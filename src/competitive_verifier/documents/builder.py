@@ -61,16 +61,40 @@ class DocumentBuilder(BaseModel):
         (self.destination_dir / "_config.yml").write_bytes(config_yml.model_dump_yml())
 
         # Copy static files
-        self.copy_static_files(static_dir=self.docs_dir / "static")
+        self.copy_static_files(
+            static_dir=self.docs_dir / "static",
+            config_yml=config_yml,
+        )
         return True
 
-    def copy_static_files(self, *, static_dir: pathlib.Path):
+    def copy_static_files(
+        self,
+        *,
+        static_dir: pathlib.Path,
+        config_yml: ConfigYaml,
+    ):
         logger.info("Copy library static files...")
         for path, content in competitive_verifier_resources.jekyll_files().items():
             file_dst = self.destination_dir / path
             logger.debug("Writing to %s", file_dst.as_posix())
             file_dst.parent.mkdir(parents=True, exist_ok=True)
             file_dst.write_bytes(content)
+
+        if (
+            config_yml.theme == "jekyll-theme-minimal"
+            and config_yml.remote_theme is None
+        ):
+            logger.info("Copy jekyll-theme-minimal overrides...")
+            for (
+                path,
+                content,
+            ) in competitive_verifier_resources.jekyll_theme_override_files(
+                "jekyll-theme-minimal",
+            ).items():
+                file_dst = self.destination_dir / path
+                logger.debug("Writing to %s", file_dst.as_posix())
+                file_dst.parent.mkdir(parents=True, exist_ok=True)
+                file_dst.write_bytes(content)
 
         logger.info("Copy user static files...")
         try:
