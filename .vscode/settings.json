@@ -9,7 +9,6 @@
     },
     "files.exclude": {
         "**/integration_test_data/dst_dir/**/cache/online-judge-tools": true,
-        ".venv": true,
         "**/__pycache__": true,
         "**/.git": true,
         "**/.svn": true,
