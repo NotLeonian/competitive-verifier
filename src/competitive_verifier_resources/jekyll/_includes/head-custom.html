@@ -1,4 +1,14 @@
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: https:;
+               font-src 'self' data:;
+               connect-src 'self';
+               object-src 'none';
+               base-uri 'none';
+               form-action 'none'">
+
 <link rel="stylesheet" href="{{ "/assets/css/default.css" | relative_url }}">
 {% include highlight/highlight_header.html %}
 {% include mathjax/mathjax.html %}

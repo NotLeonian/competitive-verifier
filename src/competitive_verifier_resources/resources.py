@@ -1,11 +1,33 @@
+from __future__ import annotations
+
 import importlib.resources
-import pathlib
-from typing import cast
+from typing import TYPE_CHECKING, Protocol, cast
+
+if TYPE_CHECKING:
+    import pathlib
+    from collections.abc import Iterable, Iterator
 
 _DOC_USAGE_PATH = "doc_usage.txt"
 
 
-_ROOT = importlib.resources.files(cast("str", __package__))
+class TraversableResource(Protocol):
+    @property
+    def name(self) -> str: ...
+
+    def iterdir(self) -> Iterable[TraversableResource]: ...
+
+    def is_dir(self) -> bool: ...
+
+    def is_file(self) -> bool: ...
+
+    def read_bytes(self) -> bytes: ...
+
+    def read_text(self, encoding: str | None = None) -> str: ...
+
+    def __truediv__(self, child: str) -> TraversableResource: ...
+
+
+_ROOT = cast("TraversableResource", importlib.resources.files(cast("str", __package__)))
 
 
 def doc_usage(
@@ -21,35 +43,18 @@ def doc_usage(
     )
 
 
+def _walk_files(
+    root: TraversableResource,
+    prefix: str = "",
+) -> Iterator[tuple[str, TraversableResource]]:
+    for child in root.iterdir():
+        rel = f"{prefix}{child.name}"
+        if child.is_file():
+            yield rel, child
+        elif child.is_dir():
+            yield from _walk_files(child, f"{rel}/")
+
+
 def jekyll_files() -> dict[str, bytes]:
-    return {
-        path: (_ROOT / "jekyll" / path).read_bytes()
-        for path in [
-            "_layouts/page.html",
-            "_layouts/document.html",
-            "_layouts/multidoc.html",
-            "_layouts/toppage.html",
-            "_includes/head-custom.html",
-            "_includes/head-custom2.html",
-            "_includes/mathjax/mathjax.html",
-            "_includes/mathjax/mathjax2.html",
-            "_includes/mathjax/mathjax3.html",
-            "_includes/code.html",
-            "_includes/code_and_testcases.html",
-            "_includes/highlight_additional.html",
-            "_includes/highlight/highlight_header.html",
-            "_includes/dependencies.html",
-            "_includes/document_header.html",
-            "_includes/document_body.html",
-            "_includes/document_footer.html",
-            "_includes/multidoc_body.html",
-            "_includes/multidoc_header.html",
-            "_includes/toppage_header.html",
-            "_includes/toppage_body.html",
-            "_includes/toppage_footer.html",
-            "assets/css/default.scss",
-            "assets/css/code.scss",
-            "assets/js/code.js",
-            "Gemfile",
-        ]
-    }
+    root = _ROOT / "jekyll"
+    return {path: resource.read_bytes() for path, resource in _walk_files(root)}

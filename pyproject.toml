@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "competitive-verifier"
-version = "4.1.1"
-description = "Verifier for libraries of competitive programming"
+version = "4.2.0"
+description = "Verifier for libraries of competitive programming (forked from competitive-verifier/competitive-verifier)"
 
 license = "MIT"
-authors = ["kzrnm <gengesa@gmail.com>"]
+authors = ["kzrnm <gengesa@gmail.com>", "Not_Leonian <75620009+NotLeonian@users.noreply.github.com>"]
 
-repository = "https://github.com/competitive-verifier/competitive-verifier"
-homepage = "https://github.com/competitive-verifier/competitive-verifier"
+repository = "https://github.com/NotLeonian/competitive-verifier"
+homepage = "https://github.com/NotLeonian/competitive-verifier"
 readme = "README.md"
 
 packages = [
@@ -82,6 +82,23 @@ test-cov-watch = { shell = 'while true; do poe test-cov --mark="${integration:-i
     { ref = "schema:verify_result", capture_stdout = "schema/verify_result.schema.json" },
     { ref = "deafult:config_yml", capture_stdout = ".competitive-verifier/docs/_config.default.yml" },
 ]
+
+# docs
+"docs-assets:vendor" = "bash scripts/vendor-doc-assets.sh"
+"docs-assets:test-resources" = "pytest tests/test_jekyll_external_assets.py"
+"docs-assets:build-wheel" = "poetry build --format wheel --clean"
+"docs-assets:check-wheel" = [
+    "docs-assets:build-wheel",
+    "docs-assets:test-wheel",
+]
+"docs-assets:check" = [
+    "docs-assets:test-resources",
+    "docs-assets:check-wheel",
+]
+
+[tool.poe.tasks."docs-assets:test-wheel"]
+cmd = "pytest tests/test_built_wheel_doc_assets.py"
+env = { CHECK_BUILT_WHEEL_ASSETS = "1" }
 
 # schema
 [tool.poe.tasks."schema:verify_files"]
@@ -255,11 +272,22 @@ ignore = ["src/competitive_verifier_resources/jekyll"]
 reportMissingImports = true
 reportMissingTypeStubs = false
 
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
+namespace_packages = true
+explicit_package_bases = true
+exclude = [
+    '^src/competitive_verifier_resources/jekyll/',
+    '^integration_test_data/',
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
     "integration: integresion test.",
     "allow_mkdir: indicates that pathlib.Path.mkdir, which is generally disallowed in tests, is being used.",
+    "package: tests that require built distribution artifacts under dist/.",
 ]
 filterwarnings = [
     "ignore:.*filter extracted tar archives and reject files or modify their metadata.*:DeprecationWarning",

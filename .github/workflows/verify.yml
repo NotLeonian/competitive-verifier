@@ -157,7 +157,7 @@ jobs:
     if: (success() || failure()) && github.ref == 'refs/heads/main'
     needs: docs-and-check
     environment:
-      name: github-pages
+      name: ${{ vars.PAGES_ENVIRONMENT_NAME || 'github-pages' }}
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
