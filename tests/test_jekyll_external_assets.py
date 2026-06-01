@@ -2,6 +2,11 @@ import re
 
 from competitive_verifier_resources.resources import jekyll_files
 
+INLINE_SCRIPT_RE = re.compile(
+    rb"""<script(?!(?:[^>]*\bsrc=))[^>]*>""",
+    re.IGNORECASE,
+)
+
 EXTERNAL_SCRIPT_RE = re.compile(
     rb"""<script[^>]+src=["']https?://""",
     re.IGNORECASE,
@@ -45,6 +50,8 @@ def test_jekyll_resources_do_not_reference_external_js_or_css() -> None:
         # checked in our templates and first-party resources. Vendored bundles
         # can contain documentation strings or internal fallback strings.
         if not _is_vendored_asset(path):
+            if INLINE_SCRIPT_RE.search(content):
+                offenders.append(f"{path}: inline <script>")
             if EXTERNAL_SCRIPT_RE.search(content):
                 offenders.append(f"{path}: external <script src>")
             if EXTERNAL_STYLESHEET_RE.search(content):
