@@ -26,6 +26,44 @@ def _is_external_url(url: str) -> bool:
     return stripped_url.startswith(("http://", "https://", "//"))
 
 
+JAVASCRIPT_MIME_TYPES: frozenset[str] = frozenset(
+    {
+        "",
+        "text/javascript",
+        "application/javascript",
+        "application/ecmascript",
+        "text/ecmascript",
+        "text/jscript",
+        "text/livescript",
+        "text/x-javascript",
+        "application/x-javascript",
+    },
+)
+
+ALLOWED_DATA_SCRIPT_TYPES: frozenset[str] = frozenset(
+    {
+        "application/ld+json",
+    },
+)
+
+
+def normalized_script_type(value: str | None) -> str:
+    if value is None:
+        return ""
+
+    # Strip MIME parameters such as `; charset=utf-8`.
+    return value.split(";", 1)[0].strip().lower()
+
+
+def is_executable_inline_script_type(value: str | None) -> bool:
+    script_type = normalized_script_type(value)
+
+    if script_type in ALLOWED_DATA_SCRIPT_TYPES:
+        return False
+
+    return script_type in JAVASCRIPT_MIME_TYPES or script_type == "module"
+
+
 class ExternalAssetHTMLParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -57,9 +95,11 @@ class ExternalAssetHTMLParser(HTMLParser):
 
         if tag_name == "script":
             src = attrs_by_name.get("src")
+            script_type = attrs_by_name.get("type")
 
             if src is None:
-                self.inline_script_count += 1
+                if is_executable_inline_script_type(script_type):
+                    self.inline_script_count += 1
             elif _is_external_url(src):
                 self.external_script_srcs.append(src)
 
