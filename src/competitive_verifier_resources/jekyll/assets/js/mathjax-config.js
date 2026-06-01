@@ -27,8 +27,7 @@
         loader: {
             paths: {
                 mathjax: mathjaxRoot,
-                sre: `${mathjaxRoot}/a11y/sre`,
-                mathmaps: `${mathjaxRoot}/a11y/mathmaps`
+                sre: `${mathjaxRoot}/sre/mathmaps`
             },
             load: ['input/asciimath', '[tex]/noerrors']
         }
