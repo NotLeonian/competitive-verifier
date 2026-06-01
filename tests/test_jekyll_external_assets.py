@@ -98,7 +98,6 @@ class ExternalAssetHTMLParser(HTMLParser):
             script_type = attrs_by_name.get("type")
 
             if src is None:
-                self.inline_script_count += 1
                 if is_executable_inline_script_type(script_type):
                     self.inline_script_count += 1
             elif _is_external_url(src):
