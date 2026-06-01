@@ -1,6 +1,7 @@
 import pathlib
 import shutil
 from logging import getLogger
+from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
@@ -13,6 +14,37 @@ from .front_matter import Markdown
 from .render import RenderJob
 
 logger = getLogger(__name__)
+
+_MINIMAL_THEME = "jekyll-theme-minimal"
+_MINIMAL_REMOTE_THEME_SLUGS = frozenset(
+    {
+        "pages-themes/minimal",
+    }
+)
+
+
+def remote_theme_slug(remote_theme: str) -> str:
+    value = remote_theme.strip()
+
+    parsed = urlparse(value)
+    if parsed.scheme and parsed.netloc:
+        value = parsed.path
+
+    value = value.split("?", 1)[0]
+    value = value.split("#", 1)[0]
+    value = value.strip("/")
+    value = value.split("@", 1)[0]
+
+    value = value.removesuffix(".git")
+
+    return value.lower()
+
+
+def uses_minimal_theme(config_yml: ConfigYaml) -> bool:
+    if config_yml.remote_theme:
+        return remote_theme_slug(config_yml.remote_theme) in _MINIMAL_REMOTE_THEME_SLUGS
+
+    return config_yml.theme == _MINIMAL_THEME
 
 
 class DocumentBuilder(BaseModel):
@@ -61,16 +93,37 @@ class DocumentBuilder(BaseModel):
         (self.destination_dir / "_config.yml").write_bytes(config_yml.model_dump_yml())
 
         # Copy static files
-        self.copy_static_files(static_dir=self.docs_dir / "static")
+        self.copy_static_files(
+            static_dir=self.docs_dir / "static",
+            config_yml=config_yml,
+        )
         return True
 
-    def copy_static_files(self, *, static_dir: pathlib.Path):
+    def copy_static_files(
+        self,
+        *,
+        static_dir: pathlib.Path,
+        config_yml: ConfigYaml,
+    ):
         logger.info("Copy library static files...")
         for path, content in competitive_verifier_resources.jekyll_files().items():
             file_dst = self.destination_dir / path
             logger.debug("Writing to %s", file_dst.as_posix())
             file_dst.parent.mkdir(parents=True, exist_ok=True)
             file_dst.write_bytes(content)
+
+        if uses_minimal_theme(config_yml):
+            logger.info("Copy jekyll-theme-minimal overrides...")
+            for (
+                path,
+                content,
+            ) in competitive_verifier_resources.jekyll_theme_override_files(
+                "jekyll-theme-minimal",
+            ).items():
+                file_dst = self.destination_dir / path
+                logger.debug("Writing to %s", file_dst.as_posix())
+                file_dst.parent.mkdir(parents=True, exist_ok=True)
+                file_dst.write_bytes(content)
 
         logger.info("Copy user static files...")
         try:

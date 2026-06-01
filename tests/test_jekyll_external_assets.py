@@ -1,6 +1,9 @@
 from html.parser import HTMLParser
 
-from competitive_verifier_resources.resources import jekyll_files
+from competitive_verifier_resources.resources import (
+    jekyll_files,
+    jekyll_theme_override_files,
+)
 
 BLOCKED_DOMAINS_EVERYWHERE: tuple[tuple[bytes, str], ...] = (
     (b"polyfill.io", "polyfill.io"),
@@ -78,11 +81,13 @@ class ExternalAssetHTMLParser(HTMLParser):
 
 
 def _is_vendored_mathjax_bundle(path: str) -> bool:
-    return path.startswith("assets/vendor/mathjax/es5/")
+    return "/assets/vendor/mathjax/es5/" in path or path.startswith(
+        "assets/vendor/mathjax/es5/"
+    )
 
 
 def _is_vendored_asset(path: str) -> bool:
-    return path.startswith("assets/vendor/")
+    return "/assets/vendor/" in path or path.startswith("assets/vendor/")
 
 
 def _find_external_asset_issues(path: str, content: bytes) -> list[str]:
@@ -106,8 +111,23 @@ def _find_external_asset_issues(path: str, content: bytes) -> list[str]:
     return issues
 
 
+def _all_jekyll_resource_files() -> dict[str, bytes]:
+    files = {f"jekyll/{path}": content for path, content in jekyll_files().items()}
+
+    files.update(
+        {
+            f"jekyll_theme_overrides/jekyll-theme-minimal/{path}": content
+            for path, content in jekyll_theme_override_files(
+                "jekyll-theme-minimal",
+            ).items()
+        },
+    )
+
+    return files
+
+
 def test_jekyll_resources_do_not_reference_external_js_or_css() -> None:
-    files = jekyll_files()
+    files = _all_jekyll_resource_files()
     offenders: list[str] = []
 
     for path, content in files.items():
@@ -131,3 +151,15 @@ def test_jekyll_resources_do_not_reference_external_js_or_css() -> None:
             )
 
     assert not offenders, "\n".join(offenders)
+
+
+def test_default_layout_is_not_copied_unconditionally() -> None:
+    assert "_layouts/default.html" not in jekyll_files()
+
+
+def test_minimal_theme_default_layout_override_exists() -> None:
+    files = jekyll_theme_override_files("jekyll-theme-minimal")
+
+    assert "_layouts/default.html" in files
+    assert b"html5shiv" not in files["_layouts/default.html"]
+    assert b"cdnjs.cloudflare.com" not in files["_layouts/default.html"]
