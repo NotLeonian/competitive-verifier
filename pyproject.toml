@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "competitive-verifier"
-version = "4.1.1"
-description = "Verifier for libraries of competitive programming"
+version = "4.2.0"
+description = "Verifier for libraries of competitive programming (forked from competitive-verifier/competitive-verifier)"
 
 license = "MIT"
-authors = ["kzrnm <gengesa@gmail.com>"]
+authors = ["kzrnm <gengesa@gmail.com>", "Not_Leonian <75620009+NotLeonian@users.noreply.github.com>"]
 
-repository = "https://github.com/competitive-verifier/competitive-verifier"
-homepage = "https://github.com/competitive-verifier/competitive-verifier"
+repository = "https://github.com/NotLeonian/competitive-verifier"
+homepage = "https://github.com/NotLeonian/competitive-verifier"
 readme = "README.md"
 
 packages = [
