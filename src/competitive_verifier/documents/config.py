@@ -4,11 +4,13 @@ from logging import getLogger
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from competitive_verifier import git, github
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import RelativeDirectoryPath, SortedPathSet
+
+from .path_sort import PathSortOrder
 
 _CONFIG_YML_PATH = "_config.yml"
 
@@ -28,7 +30,7 @@ logger = getLogger(__name__)
 
 
 class ConfigIcons(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     LIBRARY_ALL_AC: str = ":heavy_check_mark:"
     LIBRARY_PARTIAL_AC: str = ":heavy_check_mark:"
@@ -82,6 +84,16 @@ class ConfigYaml(BaseModel):
     filename_index: bool = Field(
         default=False,
         serialization_alias="filename-index",
+    )
+    path_sort: PathSortOrder | None = Field(
+        default=None,
+        validation_alias=AliasChoices("path-sort", "path_sort"),
+        serialization_alias="path-sort",
+        description=(
+            "Sort order of generated document links. "
+            "If omitted, lexicographic order is used for compatibility. "
+            "Use 'natural' to sort digit runs numerically."
+        ),
     )
     sass: dict[str, Any] = Field(default_factory=lambda: {"style": "compressed"})
     icons: ConfigIcons = ConfigIcons()
