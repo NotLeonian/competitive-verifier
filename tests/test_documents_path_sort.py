@@ -155,3 +155,12 @@ def test_natural_path_sort_preserves_digit_prefixed_names():
         "10.hpp",
         "a.hpp",
     ]
+
+
+def test_default_path_sort_preserves_case_sensitive_index_order():
+    values = ["a.hpp", "B.hpp"]
+
+    assert sorted(values, key=lambda s: path_sort_key_text(s, None)) == [
+        "B.hpp",
+        "a.hpp",
+    ]

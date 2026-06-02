@@ -32,7 +32,11 @@ from competitive_verifier.util import (
 
 from .config import ConfigYaml
 from .front_matter import FrontMatter, Markdown
-from .path_sort import PathSortOrder, path_sort_key_path
+from .path_sort import (
+    PathSortOrder,
+    is_natural_path_sort,
+    path_sort_key_path,
+)
 from .render_data import (
     CategorizedIndex,
     CodePageData,
@@ -62,14 +66,13 @@ def _paths_to_render_links(
             return None
         return job.to_render_link()
 
-    return [
-        link
-        for link in map(
-            get_link,
-            sorted(paths, key=lambda p: path_sort_key_path(p, path_sort)),
-        )
-        if link
-    ]
+    sorted_paths = (
+        sorted(paths, key=lambda p: path_sort_key_path(p, path_sort))
+        if is_natural_path_sort(path_sort)
+        else sorted(paths, key=lambda p: (p.as_posix().casefold(), p.as_posix()))
+    )
+
+    return [link for link in map(get_link, sorted_paths) if link]
 
 
 class MultiTargetMarkdown(Markdown):
@@ -367,10 +370,13 @@ class RenderJob(ABC):
 
         page_jobs: dict[pathlib.Path, PageRenderJob] = {}
         jobs: list[RenderJob] = []
-        for source in sorted(
-            sources,
-            key=lambda p: path_sort_key_path(p, config.path_sort),
-        ):
+        source_iter = (
+            sorted(sources, key=lambda p: path_sort_key_path(p, config.path_sort))
+            if is_natural_path_sort(config.path_sort)
+            else sources
+        )
+
+        for source in source_iter:
             markdown = user_markdowns.single.get(source) or Markdown.make_default(
                 source
             )
@@ -796,9 +802,15 @@ class IndexRenderJob(RenderJob):
                 (
                     CategorizedIndex(
                         name=category,
-                        pages=sorted(
-                            pages,
-                            key=lambda p: path_sort_key_path(p.path, self.path_sort),
+                        pages=(
+                            sorted(
+                                pages,
+                                key=lambda p: path_sort_key_path(
+                                    p.path, self.path_sort
+                                ),
+                            )
+                            if is_natural_path_sort(self.path_sort)
+                            else sorted(pages, key=lambda p: p.path.as_posix())
                         ),
                     )
                     for category, pages in categories.items()
