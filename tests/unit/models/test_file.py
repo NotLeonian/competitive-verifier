@@ -6,7 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from competitive_verifier.models import (
-    AddtionalSource,
+    AdditionalSource,
     CommandVerification,
     ConstVerification,
     DocumentOutputMode,
@@ -97,7 +97,7 @@ test_parse_VerificationFile_params: list[
             "dependencies": set(),
             "document_attributes": {},
             "verification": [],
-            "additonal_sources": [],
+            "additional_sources": [],
         },
     ),
     (
@@ -120,7 +120,7 @@ test_parse_VerificationFile_params: list[
             },
             "document_attributes": {},
             "verification": [],
-            "additonal_sources": [],
+            "additional_sources": [],
         },
     ),
     (
@@ -140,7 +140,7 @@ test_parse_VerificationFile_params: list[
                 "title": "Bar bar",
             },
             "verification": [],
-            "additonal_sources": [],
+            "additional_sources": [],
         },
     ),
     (
@@ -164,7 +164,7 @@ test_parse_VerificationFile_params: list[
                     "status": "success",
                 }
             ],
-            "additonal_sources": [],
+            "additional_sources": [],
         },
     ),
     (
@@ -188,23 +188,23 @@ test_parse_VerificationFile_params: list[
                     "status": "success",
                 }
             ],
-            "additonal_sources": [],
+            "additional_sources": [],
         },
     ),
     (
         VerificationFile(
-            additonal_sources=[
-                AddtionalSource(name="dummy", path=pathlib.Path("tmp/dummy.sh"))
+            additional_sources=[
+                AdditionalSource(name="dummy", path=pathlib.Path("tmp/dummy.sh"))
             ]
         ),
         {
-            "additonal_sources": [{"name": "dummy", "path": "tmp/dummy.sh"}],
+            "additional_sources": [{"name": "dummy", "path": "tmp/dummy.sh"}],
         },
         {
             "dependencies": set(),
             "document_attributes": {},
             "verification": [],
-            "additonal_sources": [
+            "additional_sources": [
                 {"name": "dummy", "path": pathlib.Path("tmp/dummy.sh")}
             ],
         },
@@ -356,12 +356,12 @@ def test_parse_file_relative(testtemp: pathlib.Path, mocker: MockerFixture):
         ),
     ],
 )
-def test_filterd_files(
+def test_filtered_files(
     obj: VerificationInput,
     results: dict[ForcePosixPath, FileResult],
     expected: list[tuple[ForcePosixPath, FileResult]],
 ):
-    assert list(obj.filterd_files(results)) == expected
+    assert list(obj.filtered_files(results)) == expected
 
 
 def test_transitive_depends_on():

@@ -147,9 +147,9 @@ def test_markdown(
     )
     assert md == expected
 
-    (testtemp / "cotent.md").write_bytes(content)
-    assert Markdown.load_file(testtemp / "cotent.md") == expected.model_copy(
-        update={"path": testtemp / "cotent.md"}
+    (testtemp / "content.md").write_bytes(content)
+    assert Markdown.load_file(testtemp / "content.md") == expected.model_copy(
+        update={"path": testtemp / "content.md"}
     )
 
     actual_front_matter, actual_content = split_front_matter(content)

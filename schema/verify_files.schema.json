@@ -1,6 +1,6 @@
 {
   "$defs": {
-    "AddtionalSource": {
+    "AdditionalSource": {
       "properties": {
         "name": {
           "description": "The name of source file.",
@@ -24,7 +24,7 @@
         "name",
         "path"
       ],
-      "title": "AddtionalSource",
+      "title": "AdditionalSource",
       "type": "object"
     },
     "CommandVerification": {
@@ -508,8 +508,8 @@
           "title": "Document Attributes",
           "type": "object"
         },
-        "additonal_sources": {
-          "description": "The addtional source paths.",
+        "additional_sources": {
+          "description": "The additional source paths.",
           "examples": [
             [
               {
@@ -519,9 +519,9 @@
             ]
           ],
           "items": {
-            "$ref": "#/$defs/AddtionalSource"
+            "$ref": "#/$defs/AdditionalSource"
           },
-          "title": "Additonal Sources",
+          "title": "Additional Sources",
           "type": "array"
         }
       },

@@ -33,14 +33,14 @@ class NotSkippableConstVerification(ConstVerification):
 class MockVerifier(BaseVerifier):
     def __init__(
         self,
-        varifications: Any = None,
+        verifications: Any = None,
         *,
         verification_time: datetime.datetime,
         prev_result: VerifyCommandResult | None = None,
         split_state: SplitState | None = None,
     ) -> None:
         super().__init__(
-            verifications=VerificationInput.model_validate(varifications),
+            verifications=VerificationInput.model_validate(verifications),
             verification_time=verification_time,
             prev_result=prev_result,
             split_state=split_state,

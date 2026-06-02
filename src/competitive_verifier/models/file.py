@@ -46,7 +46,7 @@ class DocumentOutputMode(str, enum.Enum):
     """
 
 
-class AddtionalSource(BaseModel):
+class AdditionalSource(BaseModel):
     name: str = Field(
         examples=["source_name"],
         description="The name of source file.",
@@ -77,19 +77,19 @@ class VerificationFile(BaseModel):
     )
     """The attributes for documentation.
     """
-    additonal_sources: list[AddtionalSource] = Field(
-        default_factory=list[AddtionalSource],
-        description="The addtional source paths.",
+    additional_sources: list[AdditionalSource] = Field(
+        default_factory=list[AdditionalSource],
+        description="The additional source paths.",
         examples=[
             [
-                AddtionalSource(
+                AdditionalSource(
                     name="source_name",
                     path=pathlib.Path("relative_path_of_directory/file_name.cpp"),
                 ),
             ],
         ],
     )
-    """The addtional source paths
+    """The additional source paths
     """
 
     @property
@@ -249,7 +249,7 @@ class VerificationInput(BaseModel):
     def verified_with(self) -> _DependencyEdges:
         return self._dependency_graph.verified_with
 
-    def filterd_files(self, files: dict[ForcePosixPath, "FileResult"]):
+    def filtered_files(self, files: dict[ForcePosixPath, "FileResult"]):
         for k, v in files.items():
             if k in self.files:
                 yield k, v

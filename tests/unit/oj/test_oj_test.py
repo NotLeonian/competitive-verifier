@@ -15,7 +15,7 @@ from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import (
     JudgeStatus,
     Problem,
-    VerifcationTimeoutError,
+    VerificationTimeoutError,
 )
 from competitive_verifier.models import (
     TestCaseFile as SystemTestCaseFile,
@@ -1139,7 +1139,7 @@ def test_timeout(
         ],
     )
 
-    with pytest.raises(VerifcationTimeoutError):
+    with pytest.raises(VerificationTimeoutError):
         oj.test(
             problem=mock_judge,
             command="dummy",

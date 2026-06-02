@@ -238,8 +238,8 @@ def test_write_result_output(
         == """# ⚠ Verification result
 
 - ✔&nbsp;&nbsp;All test case results are `success`
-- ❌&nbsp;&nbsp;Test case results containts `failure`
-- ⚠&nbsp;&nbsp;Test case results containts `skipped`
+- ❌&nbsp;&nbsp;Test case results contain `failure`
+- ⚠&nbsp;&nbsp;Test case results contain `skipped`
 
 
 ## Results

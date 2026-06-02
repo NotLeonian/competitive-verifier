@@ -54,11 +54,11 @@ default_languages: dict[str, Any] = {
 
 
 test_oj_resolve_config_load_params: dict[str, tuple[str, dict[str, Any]]] = {
-    "not_deifne": (
+    "not_define": (
         textwrap.dedent(""),
         {"languages": default_languages},
     ),
-    "empty_deifne": (
+    "empty_define": (
         textwrap.dedent(
             """
             [languages.cpp]

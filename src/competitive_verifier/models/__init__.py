@@ -1,5 +1,5 @@
 from .file import (
-    AddtionalSource,
+    AdditionalSource,
     DocumentOutputMode,
     VerificationFile,
     VerificationInput,
@@ -15,13 +15,13 @@ from .verification import (
     ConstVerification,
     LocalProblemVerification,
     ProblemVerification,
-    VerifcationTimeoutError,
     Verification,
     VerificationParams,
+    VerificationTimeoutError,
 )
 
 __all__ = [
-    "AddtionalSource",
+    "AdditionalSource",
     "BaseVerification",
     "CommandVerification",
     "ConstVerification",
@@ -42,11 +42,11 @@ __all__ = [
     "TestCaseFile",
     "TestCaseProvider",
     "TestcaseResult",
-    "VerifcationTimeoutError",
     "Verification",
     "VerificationFile",
     "VerificationInput",
     "VerificationParams",
     "VerificationResult",
+    "VerificationTimeoutError",
     "VerifyCommandResult",
 ]
