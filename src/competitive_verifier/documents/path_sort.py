@@ -23,11 +23,9 @@ def normalize_path_sort_order(order: PathSortOrder | None) -> PathSortOrder:
 
 def path_sort_key_text(value: str, order: PathSortOrder | None) -> _SortKey:
     order = normalize_path_sort_order(order)
-    folded = value.casefold()
 
     if order == PathSortOrder.lexicographic:
-        # equivalent to `str.casefold(...)`
-        return ((0, folded),)
+        return ((0, value),)
 
     tokens: list[_SortToken] = []
     for token in _NATURAL_SORT_RE.findall(value):
@@ -37,7 +35,7 @@ def path_sort_key_text(value: str, order: PathSortOrder | None) -> _SortKey:
             tokens.append((0, token.casefold()))
 
     # tie-break
-    tokens.append((2, folded))
+    tokens.append((2, value))
     return tuple(tokens)
 
 
