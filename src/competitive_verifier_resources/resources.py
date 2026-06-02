@@ -34,12 +34,14 @@ def doc_usage(
     *,
     markdown_dir_path: pathlib.Path,
     repo_name: str,
+    sample_repo_name: str,
 ) -> str:
     template = _ROOT / _DOC_USAGE_PATH
     return (
         template.read_text(encoding="utf-8")
         .replace("{{{{{markdown_dir_path}}}}}", markdown_dir_path.as_posix())
         .replace("{{{{{repository}}}}}", repo_name)
+        .replace("{{{{{sample_repository}}}}}", sample_repo_name)
     )
 
 

@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 
 import competitive_verifier_resources
-from competitive_verifier import git
+from competitive_verifier import git, github
 from competitive_verifier.models import VerificationInput, VerifyCommandResult
 
 from .config import ConfigYaml, load_config_yml
@@ -68,7 +68,8 @@ class DocumentBuilder(BaseModel):
         logger.info(
             competitive_verifier_resources.doc_usage(
                 markdown_dir_path=self.destination_dir,
-                repo_name=_DOC_USAGE_SAMPLE_REPOSITORY,
+                repo_name=github.env.get_repository() or _DOC_USAGE_SAMPLE_REPOSITORY,
+                sample_repo_name=_DOC_USAGE_SAMPLE_REPOSITORY,
             )
         )
 
