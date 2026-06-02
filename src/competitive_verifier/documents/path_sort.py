@@ -1,34 +1,45 @@
+import enum
 import pathlib
 import re
 from typing import Literal, TypeAlias
 
-PathSortOrder: TypeAlias = Literal["lexicographic", "natural"]
-
-_TOKEN_RE = re.compile(r"\d+|\D+")
-_SortToken: TypeAlias = tuple[int, str | int]
-_SortKey: TypeAlias = tuple[tuple[_SortToken, ...], str]
+_NATURAL_SORT_RE = re.compile(r"\d+|\D+")
 
 
-def sort_key_text(value: str, order: PathSortOrder) -> _SortKey:
+class PathSortOrder(str, enum.Enum):
+    lexicographic = "lexicographic"
+    natural = "natural"
+
+
+_SortToken: TypeAlias = (
+    tuple[Literal[0], str] | tuple[Literal[1], int] | tuple[Literal[2], str]
+)
+_SortKey: TypeAlias = tuple[_SortToken, ...]
+
+
+def normalize_path_sort_order(order: PathSortOrder | None) -> PathSortOrder:
+    return order or PathSortOrder.lexicographic
+
+
+def path_sort_key_text(value: str, order: PathSortOrder | None) -> _SortKey:
+    order = normalize_path_sort_order(order)
     folded = value.casefold()
 
-    if order == "lexicographic":
+    if order == PathSortOrder.lexicographic:
         # equivalent to `str.casefold(...)`
-        return (((0, folded),), "")
+        return ((0, folded),)
 
-    if order == "natural":
-        tokens: list[_SortToken] = []
-        for token in _TOKEN_RE.findall(value):
-            if token.isdecimal():
-                tokens.append((1, int(token)))
-            else:
-                tokens.append((0, token.casefold()))
+    tokens: list[_SortToken] = []
+    for token in _NATURAL_SORT_RE.findall(value):
+        if token.isdecimal():
+            tokens.append((1, int(token)))
+        else:
+            tokens.append((0, token.casefold()))
 
-        # tie-break
-        return (tuple(tokens), folded)
-
-    raise ValueError(f"unknown path sort order: {order}")
+    # tie-break
+    tokens.append((2, folded))
+    return tuple(tokens)
 
 
-def sort_key_path(path: pathlib.Path, order: PathSortOrder) -> _SortKey:
-    return sort_key_text(path.as_posix(), order)
+def path_sort_key_path(path: pathlib.Path, order: PathSortOrder | None) -> _SortKey:
+    return path_sort_key_text(path.as_posix(), order)

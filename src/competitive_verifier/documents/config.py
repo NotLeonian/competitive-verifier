@@ -4,12 +4,13 @@ from logging import getLogger
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from competitive_verifier import git, github
-from competitive_verifier.documents.path_sort import PathSortOrder
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import RelativeDirectoryPath, SortedPathSet
+
+from .path_sort import PathSortOrder
 
 _CONFIG_YML_PATH = "_config.yml"
 
@@ -84,14 +85,14 @@ class ConfigYaml(BaseModel):
         default=False,
         serialization_alias="filename-index",
     )
-    path_sort: PathSortOrder = Field(
-        default="lexicographic",
-        alias="path-sort",
+    path_sort: PathSortOrder | None = Field(
+        default=None,
+        validation_alias=AliasChoices("path-sort", "path_sort"),
         serialization_alias="path-sort",
         description=(
             "Sort order of generated document links. "
-            "'lexicographic' preserves the existing order; "
-            "'natural' sorts digit runs numerically."
+            "If omitted, lexicographic order is used for compatibility. "
+            "Use 'natural' to sort digit runs numerically."
         ),
     )
     sass: dict[str, Any] = Field(default_factory=lambda: {"style": "compressed"})

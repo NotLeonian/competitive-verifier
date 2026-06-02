@@ -32,7 +32,7 @@ from competitive_verifier.util import (
 
 from .config import ConfigYaml
 from .front_matter import FrontMatter, Markdown
-from .path_sort import PathSortOrder, sort_key_path
+from .path_sort import PathSortOrder, path_sort_key_path
 from .render_data import (
     CategorizedIndex,
     CodePageData,
@@ -54,7 +54,7 @@ def _paths_to_render_links(
     paths: SortedPathSet,
     page_jobs: dict[pathlib.Path, "PageRenderJob"],
     *,
-    path_sort: PathSortOrder,
+    path_sort: PathSortOrder | None = None,
 ) -> list[RenderLink]:
     def get_link(path: pathlib.Path) -> RenderLink | None:
         job = page_jobs.get(path)
@@ -66,7 +66,7 @@ def _paths_to_render_links(
         link
         for link in map(
             get_link,
-            sorted(paths, key=lambda p: sort_key_path(p, path_sort)),
+            sorted(paths, key=lambda p: path_sort_key_path(p, path_sort)),
         )
         if link
     ]
@@ -369,7 +369,7 @@ class RenderJob(ABC):
         jobs: list[RenderJob] = []
         for source in sorted(
             sources,
-            key=lambda p: sort_key_path(p, config.path_sort),
+            key=lambda p: path_sort_key_path(p, config.path_sort),
         ):
             markdown = user_markdowns.single.get(source) or Markdown.make_default(
                 source
@@ -471,7 +471,7 @@ class PageRenderJob(RenderJob):
     verifications: VerificationInput
     result: VerifyCommandResult
     page_jobs: dict[pathlib.Path, "PageRenderJob"]
-    path_sort: PathSortOrder
+    path_sort: PathSortOrder | None = None
 
     @property
     def is_verification(self):
@@ -621,7 +621,7 @@ class MultiCodePageRenderJob(RenderJob):
     markdown: MultiTargetMarkdown
     group_dir: pathlib.Path
     page_jobs: dict[pathlib.Path, "PageRenderJob"]
-    path_sort: PathSortOrder
+    path_sort: PathSortOrder | None = None
 
     def __str__(self) -> str:
         return f"MultiCodePageRenderJob(multi_documentation_of={self.markdown.multi_documentation_of!r})"
@@ -730,7 +730,7 @@ class MultiCodePageRenderJob(RenderJob):
 class IndexRenderJob(RenderJob):
     page_jobs: dict[pathlib.Path, "PageRenderJob"]
     multicode_docs: list[MultiCodePageRenderJob]
-    path_sort: PathSortOrder
+    path_sort: PathSortOrder | None = None
 
     index_md: Markdown | None = None
 
@@ -798,7 +798,7 @@ class IndexRenderJob(RenderJob):
                         name=category,
                         pages=sorted(
                             pages,
-                            key=lambda p: sort_key_path(p.path, self.path_sort),
+                            key=lambda p: path_sort_key_path(p.path, self.path_sort),
                         ),
                     )
                     for category, pages in categories.items()
