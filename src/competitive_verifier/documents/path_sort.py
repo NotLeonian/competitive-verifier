@@ -38,6 +38,6 @@ def path_sort_key_path(
 ) -> _PathSortKey:
     value = path.as_posix()
     if not is_natural_path_sort(order):
-        return (value,)
+        return (value.casefold(),)
 
     return (_NATURAL_PATH_SORT_KEY(path), value)

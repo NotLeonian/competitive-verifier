@@ -66,11 +66,7 @@ def _paths_to_render_links(
             return None
         return job.to_render_link()
 
-    sorted_paths = (
-        sorted(paths, key=lambda p: path_sort_key_path(p, path_sort))
-        if is_natural_path_sort(path_sort)
-        else sorted(paths, key=lambda p: (p.as_posix().casefold(), p.as_posix()))
-    )
+    sorted_paths = sorted(paths, key=lambda p: path_sort_key_path(p, path_sort))
 
     return [link for link in map(get_link, sorted_paths) if link]
 
