@@ -10,11 +10,11 @@ from competitive_verifier.download import download_files as run_download
 from competitive_verifier.models import (
     FileResult,
     ResultStatus,
-    VerifcationTimeoutError,
     Verification,
     VerificationFile,
     VerificationInput,
     VerificationResult,
+    VerificationTimeoutError,
     VerifyCommandResult,
 )
 from competitive_verifier.resource import try_ulimit_stack
@@ -93,7 +93,7 @@ class InputContainer(ABC):
 
         not_updated_files = {
             k
-            for k, v in self.verifications.filterd_files(self.prev_result.files)
+            for k, v in self.verifications.filtered_files(self.prev_result.files)
             if not self.file_need_verification(k, v)
         }
         return {
@@ -166,10 +166,10 @@ class BaseVerifier(InputContainer):
         verifications = list[VerificationResult]()
         try:
             if time.perf_counter() > deadline:
-                raise VerifcationTimeoutError  # noqa: TRY301
+                raise VerificationTimeoutError  # noqa: TRY301
             if download:
                 run_download(f, check=True, group_log=False)
-        except VerifcationTimeoutError:
+        except VerificationTimeoutError:
             verifications.append(
                 self.create_command_result(ResultStatus.SKIPPED, time.perf_counter())
             )
@@ -191,7 +191,7 @@ class BaseVerifier(InputContainer):
             prev_time = time.perf_counter()
             try:
                 if prev_time > deadline:
-                    raise VerifcationTimeoutError  # noqa: TRY301
+                    raise VerificationTimeoutError  # noqa: TRY301
 
                 rs, error_message = self.run_verification(ve, deadline=deadline)
                 if error_message:
@@ -205,7 +205,7 @@ class BaseVerifier(InputContainer):
                 verifications.append(
                     self.create_command_result(rs, prev_time, name=ve.name)
                 )
-            except VerifcationTimeoutError:
+            except VerificationTimeoutError:
                 logger.warning("Skip[Timeout]: %s, %r", p, ve)
                 verifications.append(
                     self.create_command_result(
@@ -245,7 +245,7 @@ class BaseVerifier(InputContainer):
         file_results: dict[pathlib.Path, FileResult] = (
             {
                 k: v.model_copy(update={"newest": False})
-                for k, v in self.verifications.filterd_files(self.prev_result.files)
+                for k, v in self.verifications.filtered_files(self.prev_result.files)
                 if k.exists()
             }
             if self.prev_result
@@ -285,7 +285,7 @@ class BaseVerifier(InputContainer):
             return ResultStatus.FAILURE, "Failed to compile"
 
         if time.perf_counter() > deadline:
-            raise VerifcationTimeoutError
+            raise VerificationTimeoutError
 
         rs = verification.run(self, deadline=deadline)
 
@@ -359,12 +359,12 @@ class Verifier(BaseVerifier):
         self.use_git_timestamp = use_git_timestamp
 
     def get_file_timestamp(self, path: pathlib.Path) -> datetime.datetime:
-        dependicies = self.verifications.transitive_depends_on[path]
+        dependencies = self.verifications.transitive_depends_on[path]
 
         if self.use_git_timestamp:
-            return git.get_commit_time(dependicies)
+            return git.get_commit_time(dependencies)
 
-        timestamp = max(x.stat().st_mtime for x in dependicies)
+        timestamp = max(x.stat().st_mtime for x in dependencies)
         system_local_timezone = _now().tzinfo
 
         # microsecond=0 is required because it's erased in git commit

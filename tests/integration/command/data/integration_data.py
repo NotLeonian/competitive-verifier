@@ -44,7 +44,7 @@ class IntegrationData:
 
     def assert_oj_resolve(self): ...
 
-    def check_envinronment(self) -> bool:
+    def check_environment(self) -> bool:
         return True
 
     def expected_verify_json(self) -> dict[str, Any]: ...

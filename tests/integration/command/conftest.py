@@ -158,5 +158,5 @@ def integration_data(
     cls = request.param
     assert issubclass(cls, IntegrationData)
     d = cls(monkeypatch, set_config_dir, file_paths)
-    assert d.check_envinronment()
+    assert d.check_environment()
     return d

@@ -19,7 +19,7 @@ class SplitState(BaseModel):
             lst (list[T]): Target list
 
         Returns:
-            list[T]: Splited list
+            list[T]: Split list
 
         Example:
             state = SplitState(size=3, index=0)

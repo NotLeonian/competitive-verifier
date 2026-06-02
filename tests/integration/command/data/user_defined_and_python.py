@@ -31,13 +31,13 @@ class UserDefinedAndPythonData(IntegrationData):
         return {
             "files": {
                 "awk/aplusb.awk": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["awk/aplusb.awk"],
                     "document_attributes": {"TITLE": 'Calculate "A + B"'},
                     "verification": [],
                 },
                 "awk/aplusb.test.awk": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["awk/aplusb.awk", "awk/aplusb.test.awk"],
                     "document_attributes": {
                         "PROBLEM": "https://judge.yosupo.jp/problem/aplusb"
@@ -56,7 +56,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/aplusb_direct.awk": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["awk/aplusb_direct.awk"],
                     "document_attributes": {
                         "PROBLEM": "https://judge.yosupo.jp/problem/aplusb"
@@ -75,7 +75,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/myaplusb1.test.awk": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "awk/aplusb.awk",
                         "awk/myaplusb1.test.awk",
@@ -100,7 +100,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/myaplusb2.test.awk": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "awk/aplusb.awk",
                         "awk/myaplusb2.test.awk",
@@ -125,7 +125,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/myaplusb3.test.awk": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "awk/aplusb.awk",
                         "awk/myaplusb3.test.awk",
@@ -153,7 +153,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "dependencies": ["encoding/cp932.txt", "encoding/EUC-KR.txt"],
                     "verification": [],
                     "document_attributes": {},
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": self.bundle_euc_ke_path.as_posix(),
@@ -164,7 +164,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "dependencies": ["encoding/cp932.txt", "encoding/EUC-KR.txt"],
                     "verification": [],
                     "document_attributes": {},
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": self.bundle_cp932_path.as_posix(),
@@ -175,16 +175,16 @@ class UserDefinedAndPythonData(IntegrationData):
                     "dependencies": ["python/lib_all_failure.py"],
                     "verification": [],
                     "document_attributes": {"links": []},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/lib_some_failure.py": {
                     "dependencies": ["python/lib_some_failure.py"],
                     "verification": [],
                     "document_attributes": {"TITLE": "Units📏", "links": []},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/lib_hidden.py": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["python/lib_hidden.py"],
                     "document_attributes": {"DISPLAY": "hidden", "links": []},
                     "verification": [],
@@ -193,13 +193,13 @@ class UserDefinedAndPythonData(IntegrationData):
                     "dependencies": ["python/lib_skip.py"],
                     "verification": [],
                     "document_attributes": {"links": []},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/lib_some_skip_some_wa.py": {
                     "dependencies": ["python/lib_some_skip_some_wa.py"],
                     "verification": [],
                     "document_attributes": {"links": []},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/success1.py": {
                     "dependencies": [
@@ -243,7 +243,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "https://judge.yosupo.jp/problem/aplusb",
                         ],
                     },
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/failure.wa.py": {
                     "dependencies": [
@@ -279,7 +279,7 @@ class UserDefinedAndPythonData(IntegrationData):
                         "PROBLEM": "https://judge.yosupo.jp/problem/aplusb",
                         "links": ["https://judge.yosupo.jp/problem/aplusb"],
                     },
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/failure.mle.py": {
                     "dependencies": [
@@ -317,7 +317,7 @@ class UserDefinedAndPythonData(IntegrationData):
                         "MLE": "100",
                         "links": ["https://judge.yosupo.jp/problem/aplusb"],
                     },
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/skip.py": {
                     "dependencies": [
@@ -331,7 +331,7 @@ class UserDefinedAndPythonData(IntegrationData):
                         "IGNORE": "",
                         "links": ["https://judge.yosupo.jp/problem/aplusb"],
                     },
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/success2.py": {
                     "dependencies": [
@@ -367,13 +367,13 @@ class UserDefinedAndPythonData(IntegrationData):
                         "PROBLEM": "https://judge.yosupo.jp/problem/aplusb",
                         "links": ["https://judge.yosupo.jp/problem/aplusb"],
                     },
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/lib_all_success.py": {
                     "dependencies": ["python/lib_all_success.py"],
                     "verification": [],
                     "document_attributes": {"links": []},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/failure.re.py": {
                     "dependencies": [
@@ -408,13 +408,13 @@ class UserDefinedAndPythonData(IntegrationData):
                         "PROBLEM": "https://judge.yosupo.jp/problem/aplusb",
                         "links": ["https://judge.yosupo.jp/problem/aplusb"],
                     },
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/lib_some_skip.py": {
                     "dependencies": ["python/lib_some_skip.py"],
                     "verification": [],
                     "document_attributes": {"links": []},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/failure.tle.py": {
                     "dependencies": [
@@ -453,10 +453,10 @@ class UserDefinedAndPythonData(IntegrationData):
                             "https://onlinejudge.u-aizu.ac.jp/courses/lesson/2/ITP1/1/ITP1_1_A"
                         ],
                     },
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "python/sub/no_dependants.py": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["python/sub/no_dependants.py"],
                     "document_attributes": {"links": []},
                     "verification": [],

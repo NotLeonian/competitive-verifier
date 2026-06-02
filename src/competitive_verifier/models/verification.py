@@ -10,8 +10,12 @@ from .result_status import ResultStatus
 from .shell import ShellCommand, ShellCommandLike
 
 
-class VerifcationTimeoutError(Exception):
+class VerificationTimeoutError(Exception):
     pass
+
+
+# Deprecated typo alias kept for compatibility with previous releases.
+VerifcationTimeoutError = VerificationTimeoutError
 
 
 class VerificationParams(Protocol):

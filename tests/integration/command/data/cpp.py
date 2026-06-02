@@ -8,7 +8,7 @@ from .integration_data import IntegrationData
 
 
 class CppWithoutConfigData(IntegrationData):
-    def check_envinronment(self) -> bool:
+    def check_environment(self) -> bool:
         return bool(shutil.which("g++") and shutil.which("clang++"))
 
     @classmethod
@@ -19,7 +19,7 @@ class CppWithoutConfigData(IntegrationData):
         return {
             "files": {
                 "aplusb.hpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": str(self.config_dir_path / "bundled/aplusb.hpp"),
@@ -33,7 +33,7 @@ class CppWithoutConfigData(IntegrationData):
                     "verification": [],
                 },
                 "aplusb.main.cpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": f"{self.config_dir_path / 'bundled/aplusb.main.cpp'}",
@@ -85,7 +85,7 @@ class CppWithoutConfigData(IntegrationData):
                     ],
                 },
                 "aplusb.test.cpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": str(
@@ -139,7 +139,7 @@ class CppWithoutConfigData(IntegrationData):
                     ],
                 },
                 "macros.hpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": str(self.config_dir_path / "bundled/macros.hpp"),
@@ -367,7 +367,7 @@ class CppWithConfigData(CppWithoutConfigData):
         return {
             "files": {
                 "aplusb.hpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": str(self.config_dir_path / "bundled/aplusb.hpp"),
@@ -381,7 +381,7 @@ class CppWithConfigData(CppWithoutConfigData):
                     "verification": [],
                 },
                 "aplusb.main.cpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": f"{self.config_dir_path / 'bundled/aplusb.main.cpp'}",
@@ -431,7 +431,7 @@ class CppWithConfigData(CppWithoutConfigData):
                     ],
                 },
                 "aplusb.test.cpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": str(
@@ -483,7 +483,7 @@ class CppWithConfigData(CppWithoutConfigData):
                     ],
                 },
                 "macros.hpp": {
-                    "additonal_sources": [
+                    "additional_sources": [
                         {
                             "name": "bundled",
                             "path": str(self.config_dir_path / "bundled/macros.hpp"),

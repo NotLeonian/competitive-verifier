@@ -16,7 +16,7 @@ from competitive_verifier import config, git
 from competitive_verifier.arg import IncludeExcludeArguments, VerboseArguments
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import (
-    AddtionalSource,
+    AdditionalSource,
     CommandVerification,
     ConstVerification,
     LocalProblemVerification,
@@ -284,21 +284,21 @@ class OjResolver:
             deps = set(git.ls_files(*language.list_dependencies(path, basedir=basedir)))
             attr = language.list_attributes(path, basedir=basedir)
 
-            additonal_sources: list[AddtionalSource] = []
+            additional_sources: list[AdditionalSource] = []
             if bundle:
                 try:
                     bundled_code = language.bundle(path, basedir=basedir)
                     if bundled_code:
                         dest_path = _write_bundled(bundled_code, path=path)
-                        additonal_sources.append(
-                            AddtionalSource(name="bundled", path=dest_path)
+                        additional_sources.append(
+                            AdditionalSource(name="bundled", path=dest_path)
                         )
                 except Exception:  # noqa: BLE001
                     dest_path = _write_bundled(
                         traceback.format_exc().encode(), path=path
                     )
-                    additonal_sources.append(
-                        AddtionalSource(name="bundle error", path=dest_path)
+                    additional_sources.append(
+                        AdditionalSource(name="bundle error", path=dest_path)
                     )
 
             verifications = list(
@@ -311,7 +311,7 @@ class OjResolver:
                 dependencies=deps,
                 verification=verifications,
                 document_attributes=attr,
-                additonal_sources=additonal_sources,
+                additional_sources=additional_sources,
             )
         return VerificationInput(files=files)
 

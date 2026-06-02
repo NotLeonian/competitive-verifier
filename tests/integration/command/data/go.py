@@ -8,7 +8,7 @@ from .integration_data import IntegrationData
 
 
 class GoWithoutConfigData(IntegrationData):
-    def check_envinronment(self) -> bool:
+    def check_environment(self) -> bool:
         return bool(shutil.which("go"))
 
     @classmethod
@@ -19,7 +19,7 @@ class GoWithoutConfigData(IntegrationData):
         return {
             "files": {
                 "helloworld.aoj.go": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "helloworld.aoj.go",
                         "helloworld/helloworld.go",
@@ -45,7 +45,7 @@ class GoWithoutConfigData(IntegrationData):
                     ],
                 },
                 "helloworld/helloworld.go": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "helloworld.aoj.go",
                         "helloworld/helloworld.go",
@@ -55,7 +55,7 @@ class GoWithoutConfigData(IntegrationData):
                     "verification": [],
                 },
                 "helloworld_test.go": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "helloworld.aoj.go",
                         "helloworld/helloworld.go",
@@ -127,7 +127,7 @@ class GoWithConfigData(GoWithoutConfigData):
         return {
             "files": {
                 "helloworld.aoj.go": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "helloworld.aoj.go",
                         "helloworld/helloworld.go",
@@ -147,7 +147,7 @@ class GoWithConfigData(GoWithoutConfigData):
                     ],
                 },
                 "helloworld/helloworld.go": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "helloworld.aoj.go",
                         "helloworld/helloworld.go",
@@ -157,7 +157,7 @@ class GoWithConfigData(GoWithoutConfigData):
                     "verification": [],
                 },
                 "helloworld_test.go": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "helloworld.aoj.go",
                         "helloworld/helloworld.go",

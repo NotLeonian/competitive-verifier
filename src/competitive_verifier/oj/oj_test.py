@@ -19,8 +19,8 @@ from competitive_verifier.models import (
     ResultStatus,
     TestCaseProvider,
     TestcaseResult,
-    VerifcationTimeoutError,
     VerificationResult,
+    VerificationTimeoutError,
 )
 
 from . import gnu
@@ -315,11 +315,11 @@ def single_case(
         logger.info("%s: start", test_name)
 
         # run the binary
-        with test_input_path.open("rb") as infp:
+        with test_input_path.open("rb") as input_file:
             info = measure_command(
                 args.command,
                 env=args.env,
-                stdin=infp,
+                stdin=input_file,
                 timeout=args.tle,
                 gnu_time=True,
             )
@@ -377,7 +377,7 @@ def single_case(
 
 
 def gnu_time_message(args: OjTestArguments):
-    """Check wheather GNU time is available.
+    """Check whether GNU time is available.
 
     Show messages if GNU time is not available.
     """
@@ -459,7 +459,7 @@ def _run(args: OjTestArguments) -> OjTestResult:
     history: list[OjTestcaseResult] = []
     for t in tests:
         if time.perf_counter() > args.deadline:
-            raise VerifcationTimeoutError
+            raise VerificationTimeoutError
 
         history.append(single_case(t.name, t.input_path, t.output_path, args=args))
 

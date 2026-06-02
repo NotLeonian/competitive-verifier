@@ -80,7 +80,7 @@ test-cov-watch = { shell = 'while true; do poe test-cov --mark="${integration:-i
 "schema:write" = [
     { ref = "schema:verify_files", capture_stdout = "schema/verify_files.schema.json" },
     { ref = "schema:verify_result", capture_stdout = "schema/verify_result.schema.json" },
-    { ref = "deafult:config_yml", capture_stdout = ".competitive-verifier/docs/_config.default.yml" },
+    { ref = "default:config_yml", capture_stdout = ".competitive-verifier/docs/_config.default.yml" },
 ]
 
 # docs
@@ -107,7 +107,7 @@ imports = ["json", "competitive_verifier.models"]
 [tool.poe.tasks."schema:verify_result"]
 expr = "json.dumps(competitive_verifier.models.VerifyCommandResult.model_json_schema(), indent=2)"
 imports = ["json", "competitive_verifier.models"]
-[tool.poe.tasks."deafult:config_yml"]
+[tool.poe.tasks."default:config_yml"]
 expr = "competitive_verifier.documents.config.ConfigYaml().model_dump_yml().decode(encoding='utf-8')"
 imports = ["json", "competitive_verifier.documents.config"]
 
@@ -174,6 +174,17 @@ cwd = "${_COMPETITIVE_SERVE_DIR}"
 [[tool.poe.tasks._serve.sequence]]
 ref = "jekyll:serve"
 cwd = "${_COMPETITIVE_SERVE_DIR}"
+
+[tool.typos.files]
+extend-exclude = ["src/competitive_verifier_resources/jekyll/assets/vendor"]
+
+[tool.typos.default]
+extend-ignore-identifiers-re = [
+    "AddtionalSource",
+    "VerifcationTimeoutError",
+    "additonal_sources",
+    "repository_nwo",
+]
 
 [tool.ruff]
 target-version = "py310"

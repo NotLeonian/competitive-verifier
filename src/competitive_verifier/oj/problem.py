@@ -243,7 +243,7 @@ class YukicoderProblem(_BaseProblem):
                     outputs[path.stem] = file
             return [
                 TestCaseData(name=name, input_data=i, output_data=o)
-                for name, i, o in enumerate_inouts(inputs, outputs)
+                for name, i, o in enumerate_input_outputs(inputs, outputs)
             ]
 
     @property
@@ -439,13 +439,13 @@ def problem_from_url(url: str) -> Problem | None:
     return None
 
 
-_InOut = TypeVar("_InOut")
+_InputOutput = TypeVar("_InputOutput")
 
 
-def enumerate_inouts(
-    inputs: dict[str, _InOut],
-    outputs: dict[str, _InOut],
-) -> Iterator[tuple[str, _InOut, _InOut]]:
+def enumerate_input_outputs(
+    inputs: dict[str, _InputOutput],
+    outputs: dict[str, _InputOutput],
+) -> Iterator[tuple[str, _InputOutput, _InputOutput]]:
     common_keys = inputs.keys() & outputs.keys()
     if len(inputs) != len(common_keys) or len(outputs) != len(common_keys):
         logger.warning("dangling output case")
@@ -461,7 +461,7 @@ def merge_testcase_files(
     inputs: dict[str, pathlib.Path],
     outputs: dict[str, pathlib.Path],
 ) -> Iterator[TestCaseFile]:
-    for name, i, o in enumerate_inouts(inputs, outputs):
+    for name, i, o in enumerate_input_outputs(inputs, outputs):
         yield TestCaseFile(name=name, input_path=i, output_path=o)
 
 

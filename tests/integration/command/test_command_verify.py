@@ -22,7 +22,7 @@ from .data.integration_data import IntegrationData
 @pytest.mark.integration
 @pytest.mark.usefixtures("additional_path")
 @pytest.mark.order(-500)
-class TestCommandVerfy:
+class TestCommandVerify:
     @pytest.mark.usefixtures("mock_verification")
     def test_mock_dump(self):
         for _ in range(20):

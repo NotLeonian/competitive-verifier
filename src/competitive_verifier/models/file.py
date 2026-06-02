@@ -4,7 +4,7 @@ from functools import cached_property
 from logging import getLogger
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.util import to_relative
@@ -46,7 +46,7 @@ class DocumentOutputMode(str, enum.Enum):
     """
 
 
-class AddtionalSource(BaseModel):
+class AdditionalSource(BaseModel):
     name: str = Field(
         examples=["source_name"],
         description="The name of source file.",
@@ -59,6 +59,10 @@ class AddtionalSource(BaseModel):
     )
     """The path source file.
     """
+
+
+# Deprecated typo alias kept for compatibility with previous releases.
+AddtionalSource = AdditionalSource
 
 
 class VerificationFile(BaseModel):
@@ -77,19 +81,20 @@ class VerificationFile(BaseModel):
     )
     """The attributes for documentation.
     """
-    additonal_sources: list[AddtionalSource] = Field(
-        default_factory=list[AddtionalSource],
-        description="The addtional source paths.",
+    additional_sources: list[AdditionalSource] = Field(
+        default_factory=list[AdditionalSource],
+        validation_alias=AliasChoices("additional_sources", "additonal_sources"),
+        description="The additional source paths.",
         examples=[
             [
-                AddtionalSource(
+                AdditionalSource(
                     name="source_name",
                     path=pathlib.Path("relative_path_of_directory/file_name.cpp"),
                 ),
             ],
         ],
     )
-    """The addtional source paths
+    """The additional source paths
     """
 
     @property
@@ -249,7 +254,7 @@ class VerificationInput(BaseModel):
     def verified_with(self) -> _DependencyEdges:
         return self._dependency_graph.verified_with
 
-    def filterd_files(self, files: dict[ForcePosixPath, "FileResult"]):
+    def filtered_files(self, files: dict[ForcePosixPath, "FileResult"]):
         for k, v in files.items():
             if k in self.files:
                 yield k, v

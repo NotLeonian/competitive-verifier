@@ -61,7 +61,7 @@ def test_to_json():
                             "status": "success",
                         }
                     ],
-                    "additonal_sources": [{"name": "dummy", "path": "tmp/dumm.py"}],
+                    "additional_sources": [{"name": "dummy", "path": "tmp/dumm.py"}],
                 },
             },
         }
@@ -72,7 +72,7 @@ def test_to_json():
                 "dependencies": [],
                 "document_attributes": {},
                 "verification": [],
-                "additonal_sources": [],
+                "additional_sources": [],
             },
             "foo/baz.py": {
                 "document_attributes": {"title": "foo-baz"},
@@ -83,9 +83,35 @@ def test_to_json():
                         "status": "success",
                     }
                 ],
-                "additonal_sources": [{"name": "dummy", "path": "tmp/dumm.py"}],
+                "additional_sources": [{"name": "dummy", "path": "tmp/dumm.py"}],
             },
         },
+    }
+
+
+def test_parse_file_relative_accepts_legacy_sources_key(testtemp: Path):
+    path = testtemp / "verify_files.json"
+    path.write_text(
+        json.dumps(
+            {
+                "files": {
+                    "foo/baz.py": {
+                        "additonal_sources": [
+                            {"name": "dummy", "path": "tmp/dummy.sh"}
+                        ],
+                    },
+                },
+            }
+        )
+    )
+
+    obj = VerificationInput.parse_file_relative(path)
+
+    assert obj.files[Path("foo/baz.py")].model_dump(exclude_none=True) == {
+        "dependencies": set(),
+        "document_attributes": {},
+        "verification": [],
+        "additional_sources": [{"name": "dummy", "path": Path("tmp/dummy.sh")}],
     }
 
 
@@ -106,7 +132,7 @@ def test_repr():
                             "status": "success",
                         }
                     ],
-                    "additonal_sources": [{"name": "dummy", "path": "tmp/dumm.py"}],
+                    "additional_sources": [{"name": "dummy", "path": "tmp/dumm.py"}],
                 },
             },
         }
@@ -114,9 +140,9 @@ def test_repr():
     assert repr(obj) == (
         "VerificationInput("
         f"files={{{Path('foo/bar.py')!r}: "
-        f"VerificationFile(dependencies=set(), verification=[], document_attributes={{}}, additonal_sources=[]),"
+        f"VerificationFile(dependencies=set(), verification=[], document_attributes={{}}, additional_sources=[]),"
         f" {Path('foo/baz.py')!r}: "
-        f"VerificationFile(dependencies={{{Path('foo/bar.py')!r}}}, verification=[ConstVerification(name=None, type='const', status=<ResultStatus.SUCCESS: 'success'>)], document_attributes={{'title': {'foo-baz'!r}}}, additonal_sources=[AddtionalSource(name='dummy', path={Path('tmp/dumm.py')!r})])"
+        f"VerificationFile(dependencies={{{Path('foo/bar.py')!r}}}, verification=[ConstVerification(name=None, type='const', status=<ResultStatus.SUCCESS: 'success'>)], document_attributes={{'title': {'foo-baz'!r}}}, additional_sources=[AdditionalSource(name='dummy', path={Path('tmp/dumm.py')!r})])"
         f"}})"
     )
 

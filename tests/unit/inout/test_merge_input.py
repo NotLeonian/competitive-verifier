@@ -34,13 +34,13 @@ test_merge_input_params: list[tuple[dict[str, VerificationInput], dict[str, Any]
                     "dependencies": ["file2.txt"],
                     "verification": {"type": "const", "status": "success"},
                     "document_attributes": {},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "file2.txt": {
                     "dependencies": [],
                     "verification": [],
                     "document_attributes": {"TITLE": "file2", "JSON": "file1"},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
             }
         },
@@ -76,16 +76,16 @@ test_merge_input_params: list[tuple[dict[str, VerificationInput], dict[str, Any]
                     "dependencies": ["file2.txt"],
                     "verification": {"type": "const", "status": "success"},
                     "document_attributes": {},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "file2.txt": {
                     "dependencies": [],
                     "verification": [],
                     "document_attributes": {"NAME": "FILE2", "JSON": "file2"},
-                    "additonal_sources": [],
+                    "additional_sources": [],
                 },
                 "fileA.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "file2.txt",
                     ],

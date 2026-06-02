@@ -5,14 +5,14 @@ from .integration_data import IntegrationData
 
 
 class JavaData(IntegrationData):
-    def check_envinronment(self) -> bool:
+    def check_environment(self) -> bool:
         return bool(shutil.which("javac"))
 
     def expected_verify_json(self) -> dict[str, Any]:
         return {
             "files": {
                 "examples/Aplusb.java": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "examples/Aplusb.java",
                         "examples/Aplusb_main.java",
@@ -24,7 +24,7 @@ class JavaData(IntegrationData):
                     "verification": [],
                 },
                 "examples/Aplusb_main.java": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "examples/Aplusb.java",
                         "examples/Aplusb_main.java",
@@ -47,7 +47,7 @@ class JavaData(IntegrationData):
                     ],
                 },
                 "examples/Aplusb_test.java": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "examples/Aplusb.java",
                         "examples/Aplusb_main.java",
@@ -72,7 +72,7 @@ class JavaData(IntegrationData):
                     ],
                 },
                 "examples/HelloWorld.java": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "examples/Aplusb.java",
                         "examples/Aplusb_main.java",
@@ -84,7 +84,7 @@ class JavaData(IntegrationData):
                     "verification": [],
                 },
                 "examples/HelloWorld_test.java": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "examples/Aplusb.java",
                         "examples/Aplusb_main.java",

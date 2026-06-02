@@ -552,7 +552,7 @@ class PageRenderJob(RenderJob):
         embedded = [EmbeddedCode(name="default", code=code)]
         embedded.extend(
             EmbeddedCode(name=s.name, code=read_text_normalized(s.path))
-            for s in self.stat.file_input.additonal_sources
+            for s in self.stat.file_input.additional_sources
         )
 
         return PageRenderData(

@@ -126,10 +126,10 @@ def write_summary(fp: IO[str], result: VerifyCommandResult):
     fp.write(_with_icon("✔", "All test case results are `success`"))
     fp.write("\n")
     fp.write("- ")
-    fp.write(_with_icon("❌", "Test case results containts `failure`"))
+    fp.write(_with_icon("❌", "Test case results contain `failure`"))
     fp.write("\n")
     fp.write("- ")
-    fp.write(_with_icon("⚠", "Test case results containts `skipped`"))
+    fp.write(_with_icon("⚠", "Test case results contain `skipped`"))
     fp.write("\n\n\n")
 
     header = [

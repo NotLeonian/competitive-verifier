@@ -108,73 +108,73 @@ class TestCommandOjResolve:
         assert resolved == {
             "files": {
                 "a1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["a1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "a2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["a2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "b1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["b1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "b2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["b2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "c1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["c1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "c2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["c2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/a1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/a2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/b1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/b1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/b2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/b2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/c1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/c1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/c2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/c2.txt"],
                     "document_attributes": {},
                     "verification": [],
@@ -207,37 +207,37 @@ class TestCommandOjResolve:
         assert resolved == {
             "files": {
                 "subdir/a1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/a2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/b1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/b1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/b2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/b2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/c1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/c1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/c2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/c2.txt"],
                     "document_attributes": {},
                     "verification": [],
@@ -268,25 +268,25 @@ class TestCommandOjResolve:
         assert resolved == {
             "files": {
                 "a1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["a1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "a2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["a2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/a1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/a2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a2.txt"],
                     "document_attributes": {},
                     "verification": [],
@@ -317,37 +317,37 @@ class TestCommandOjResolve:
         assert resolved == {
             "files": {
                 "a1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["a1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "a2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["a2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "b1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["b1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "b2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["b2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "c1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["c1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "c2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["c2.txt"],
                     "document_attributes": {},
                     "verification": [],
@@ -378,49 +378,49 @@ class TestCommandOjResolve:
         assert resolved == {
             "files": {
                 "c1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["c1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "c2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["c2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/a1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/a2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/a2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/b1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/b1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/b2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/b2.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/c1.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/c1.txt"],
                     "document_attributes": {},
                     "verification": [],
                 },
                 "subdir/c2.txt": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["subdir/c2.txt"],
                     "document_attributes": {},
                     "verification": [],
@@ -449,19 +449,19 @@ class TestCommandOjResolve:
         assert resolved == {
             "files": {
                 "aplusb.hpp": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["aplusb.hpp"],
                     "document_attributes": {"links": []},
                     "verification": [],
                 },
                 "aplusb.main.cpp": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["aplusb.hpp", "aplusb.main.cpp"],
                     "document_attributes": {"links": []},
                     "verification": [],
                 },
                 "aplusb.test.cpp": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["aplusb.hpp", "aplusb.test.cpp", "macros.hpp"],
                     "document_attributes": {
                         "links": ["https://judge.yosupo.jp/problem/aplusb"],
@@ -469,7 +469,7 @@ class TestCommandOjResolve:
                     "verification": [],
                 },
                 "macros.hpp": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["macros.hpp"],
                     "document_attributes": {
                         "links": [],

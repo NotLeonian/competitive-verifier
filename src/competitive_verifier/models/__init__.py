@@ -1,4 +1,5 @@
 from .file import (
+    AdditionalSource,
     AddtionalSource,
     DocumentOutputMode,
     VerificationFile,
@@ -18,9 +19,11 @@ from .verification import (
     VerifcationTimeoutError,
     Verification,
     VerificationParams,
+    VerificationTimeoutError,
 )
 
 __all__ = [
+    "AdditionalSource",
     "AddtionalSource",
     "BaseVerification",
     "CommandVerification",
@@ -48,5 +51,6 @@ __all__ = [
     "VerificationInput",
     "VerificationParams",
     "VerificationResult",
+    "VerificationTimeoutError",
     "VerifyCommandResult",
 ]

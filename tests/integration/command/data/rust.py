@@ -5,7 +5,7 @@ from .integration_data import IntegrationData
 
 
 class RustWithoutConfigData(IntegrationData):
-    def check_envinronment(self) -> bool:
+    def check_environment(self) -> bool:
         return bool(shutil.which("rustc"))
 
     @classmethod
@@ -16,19 +16,19 @@ class RustWithoutConfigData(IntegrationData):
         return {
             "files": {
                 "crates/helloworld/hello/src/lib.rs": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["crates/helloworld/hello/src/lib.rs"],
                     "document_attributes": {"links": []},
                     "verification": [],
                 },
                 "crates/helloworld/world/src/lib.rs": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["crates/helloworld/world/src/lib.rs"],
                     "document_attributes": {"links": []},
                     "verification": [],
                 },
                 "crates/io/input/src/lib.rs": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "crates/io/input/src/lib.rs",
                         "crates/io/scanner/src/lib.rs",
@@ -37,13 +37,13 @@ class RustWithoutConfigData(IntegrationData):
                     "verification": [],
                 },
                 "crates/io/scanner/src/lib.rs": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": ["crates/io/scanner/src/lib.rs"],
                     "document_attributes": {"links": []},
                     "verification": [],
                 },
                 "src/lib.rs": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "crates/helloworld/hello/src/lib.rs",
                         "crates/helloworld/world/src/lib.rs",
@@ -55,7 +55,7 @@ class RustWithoutConfigData(IntegrationData):
                     "verification": [],
                 },
                 "verification/src/bin/aizu-online-judge-itp1-1-a.rs": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "crates/helloworld/hello/src/lib.rs",
                         "crates/helloworld/world/src/lib.rs",
@@ -91,7 +91,7 @@ class RustWithoutConfigData(IntegrationData):
                     ],
                 },
                 "verification/src/bin/library-checker-aplusb.rs": {
-                    "additonal_sources": [],
+                    "additional_sources": [],
                     "dependencies": [
                         "crates/helloworld/hello/src/lib.rs",
                         "crates/helloworld/world/src/lib.rs",

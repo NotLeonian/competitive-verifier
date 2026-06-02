@@ -7,18 +7,12 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 LICENSES_FILE="$ROOT/3rd-party-license.txt"
-LEGACY_LICENSES_FILE="$ROOT/3rd-party-lisence.txt"
 BEGIN_MARKER="BEGIN GENERATED VENDORED DOC ASSET LICENSES"
 END_MARKER="END GENERATED VENDORED DOC ASSET LICENSES"
 
 MATHJAX_VERSION="3.2.2"
 HIGHLIGHTJS_VERSION="11.6.0"
 HINTCSS_VERSION="2.7.0"
-
-if [[ ! -f "$LICENSES_FILE" && -f "$LEGACY_LICENSES_FILE" ]]; then
-  echo "::error::$LEGACY_LICENSES_FILE exists, but $LICENSES_FILE does not. Rename it first: git mv 3rd-party-lisence.txt 3rd-party-license.txt"
-  exit 1
-fi
 
 require_command() {
   local command_name="$1"
