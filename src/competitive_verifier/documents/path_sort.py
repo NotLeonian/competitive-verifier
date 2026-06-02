@@ -1,9 +1,11 @@
 import enum
 import pathlib
-import re
-from typing import Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias, cast
 
-_NATURAL_SORT_RE = re.compile(r"\d+|\D+")
+from natsort import natsort_keygen, ns
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class PathSortOrder(str, enum.Enum):
@@ -11,9 +13,13 @@ class PathSortOrder(str, enum.Enum):
     natural = "natural"
 
 
-_SortToken: TypeAlias = tuple[Literal[0], str] | tuple[Literal[1], int]
-_PrimarySortKey: TypeAlias = tuple[_SortToken, ...]
-_SortKey: TypeAlias = tuple[_PrimarySortKey, str]
+_NatsortPrimaryKey: TypeAlias = tuple[Any, ...]
+_SortKey: TypeAlias = tuple[_NatsortPrimaryKey, str]
+
+_NATURAL_SORT_KEY = cast(
+    "Callable[[str], _NatsortPrimaryKey]",
+    natsort_keygen(alg=ns.INT | ns.IGNORECASE),
+)
 
 
 def normalize_path_sort_order(order: PathSortOrder | None) -> PathSortOrder:
@@ -24,18 +30,13 @@ def path_sort_key_text(value: str, order: PathSortOrder | None) -> _SortKey:
     order = normalize_path_sort_order(order)
 
     if order == PathSortOrder.lexicographic:
-        return (((0, value.casefold()),), value)  # (casefold, raw)
+        return ((value.casefold(),), value)
 
-    tokens: list[_SortToken] = []
-    for token in _NATURAL_SORT_RE.findall(value):
-        if token.isdecimal():
-            tokens.append((1, int(token)))
-        else:
-            tokens.append((0, token.casefold()))
-
-    # tie-break
-    return (tuple(tokens), value)
+    return (_NATURAL_SORT_KEY(value), value)
 
 
-def path_sort_key_path(path: pathlib.Path, order: PathSortOrder | None) -> _SortKey:
+def path_sort_key_path(
+    path: pathlib.PurePath,
+    order: PathSortOrder | None,
+) -> _SortKey:
     return path_sort_key_text(path.as_posix(), order)
