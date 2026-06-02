@@ -14,6 +14,10 @@ class VerificationTimeoutError(Exception):
     pass
 
 
+# Deprecated typo alias kept for compatibility with previous releases.
+VerifcationTimeoutError = VerificationTimeoutError
+
+
 class VerificationParams(Protocol):
     default_tle: float | None
     default_mle: float | None

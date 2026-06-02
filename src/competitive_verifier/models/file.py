@@ -61,6 +61,10 @@ class AdditionalSource(BaseModel):
     """
 
 
+# Deprecated typo alias kept for compatibility with previous releases.
+AddtionalSource = AdditionalSource
+
+
 class VerificationFile(BaseModel):
     dependencies: SortedPathSet = Field(
         default_factory=set[ForcePosixPath],
