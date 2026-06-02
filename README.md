@@ -1,21 +1,22 @@
 # competitive-verifier
 
-[![Actions Status](https://github.com/competitive-verifier/competitive-verifier/actions/workflows/verify.yml/badge.svg)](https://github.com/competitive-verifier/competitive-verifier/actions) [![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=+&color=brightgreen&logo=github)](https://competitive-verifier.github.io/competitive-verifier)
-[![PyPI](https://img.shields.io/pypi/v/competitive-verifier)](https://pypi.org/project/competitive-verifier/)
+[![Actions Status](https://github.com/NotLeonian/competitive-verifier/actions/workflows/verify.yml/badge.svg)](https://github.com/NotLeonian/competitive-verifier/actions) [![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=+&color=brightgreen&logo=github)](https://notleonian.github.io/competitive-verifier)
 
-The library is inspired by [online-judge-tools/verification-helper](https://github.com/online-judge-tools/verification-helper).
+upstream の PyPI: [![PyPI](https://img.shields.io/pypi/v/competitive-verifier)](https://pypi.org/project/competitive-verifier/)
 
-- [Getting Started](https://competitive-verifier.github.io/competitive-verifier/installer.html) / [日本語](https://competitive-verifier.github.io/competitive-verifier/installer.ja.html)
-- [Reference](https://competitive-verifier.github.io/competitive-verifier/document.html) / [日本語](https://competitive-verifier.github.io/competitive-verifier/document.ja.html)
-- [DESIGN(日本語)](https://competitive-verifier.github.io/competitive-verifier/DESIGN)
+This is [Not_Leonian](https://github.com/NotLeonian)'s fork of [competitive-verifier/competitive-verifier](https://github.com/competitive-verifier/competitive-verifier).
+
+- [Getting Started](https://notleonian.github.io/competitive-verifier/installer.html) / [日本語](https://notleonian.github.io/competitive-verifier/installer.ja.html)
+- [Reference](https://notleonian.github.io/competitive-verifier/document.html) / [日本語](https://notleonian.github.io/competitive-verifier/document.ja.html)
+- [DESIGN(日本語)](https://notleonian.github.io/competitive-verifier/DESIGN)
 
 
 ## Get started
 
 ### Use in GitHub Actions
 
-See [GitHub Pages](https://competitive-verifier.github.io/competitive-verifier/installer.html).
-[日本語](https://competitive-verifier.github.io/competitive-verifier/installer.ja.html)
+See [GitHub Pages](https://notleonian.github.io/competitive-verifier/installer.html).
+[日本語](https://notleonian.github.io/competitive-verifier/installer.ja.html)
 
 ### Use in local
 
@@ -30,8 +31,10 @@ pip install competitive-verifier
 Or
 
 ```sh
-pip install git+https://github.com/competitive-verifier/competitive-verifier.git@latest
+pip install pip install git+https://github.com/NotLeonian/competitive-verifier.git@main
 ```
+
+末尾の `main` の代わりに、main ブランチの最新のコミットの SHA を指定するとより堅実である。
 
 **Migrate from verification-helper**
 

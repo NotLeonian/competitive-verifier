@@ -67,7 +67,7 @@ class DocumentBuilder(BaseModel):
             competitive_verifier_resources.doc_usage(
                 markdown_dir_path=self.destination_dir,
                 repo_name=github.env.get_repository()
-                or "competitive-verifier/competitive-verifier",
+                or "NotLeonian/competitive-verifier",
             )
         )
 
