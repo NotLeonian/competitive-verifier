@@ -111,9 +111,7 @@ def test_parse_file_relative_accepts_legacy_sources_key(testtemp: Path):
         "dependencies": set(),
         "document_attributes": {},
         "verification": [],
-        "additional_sources": [
-            {"name": "dummy", "path": Path("tmp/dummy.sh")}
-        ],
+        "additional_sources": [{"name": "dummy", "path": Path("tmp/dummy.sh")}],
     }
 
 
