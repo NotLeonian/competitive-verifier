@@ -7,6 +7,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 from competitive_verifier import git, github
+from competitive_verifier.documents.path_sort import PathSortOrder
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import RelativeDirectoryPath, SortedPathSet
 
@@ -28,7 +29,7 @@ logger = getLogger(__name__)
 
 
 class ConfigIcons(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     LIBRARY_ALL_AC: str = ":heavy_check_mark:"
     LIBRARY_PARTIAL_AC: str = ":heavy_check_mark:"
@@ -82,6 +83,16 @@ class ConfigYaml(BaseModel):
     filename_index: bool = Field(
         default=False,
         serialization_alias="filename-index",
+    )
+    path_sort: PathSortOrder = Field(
+        default="lexicographic",
+        alias="path-sort",
+        serialization_alias="path-sort",
+        description=(
+            "Sort order of generated document links. "
+            "'lexicographic' preserves the existing order; "
+            "'natural' sorts digit runs numerically."
+        ),
     )
     sass: dict[str, Any] = Field(default_factory=lambda: {"style": "compressed"})
     icons: ConfigIcons = ConfigIcons()

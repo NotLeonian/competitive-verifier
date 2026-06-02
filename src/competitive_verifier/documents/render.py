@@ -32,6 +32,7 @@ from competitive_verifier.util import (
 
 from .config import ConfigYaml
 from .front_matter import FrontMatter, Markdown
+from .path_sort import PathSortOrder, sort_key_path
 from .render_data import (
     CategorizedIndex,
     CodePageData,
@@ -50,7 +51,10 @@ logger = getLogger(__name__)
 
 
 def _paths_to_render_links(
-    paths: SortedPathSet, page_jobs: dict[pathlib.Path, "PageRenderJob"]
+    paths: SortedPathSet,
+    page_jobs: dict[pathlib.Path, "PageRenderJob"],
+    *,
+    path_sort: PathSortOrder,
 ) -> list[RenderLink]:
     def get_link(path: pathlib.Path) -> RenderLink | None:
         job = page_jobs.get(path)
@@ -61,7 +65,8 @@ def _paths_to_render_links(
     return [
         link
         for link in map(
-            get_link, sorted(paths, key=lambda p: str.casefold(p.as_posix()))
+            get_link,
+            sorted(paths, key=lambda p: sort_key_path(p, path_sort)),
         )
         if link
     ]
@@ -362,7 +367,10 @@ class RenderJob(ABC):
 
         page_jobs: dict[pathlib.Path, PageRenderJob] = {}
         jobs: list[RenderJob] = []
-        for source in sources:
+        for source in sorted(
+            sources,
+            key=lambda p: sort_key_path(p, config.path_sort),
+        ):
             markdown = user_markdowns.single.get(source) or Markdown.make_default(
                 source
             )
@@ -389,6 +397,7 @@ class RenderJob(ABC):
                 verifications=verifications,
                 result=result,
                 page_jobs=page_jobs,
+                path_sort=config.path_sort,
             )
 
             if pj.display == DocumentOutputMode.never:
@@ -409,6 +418,7 @@ class RenderJob(ABC):
                 markdown=md,
                 group_dir=group_dir or md.path.parent,
                 page_jobs=page_jobs,
+                path_sort=config.path_sort,
             )
 
             if md.front_matter.display == DocumentOutputMode.never:
@@ -421,6 +431,7 @@ class RenderJob(ABC):
                 page_jobs=page_jobs,
                 multicode_docs=multis,
                 index_md=index_md,
+                path_sort=config.path_sort,
             )
         )
         return jobs
@@ -460,6 +471,7 @@ class PageRenderJob(RenderJob):
     verifications: VerificationInput
     result: VerifyCommandResult
     page_jobs: dict[pathlib.Path, "PageRenderJob"]
+    path_sort: PathSortOrder
 
     @property
     def is_verification(self):
@@ -532,9 +544,21 @@ class PageRenderJob(RenderJob):
         ).dump_merged(fp)
 
     def get_page_data(self) -> PageRenderData:
-        depends_on = _paths_to_render_links(self.stat.depends_on, self.page_jobs)
-        required_by = _paths_to_render_links(self.stat.required_by, self.page_jobs)
-        verified_with = _paths_to_render_links(self.stat.verified_with, self.page_jobs)
+        depends_on = _paths_to_render_links(
+            self.stat.depends_on,
+            self.page_jobs,
+            path_sort=self.path_sort,
+        )
+        required_by = _paths_to_render_links(
+            self.stat.required_by,
+            self.page_jobs,
+            path_sort=self.path_sort,
+        )
+        verified_with = _paths_to_render_links(
+            self.stat.verified_with,
+            self.page_jobs,
+            path_sort=self.path_sort,
+        )
 
         attributes = self.stat.file_input.document_attributes.copy()
         if problem_url := next(
@@ -597,6 +621,7 @@ class MultiCodePageRenderJob(RenderJob):
     markdown: MultiTargetMarkdown
     group_dir: pathlib.Path
     page_jobs: dict[pathlib.Path, "PageRenderJob"]
+    path_sort: PathSortOrder
 
     def __str__(self) -> str:
         return f"MultiCodePageRenderJob(multi_documentation_of={self.markdown.multi_documentation_of!r})"
@@ -672,9 +697,21 @@ class MultiCodePageRenderJob(RenderJob):
             - multi_documentation_of_set
         )
 
-        depends_on = _paths_to_render_links(depends_on_paths, self.page_jobs)
-        required_by = _paths_to_render_links(required_by_paths, self.page_jobs)
-        verified_with = _paths_to_render_links(verified_with_paths, self.page_jobs)
+        depends_on = _paths_to_render_links(
+            depends_on_paths,
+            self.page_jobs,
+            path_sort=self.path_sort,
+        )
+        required_by = _paths_to_render_links(
+            required_by_paths,
+            self.page_jobs,
+            path_sort=self.path_sort,
+        )
+        verified_with = _paths_to_render_links(
+            verified_with_paths,
+            self.page_jobs,
+            path_sort=self.path_sort,
+        )
 
         return MultiCodePageData(
             path=self.markdown.path,
@@ -693,6 +730,8 @@ class MultiCodePageRenderJob(RenderJob):
 class IndexRenderJob(RenderJob):
     page_jobs: dict[pathlib.Path, "PageRenderJob"]
     multicode_docs: list[MultiCodePageRenderJob]
+    path_sort: PathSortOrder
+
     index_md: Markdown | None = None
 
     def __str__(self) -> str:
@@ -753,7 +792,10 @@ class IndexRenderJob(RenderJob):
                 (
                     CategorizedIndex(
                         name=category,
-                        pages=sorted(pages, key=lambda p: p.path.as_posix()),
+                        pages=sorted(
+                            pages,
+                            key=lambda p: sort_key_path(p.path, self.path_sort),
+                        ),
                     )
                     for category, pages in categories.items()
                 ),
