@@ -33,11 +33,11 @@ def test_path_sort_serializes_with_yaml_alias_when_set():
 
 def test_natural_path_sort_order():
     paths = [
-        pathlib.Path("verify/yukicoder-1907.test.cpp"),
-        pathlib.Path("verify/yukicoder-2362.test.cpp"),
-        pathlib.Path("verify/yukicoder-2603.test.cpp"),
-        pathlib.Path("verify/yukicoder-275.test.cpp"),
-        pathlib.Path("verify/yukicoder-3148.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-1907.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-2362.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-2603.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-275.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-3148.test.cpp"),
     ]
 
     assert [
@@ -57,11 +57,11 @@ def test_natural_path_sort_order():
 
 def test_default_path_sort_order_is_lexicographic():
     paths = [
-        pathlib.Path("verify/yukicoder-1907.test.cpp"),
-        pathlib.Path("verify/yukicoder-2362.test.cpp"),
-        pathlib.Path("verify/yukicoder-2603.test.cpp"),
-        pathlib.Path("verify/yukicoder-275.test.cpp"),
-        pathlib.Path("verify/yukicoder-3148.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-1907.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-2362.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-2603.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-275.test.cpp"),
+        pathlib.PurePosixPath("verify/yukicoder-3148.test.cpp"),
     ]
 
     assert [
@@ -86,8 +86,8 @@ def test_lexicographic_path_sort_is_case_distinct():
 
 def test_lexicographic_path_sort_is_deterministic_for_case_only_difference():
     paths = {
-        pathlib.Path("data_structure/dsu.hpp"),
-        pathlib.Path("data_structure/DSU.hpp"),
+        pathlib.PurePosixPath("data_structure/dsu.hpp"),
+        pathlib.PurePosixPath("data_structure/DSU.hpp"),
     }
 
     assert [
@@ -99,14 +99,17 @@ def test_lexicographic_path_sort_is_deterministic_for_case_only_difference():
 
 
 def test_natural_path_sort_uses_original_value_as_tie_breaker():
-    values = {"a2.hpp", "a02.hpp"}
+    values = [
+        "lib/a2.hpp",
+        "lib/a02.hpp",
+    ]
 
     assert sorted(
         values,
-        key=lambda s: path_sort_key_text(s, PathSortOrder.natural),
+        key=lambda value: path_sort_key_text(value, PathSortOrder.natural),
     ) == [
-        "a02.hpp",
-        "a2.hpp",
+        "lib/a02.hpp",
+        "lib/a2.hpp",
     ]
 
 
@@ -134,4 +137,21 @@ def test_natural_path_sort_keeps_prefix_before_numbered_continuation():
     ) == [
         "lib/foo",
         "lib/foo1",
+    ]
+
+
+def test_natural_path_sort_preserves_digit_prefixed_names():
+    values = [
+        "2.hpp",
+        "a.hpp",
+        "10.hpp",
+    ]
+
+    assert sorted(
+        values,
+        key=lambda value: path_sort_key_text(value, PathSortOrder.natural),
+    ) == [
+        "2.hpp",
+        "10.hpp",
+        "a.hpp",
     ]
