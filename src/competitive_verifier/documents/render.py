@@ -764,7 +764,11 @@ class IndexRenderJob(RenderJob):
     def get_page_data(self) -> IndexRenderData:
         library_categories: dict[str, list[RenderLink]] = {}
         verification_categories: dict[str, list[RenderLink]] = {}
-        for job in chain.from_iterable([self.page_jobs.values(), self.multicode_docs]):
+        index_jobs: Iterable[PageRenderJob | MultiCodePageRenderJob] = chain(
+            self.page_jobs.values(),
+            self.multicode_docs,
+        )
+        for job in index_jobs:
             if job.display != DocumentOutputMode.visible:
                 continue
             categories = (
