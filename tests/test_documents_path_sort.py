@@ -120,3 +120,18 @@ def test_natural_path_sort_is_case_distinct_when_casefolded_keys_match():
         "DSU2.hpp",
         "dsu2.hpp",
     ]
+
+
+def test_natural_path_sort_keeps_prefix_before_numbered_continuation():
+    values = [
+        "lib/foo1",
+        "lib/foo",
+    ]
+
+    assert sorted(
+        values,
+        key=lambda value: path_sort_key_text(value, PathSortOrder.natural),
+    ) == [
+        "lib/foo",
+        "lib/foo1",
+    ]

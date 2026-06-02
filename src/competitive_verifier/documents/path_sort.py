@@ -11,10 +11,9 @@ class PathSortOrder(str, enum.Enum):
     natural = "natural"
 
 
-_SortToken: TypeAlias = (
-    tuple[Literal[0], str] | tuple[Literal[1], int] | tuple[Literal[2], str]
-)
-_SortKey: TypeAlias = tuple[_SortToken, ...]
+_SortToken: TypeAlias = tuple[Literal[0], str] | tuple[Literal[1], int]
+_PrimarySortKey: TypeAlias = tuple[_SortToken, ...]
+_SortKey: TypeAlias = tuple[_PrimarySortKey, str]
 
 
 def normalize_path_sort_order(order: PathSortOrder | None) -> PathSortOrder:
@@ -25,7 +24,7 @@ def path_sort_key_text(value: str, order: PathSortOrder | None) -> _SortKey:
     order = normalize_path_sort_order(order)
 
     if order == PathSortOrder.lexicographic:
-        return ((0, value),)
+        return (((0, value.casefold()),), value)  # (casefold, raw)
 
     tokens: list[_SortToken] = []
     for token in _NATURAL_SORT_RE.findall(value):
@@ -35,8 +34,7 @@ def path_sort_key_text(value: str, order: PathSortOrder | None) -> _SortKey:
             tokens.append((0, token.casefold()))
 
     # tie-break
-    tokens.append((2, value))
-    return tuple(tokens)
+    return (tuple(tokens), value)
 
 
 def path_sort_key_path(path: pathlib.Path, order: PathSortOrder | None) -> _SortKey:
