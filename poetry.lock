@@ -911,7 +911,7 @@ files = [
     {file = "tomli-2.4.1-py3-none-any.whl", hash = "sha256:0d85819802132122da43cb86656f8d1f8c6587d54ae7dcaf30e90533028b49fe"},
     {file = "tomli-2.4.1.tar.gz", hash = "sha256:7c7e1a961a0b2f2472c1ac5b69affa0ae1132c39adcb67aba98568702b9cc23f"},
 ]
-markers = {test = "python_full_version <= \"3.11.0a6\""}
+markers = {main = "python_version == \"3.10\"", dev = "python_version == \"3.10\"", test = "python_full_version <= \"3.11.0a6\""}
 
 [[package]]
 name = "typing-extensions"
@@ -962,4 +962,4 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "1801b566c40e0cf8abb56e90a97307774c46fc8313e93bb05f69397e91ee19f0"
+content-hash = "47ec241be45a5107ef480e84aa1d88f39fa3265f7a4f5d3b67639890f33c0ee6"
