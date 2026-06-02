@@ -15,6 +15,8 @@ from .render import RenderJob
 
 logger = getLogger(__name__)
 
+_DOC_USAGE_SAMPLE_REPOSITORY = "NotLeonian/competitive-verifier"
+
 _MINIMAL_THEME = "jekyll-theme-minimal"
 _MINIMAL_REMOTE_THEME_SLUGS = frozenset(
     {
@@ -66,8 +68,8 @@ class DocumentBuilder(BaseModel):
         logger.info(
             competitive_verifier_resources.doc_usage(
                 markdown_dir_path=self.destination_dir,
-                repo_name=github.env.get_repository()
-                or "competitive-verifier/competitive-verifier",
+                repo_name=github.env.get_repository() or _DOC_USAGE_SAMPLE_REPOSITORY,
+                sample_repo_name=_DOC_USAGE_SAMPLE_REPOSITORY,
             )
         )
 

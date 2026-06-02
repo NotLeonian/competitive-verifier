@@ -289,9 +289,12 @@ mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 namespace_packages = true
 explicit_package_bases = true
 exclude = [
-    '^src/competitive_verifier_resources/jekyll/',
     '^integration_test_data/',
 ]
+
+[[tool.mypy.overrides]]
+module = ["yaml.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

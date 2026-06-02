@@ -7,6 +7,7 @@ def test_doc_usage():
     doc_usage = competitive_verifier_resources.doc_usage(
         markdown_dir_path=pathlib.Path(),
         repo_name="example/myrepo",
+        sample_repo_name="example/sample/repo",
     )
     assert "jekyll serve" in doc_usage
     assert "{{" not in doc_usage
