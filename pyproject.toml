@@ -179,7 +179,7 @@ cwd = "${_COMPETITIVE_SERVE_DIR}"
 extend-exclude = ["src/competitive_verifier_resources/jekyll/assets/vendor"]
 
 [tool.typos.default]
-extend-ignore-identifiers-re = ["additonal_sources"]
+extend-ignore-identifiers-re = ["additonal_sources", "repository_nwo"]
 
 [tool.ruff]
 target-version = "py310"
