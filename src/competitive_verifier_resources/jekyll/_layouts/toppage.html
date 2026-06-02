@@ -10,6 +10,8 @@ layout: page
     <p>
     {%- if site.github.project_tagline -%}
         {{- site.github.project_tagline -}}
+    {%- elsif site.description and site.description != site.generator_description -%}
+        {{- site.description -}}
     {%- else -%}
         {{- site.generator_description_html | default: site.description -}}
     {%- endif -%}

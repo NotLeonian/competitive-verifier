@@ -67,6 +67,7 @@ class ConfigYaml(BaseModel):
 
     exclude: list[str] | None = None
     description: str = _GENERATOR_DESCRIPTION
+    generator_description: str = _GENERATOR_DESCRIPTION
     generator_description_html: str = _GENERATOR_DESCRIPTION_HTML
 
     plugins: list[str] = Field(

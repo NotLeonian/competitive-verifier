@@ -18,7 +18,13 @@
           <img src="{{ site.logo | relative_url }}" alt="Logo" />
         {% endif %}
 
-        <p>{{ site.generator_description_html | default: site.description | default: site.github.project_tagline }}</p>
+        {% if site.description and site.description != site.generator_description %}
+        <p>{{ site.description }}</p>
+        {% elsif site.github.project_tagline %}
+        <p>{{ site.github.project_tagline }}</p>
+        {% else %}
+        <p>{{ site.generator_description_html | default: site.description }}</p>
+        {% endif %}
 
         {% if site.github.is_project_page %}
         <p class="view"><a href="{{ site.github.repository_url }}">View the Project on GitHub <small>{{ site.github.repository_nwo }}</small></a></p>
