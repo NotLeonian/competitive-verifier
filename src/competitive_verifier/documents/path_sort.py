@@ -18,9 +18,9 @@ _NaturalSortKey: TypeAlias = tuple[_NaturalPrimaryKey, str]
 _LexicographicSortKey: TypeAlias = tuple[str]
 _PathSortKey: TypeAlias = _NaturalSortKey | _LexicographicSortKey
 
-_NATURAL_SORT_KEY = cast(
-    "Callable[[str], _NaturalPrimaryKey]",
-    natsort_keygen(alg=ns.INT | ns.IGNORECASE),
+_NATURAL_PATH_SORT_KEY = cast(
+    "Callable[[pathlib.PurePath], _NaturalPrimaryKey]",
+    natsort_keygen(alg=ns.INT | ns.IGNORECASE | ns.PATH),
 )
 
 
@@ -32,15 +32,12 @@ def is_natural_path_sort(order: PathSortOrder | None) -> bool:
     return normalize_path_sort_order(order) == PathSortOrder.natural
 
 
-def path_sort_key_text(value: str, order: PathSortOrder | None) -> _PathSortKey:
-    if not is_natural_path_sort(order):
-        return (value,)
-
-    return (_NATURAL_SORT_KEY(value), value)
-
-
 def path_sort_key_path(
     path: pathlib.PurePath,
     order: PathSortOrder | None,
 ) -> _PathSortKey:
-    return path_sort_key_text(path.as_posix(), order)
+    value = path.as_posix()
+    if not is_natural_path_sort(order):
+        return (value,)
+
+    return (_NATURAL_PATH_SORT_KEY(path), value)

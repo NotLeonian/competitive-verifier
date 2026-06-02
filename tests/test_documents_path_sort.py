@@ -6,8 +6,18 @@ from competitive_verifier.documents.config import ConfigYaml
 from competitive_verifier.documents.path_sort import (
     PathSortOrder,
     path_sort_key_path,
-    path_sort_key_text,
 )
+
+
+def _sorted_path_values(
+    values: list[str] | set[str],
+    order: PathSortOrder | None,
+) -> list[str]:
+    paths = [pathlib.PurePosixPath(value) for value in values]
+    return [
+        path.as_posix()
+        for path in sorted(paths, key=lambda path: path_sort_key_path(path, order))
+    ]
 
 
 def test_path_sort_is_not_serialized_by_default():
@@ -78,7 +88,7 @@ def test_default_path_sort_order_is_lexicographic():
 def test_lexicographic_path_sort_is_case_distinct():
     values = {"dsu.hpp", "DSU.hpp"}
 
-    assert sorted(values, key=lambda s: path_sort_key_text(s, None)) == [
+    assert _sorted_path_values(values, None) == [
         "DSU.hpp",
         "dsu.hpp",
     ]
@@ -104,10 +114,7 @@ def test_natural_path_sort_uses_original_value_as_tie_breaker():
         "lib/a02.hpp",
     ]
 
-    assert sorted(
-        values,
-        key=lambda value: path_sort_key_text(value, PathSortOrder.natural),
-    ) == [
+    assert _sorted_path_values(values, PathSortOrder.natural) == [
         "lib/a02.hpp",
         "lib/a2.hpp",
     ]
@@ -116,10 +123,7 @@ def test_natural_path_sort_uses_original_value_as_tie_breaker():
 def test_natural_path_sort_is_case_distinct_when_casefolded_keys_match():
     values = {"dsu2.hpp", "DSU2.hpp"}
 
-    assert sorted(
-        values,
-        key=lambda s: path_sort_key_text(s, PathSortOrder.natural),
-    ) == [
+    assert _sorted_path_values(values, PathSortOrder.natural) == [
         "DSU2.hpp",
         "dsu2.hpp",
     ]
@@ -131,10 +135,7 @@ def test_natural_path_sort_keeps_prefix_before_numbered_continuation():
         "lib/foo",
     ]
 
-    assert sorted(
-        values,
-        key=lambda value: path_sort_key_text(value, PathSortOrder.natural),
-    ) == [
+    assert _sorted_path_values(values, PathSortOrder.natural) == [
         "lib/foo",
         "lib/foo1",
     ]
@@ -147,20 +148,33 @@ def test_natural_path_sort_preserves_digit_prefixed_names():
         "10.hpp",
     ]
 
-    assert sorted(
-        values,
-        key=lambda value: path_sort_key_text(value, PathSortOrder.natural),
-    ) == [
+    assert _sorted_path_values(values, PathSortOrder.natural) == [
         "2.hpp",
         "10.hpp",
         "a.hpp",
     ]
 
 
+def test_natural_path_sort_compares_path_segments():
+    values = [
+        "lib/a2.hpp",
+        "lib/a/10.hpp",
+        "lib/a10.hpp",
+        "lib/a/2.hpp",
+    ]
+
+    assert _sorted_path_values(values, PathSortOrder.natural) == [
+        "lib/a/2.hpp",
+        "lib/a/10.hpp",
+        "lib/a2.hpp",
+        "lib/a10.hpp",
+    ]
+
+
 def test_default_path_sort_preserves_case_sensitive_index_order():
     values = ["a.hpp", "B.hpp"]
 
-    assert sorted(values, key=lambda s: path_sort_key_text(s, None)) == [
+    assert _sorted_path_values(values, None) == [
         "B.hpp",
         "a.hpp",
     ]
