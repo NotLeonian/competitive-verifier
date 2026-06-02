@@ -31,7 +31,7 @@ pip install competitive-verifier
 Or
 
 ```sh
-pip install pip install git+https://github.com/NotLeonian/competitive-verifier.git@main
+pip install git+https://github.com/NotLeonian/competitive-verifier.git@main
 ```
 
 末尾の `main` の代わりに、main ブランチの最新のコミットの SHA を指定するとより堅実である。
