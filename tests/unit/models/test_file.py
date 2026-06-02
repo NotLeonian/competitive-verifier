@@ -225,6 +225,21 @@ def test_parse_VerificationFile(
     assert obj.model_dump(exclude_none=True) == output_dict
 
 
+def test_parse_VerificationFile_accepts_legacy_sources_key():
+    obj = VerificationFile.model_validate(
+        {"additonal_sources": [{"name": "dummy", "path": "tmp/dummy.sh"}]}
+    )
+
+    assert obj.additional_sources == [
+        AdditionalSource(name="dummy", path=pathlib.Path("tmp/dummy.sh"))
+    ]
+    dumped = obj.model_dump(exclude_none=True)
+    assert dumped["additional_sources"] == [
+        {"name": "dummy", "path": pathlib.Path("tmp/dummy.sh")}
+    ]
+    assert "additonal_sources" not in dumped
+
+
 test_is_verification_params = [
     (
         VerificationFile(

@@ -89,6 +89,34 @@ def test_to_json():
     }
 
 
+def test_parse_file_relative_accepts_legacy_sources_key(testtemp: Path):
+    path = testtemp / "verify_files.json"
+    path.write_text(
+        json.dumps(
+            {
+                "files": {
+                    "foo/baz.py": {
+                        "additonal_sources": [
+                            {"name": "dummy", "path": "tmp/dummy.sh"}
+                        ],
+                    },
+                },
+            }
+        )
+    )
+
+    obj = VerificationInput.parse_file_relative(path)
+
+    assert obj.files[Path("foo/baz.py")].model_dump(exclude_none=True) == {
+        "dependencies": set(),
+        "document_attributes": {},
+        "verification": [],
+        "additional_sources": [
+            {"name": "dummy", "path": Path("tmp/dummy.sh")}
+        ],
+    }
+
+
 def test_repr():
     obj = VerificationInput.model_validate(
         {

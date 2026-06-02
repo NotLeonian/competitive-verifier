@@ -4,7 +4,7 @@ from functools import cached_property
 from logging import getLogger
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.util import to_relative
@@ -79,6 +79,7 @@ class VerificationFile(BaseModel):
     """
     additional_sources: list[AdditionalSource] = Field(
         default_factory=list[AdditionalSource],
+        validation_alias=AliasChoices("additional_sources", "additonal_sources"),
         description="The additional source paths.",
         examples=[
             [
