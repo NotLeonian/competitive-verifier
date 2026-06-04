@@ -1,6 +1,10 @@
 * text=auto eol=lf
 
+*.bundle binary
+*.gif binary
+*.ico binary
 *.jpg binary
+*.jpeg binary
 *.png binary
 *.woff binary
 *.woff2 binary
