@@ -1,6 +1,6 @@
 # competitive-verifier
 
-[![Actions Status](https://github.com/NotLeonian/competitive-verifier/actions/workflows/verify.yml/badge.svg)](https://github.com/NotLeonian/competitive-verifier/actions) [![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=+&color=brightgreen&logo=github)](https://notleonian.github.io/competitive-verifier)
+[![Actions Status](https://github.com/NotLeonian/competitive-verifier/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/NotLeonian/competitive-verifier/actions/workflows/verify.yml?query=branch%3Amain) [![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=competitive-verifier+&color=brightgreen&logo=github)](https://notleonian.github.io/competitive-verifier)
 
 upstream の PyPI: [![PyPI](https://img.shields.io/pypi/v/competitive-verifier)](https://pypi.org/project/competitive-verifier/)
 
