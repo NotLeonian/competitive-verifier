@@ -1,3 +1,11 @@
 <h1>{{ site.title }}</h1>
-<a href="{{ site.github.repository_url }}/actions"><img src="{{ site.github.repository_url }}/actions/workflows/{{ site.workflow_name | default: "verify.yml" }}/badge.svg" /></a>
+{% assign workflow_name = site.workflow_name | default: "verify.yml" %}
+{% assign workflow_branch = site.workflow_branch | default: "" | strip %}
+{% if workflow_branch != "" %}
+{% assign workflow_branch_param = workflow_branch | cgi_escape %}
+{% assign workflow_branch_query = workflow_branch | prepend: "branch:" | cgi_escape %}
+<a href="{{ site.github.repository_url }}/actions/workflows/{{ workflow_name }}?query={{ workflow_branch_query }}"><img src="{{ site.github.repository_url }}/actions/workflows/{{ workflow_name }}/badge.svg?branch={{ workflow_branch_param }}" /></a>
+{% else %}
+<a href="{{ site.github.repository_url }}/actions/workflows/{{ workflow_name }}"><img src="{{ site.github.repository_url }}/actions/workflows/{{ workflow_name }}/badge.svg" /></a>
+{% endif %}
 <a href="{{ site.github.repository_url }}"><img src="https://img.shields.io/github/last-commit/{{ site.github.owner_name }}/{{ site.github.repository_name }}" /></a>
