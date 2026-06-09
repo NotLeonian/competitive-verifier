@@ -19,3 +19,4 @@ navigation:
         link: /competitive-verifier/document.ja.html
   - name: DESIGN(日本語)
     link: /competitive-verifier/DESIGN.html
+workflow_branch: main

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "competitive-verifier"
-version = "4.2.3"
+version = "4.2.4"
 description = "Verifier for libraries of competitive programming (forked from competitive-verifier/competitive-verifier)"
 
 license = "MIT"
