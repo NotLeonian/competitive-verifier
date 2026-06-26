@@ -4,14 +4,16 @@ import os
 import pathlib
 import posixpath
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
 import urllib.parse
 import zipfile
 from abc import abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from io import BytesIO
 from logging import getLogger
 from typing import ClassVar, Optional, TypeVar
 
@@ -214,37 +216,276 @@ class YukicoderProblem(_BaseProblem):
         else:
             raise ValueError("Needs problem_no or problem_id")
 
-    def _download_cases(self) -> list[TestCaseData]:
-        """Download yukicoder problem.
+    @staticmethod
+    def _env_float(name: str, default: float) -> float:
+        value = os.environ.get(name)
+        if value is None or value == "":
+            return default
+        try:
+            return float(value)
+        except ValueError as e:
+            raise ValueError(f"{name} must be a float: {value!r}") from e
 
-        Raises:
-            NotLoggedInError: If the `cargo metadata` command fails
-        """
-        headers: dict[str, str] | None = None
-        if yukicoder_token := os.environ.get("YUKICODER_TOKEN"):
-            headers = {"Authorization": f"Bearer {yukicoder_token}"}
+    @staticmethod
+    def _env_int(name: str, default: int) -> int:
+        value = os.environ.get(name)
+        if value is None or value == "":
+            return default
+        try:
+            return int(value)
+        except ValueError as e:
+            raise ValueError(f"{name} must be an integer: {value!r}") from e
 
+    @staticmethod
+    def _headers() -> dict[str, str] | None:
+        yukicoder_token = os.environ.get("YUKICODER_TOKEN")
+        if not yukicoder_token:
+            return None
+        return {"Authorization": f"Bearer {yukicoder_token}"}
+
+    def download_system_cases(self) -> Iterable[TestCaseData] | bool:
+        test_directory = self.test_directory
+        if test_directory.exists() and any(test_directory.iterdir()):
+            logger.info("download:already exists: %s", self.url)
+            return True
+
+        headers = self._headers()
         if not self._is_logged_in(headers=headers):
             raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
-        url = f"{self.url}/testcase.zip"
-        resp = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
 
-        with zipfile.ZipFile(BytesIO(resp.content)) as fh:
-            inputs: dict[str, bytes] = {}
-            outputs: dict[str, bytes] = {}
-            for filename in fh.namelist():
+        self.problem_directory.parent.mkdir(parents=True, exist_ok=True)
+
+        tmp_root = pathlib.Path(
+            tempfile.mkdtemp(
+                prefix=f"{self.hash_id}.",
+                dir=self.problem_directory.parent,
+            )
+        )
+        zip_path = tmp_root / "testcase.zip"
+        staging_directory = tmp_root / "test"
+
+        try:
+            self._download_testcase_zip(zip_path, headers=headers)
+            case_count = self._extract_testcase_zip(zip_path, staging_directory)
+
+            if case_count == 0:
+                logger.error(
+                    "Sample not found",
+                    extra={"github": GitHubMessageParams()},
+                )
+                return False
+
+            self.problem_directory.mkdir(parents=True, exist_ok=True)
+
+            if test_directory.exists():
+                shutil.rmtree(test_directory)
+
+            staging_directory.rename(test_directory)
+            logger.info("download:saved: %s cases: %s", case_count, self.url)
+            return True
+        finally:
+            shutil.rmtree(tmp_root, ignore_errors=True)
+
+    def _download_cases(self) -> list[TestCaseData]:
+        headers = self._headers()
+        if not self._is_logged_in(headers=headers):
+            raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
+
+        self.problem_directory.parent.mkdir(parents=True, exist_ok=True)
+
+        tmp_root = pathlib.Path(
+            tempfile.mkdtemp(
+                prefix=f"{self.hash_id}.",
+                dir=self.problem_directory.parent,
+            )
+        )
+        zip_path = tmp_root / "testcase.zip"
+
+        try:
+            self._download_testcase_zip(zip_path, headers=headers)
+            with zipfile.ZipFile(zip_path) as fh:
+                inputs: dict[str, bytes] = {}
+                outputs: dict[str, bytes] = {}
+
+                for info in fh.infolist():
+                    filename = info.filename
+                    if filename.endswith("/"):
+                        continue
+
+                    path = pathlib.PurePosixPath(filename)
+                    self._validate_zip_member_path(path)
+
+                    if filename.startswith("test_in/"):
+                        inputs[path.stem] = fh.read(info)
+                    elif filename.startswith("test_out/"):
+                        outputs[path.stem] = fh.read(info)
+
+                return [
+                    TestCaseData(name=name, input_data=i, output_data=o)
+                    for name, i, o in enumerate_input_outputs(inputs, outputs)
+                ]
+        finally:
+            shutil.rmtree(tmp_root, ignore_errors=True)
+
+    def _download_testcase_zip(
+        self,
+        destination: pathlib.Path,
+        *,
+        headers: dict[str, str] | None,
+    ) -> None:
+        url = f"{self.url}/testcase.zip"
+
+        connect_timeout = self._env_float(
+            "COMPETITIVE_VERIFIER_YUKICODER_CONNECT_TIMEOUT",
+            10.0,
+        )
+        read_timeout = self._env_float(
+            "COMPETITIVE_VERIFIER_YUKICODER_READ_TIMEOUT",
+            30.0,
+        )
+        download_timeout = self._env_float(
+            "COMPETITIVE_VERIFIER_YUKICODER_DOWNLOAD_TIMEOUT",
+            0.0,
+        )
+        report_interval = self._env_float(
+            "COMPETITIVE_VERIFIER_YUKICODER_REPORT_INTERVAL",
+            5.0,
+        )
+        chunk_size = self._env_int(
+            "COMPETITIVE_VERIFIER_YUKICODER_CHUNK_SIZE",
+            1024 * 1024,
+        )
+
+        logger.info("download:yukicoder testcase.zip: %s", url)
+
+        started_at = time.perf_counter()
+        last_reported_at = started_at
+        total = 0
+
+        with requests.get(
+            url,
+            headers=headers,
+            allow_redirects=True,
+            stream=True,
+            timeout=(connect_timeout, read_timeout),
+        ) as resp:
+            resp.raise_for_status()
+
+            content_length_text = resp.headers.get("content-length")
+            content_length = (
+                int(content_length_text)
+                if content_length_text is not None and content_length_text.isdigit()
+                else None
+            )
+
+            logger.info(
+                "download:yukicoder response: status=%s, content-type=%s, content-length=%s",
+                resp.status_code,
+                resp.headers.get("content-type"),
+                content_length_text,
+            )
+
+            with destination.open("wb") as out:
+                for chunk in resp.iter_content(chunk_size=chunk_size):
+                    if not chunk:
+                        continue
+
+                    out.write(chunk)
+                    total += len(chunk)
+
+                    now = time.perf_counter()
+                    elapsed = now - started_at
+
+                    if download_timeout > 0 and elapsed > download_timeout:
+                        raise TimeoutError(
+                            f"download timeout: {url}: "
+                            f"{total} bytes in {download_timeout:.0f} sec"
+                        )
+
+                    if (
+                        report_interval > 0
+                        and now - last_reported_at >= report_interval
+                    ):
+                        mib = total / 1024 / 1024
+                        speed = mib / elapsed if elapsed > 0 else 0.0
+
+                        if content_length:
+                            percent = total * 100.0 / content_length
+                            logger.info(
+                                "download:yukicoder progress: %.1f / %.1f MiB, %.1f%%, %.2f MiB/s",
+                                mib,
+                                content_length / 1024 / 1024,
+                                percent,
+                                speed,
+                            )
+                        else:
+                            logger.info(
+                                "download:yukicoder progress: %.1f MiB, %.2f MiB/s",
+                                mib,
+                                speed,
+                            )
+
+                        last_reported_at = now
+
+        elapsed = time.perf_counter() - started_at
+        mib = total / 1024 / 1024
+        speed = mib / elapsed if elapsed > 0 else 0.0
+        logger.info(
+            "download:yukicoder done: %.1f MiB, %.2f MiB/s, %.1f sec",
+            mib,
+            speed,
+            elapsed,
+        )
+
+    def _extract_testcase_zip(
+        self,
+        zip_path: pathlib.Path,
+        destination: pathlib.Path,
+    ) -> int:
+        inputs: dict[str, zipfile.ZipInfo] = {}
+        outputs: dict[str, zipfile.ZipInfo] = {}
+
+        with zipfile.ZipFile(zip_path) as fh:
+            for info in fh.infolist():
+                filename = info.filename
                 if filename.endswith("/"):
                     continue
-                file = fh.read(filename)
-                path = pathlib.Path(filename)
+
+                path = pathlib.PurePosixPath(filename)
+                self._validate_zip_member_path(path)
+
                 if filename.startswith("test_in/"):
-                    inputs[path.stem] = file
+                    inputs[path.stem] = info
                 elif filename.startswith("test_out/"):
-                    outputs[path.stem] = file
-            return [
-                TestCaseData(name=name, input_data=i, output_data=o)
-                for name, i, o in enumerate_input_outputs(inputs, outputs)
-            ]
+                    outputs[path.stem] = info
+
+            common_names = sorted(inputs.keys() & outputs.keys())
+
+            if len(inputs) != len(common_names) or len(outputs) != len(common_names):
+                logger.warning("dangling output case")
+
+            if not common_names:
+                logger.warning("no cases found")
+                return 0
+
+            destination.mkdir(parents=True, exist_ok=False)
+
+            for name in common_names:
+                input_path = destination / _name_to_filename(name, "in")
+                output_path = destination / _name_to_filename(name, "out")
+
+                with fh.open(inputs[name]) as src, input_path.open("wb") as out:
+                    shutil.copyfileobj(src, out)
+
+                with fh.open(outputs[name]) as src, output_path.open("wb") as out:
+                    shutil.copyfileobj(src, out)
+
+        return len(common_names)
+
+    @staticmethod
+    def _validate_zip_member_path(path: pathlib.PurePosixPath) -> None:
+        if path.is_absolute() or ".." in path.parts:
+            raise RuntimeError(f"unsafe path in testcase.zip: {path}")
 
     @property
     def url(self) -> str:
