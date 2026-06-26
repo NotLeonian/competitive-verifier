@@ -426,10 +426,11 @@ def _normpath(path: str) -> str:
     return path
 
 
-def _subclasses_recursive(cls: type[Problem]) -> Iterable[type[Problem]]:
-    yield from (children := cls.__subclasses__())
-    for ch in children:
-        yield from _subclasses_recursive(ch)
+def _subclasses_recursive(cls: type[object]) -> Iterable[type[Problem]]:
+    for ch in cls.__subclasses__():
+        if issubclass(ch, Problem):
+            yield ch
+            yield from _subclasses_recursive(ch)
 
 
 def problem_from_url(url: str) -> Problem | None:
