@@ -279,8 +279,6 @@ convention = "google"
 
 [tool.pyright]
 pythonVersion = "3.10"
-venvPath = "."
-venv = ".venv"
 typeCheckingMode = "strict"
 include = ["src", "tests"]
 ignore = ["src/competitive_verifier_resources/jekyll"]
