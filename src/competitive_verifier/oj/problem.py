@@ -237,25 +237,11 @@ class YukicoderProblem(_BaseProblem):
             raise ValueError(f"{name} must be an integer: {value!r}") from e
 
     @staticmethod
-    def _headers() -> dict[str, str]:
+    def _headers() -> dict[str, str] | None:
         yukicoder_token = os.environ.get("YUKICODER_TOKEN")
         if not yukicoder_token:
-            raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
-
-        if yukicoder_token != yukicoder_token.strip():
-            raise NotLoggedInError(
-                "YUKICODER_TOKEN must not contain surrounding whitespace"
-            )
-
-        if "\r" in yukicoder_token or "\n" in yukicoder_token:
-            raise NotLoggedInError("YUKICODER_TOKEN must not contain newlines")
-
-        authorization = (
-            yukicoder_token
-            if yukicoder_token.lower().startswith("bearer ")
-            else f"Bearer {yukicoder_token}"
-        )
-        return {"Authorization": authorization}
+            return None
+        return {"Authorization": f"Bearer {yukicoder_token}"}
 
     def download_system_cases(self) -> Iterable[TestCaseData] | bool:
         test_directory = self.test_directory
@@ -264,12 +250,15 @@ class YukicoderProblem(_BaseProblem):
             return True
 
         headers = self._headers()
+        if not self._is_logged_in(headers=headers):
+            raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
+
         self.problem_directory.parent.mkdir(parents=True, exist_ok=True)
 
         tmp_root = pathlib.Path(
             tempfile.mkdtemp(
                 prefix=f"{self.hash_id}.",
-                dir=str(self.problem_directory.parent),
+                dir=self.problem_directory.parent,
             )
         )
         zip_path = tmp_root / "testcase.zip"
@@ -299,13 +288,15 @@ class YukicoderProblem(_BaseProblem):
 
     def _download_cases(self) -> list[TestCaseData]:
         headers = self._headers()
+        if not self._is_logged_in(headers=headers):
+            raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
 
         self.problem_directory.parent.mkdir(parents=True, exist_ok=True)
 
         tmp_root = pathlib.Path(
             tempfile.mkdtemp(
                 prefix=f"{self.hash_id}.",
-                dir=str(self.problem_directory.parent),
+                dir=self.problem_directory.parent,
             )
         )
         zip_path = tmp_root / "testcase.zip"
@@ -317,15 +308,16 @@ class YukicoderProblem(_BaseProblem):
                 outputs: dict[str, bytes] = {}
 
                 for info in fh.infolist():
-                    if info.is_dir():
+                    filename = info.filename
+                    if filename.endswith("/"):
                         continue
 
-                    path = pathlib.PurePosixPath(info.filename)
+                    path = pathlib.PurePosixPath(filename)
                     self._validate_zip_member_path(path)
 
-                    if path.parts and path.parts[0] == "test_in":
+                    if filename.startswith("test_in/"):
                         inputs[path.stem] = fh.read(info)
-                    elif path.parts and path.parts[0] == "test_out":
+                    elif filename.startswith("test_out/"):
                         outputs[path.stem] = fh.read(info)
 
                 return [
@@ -339,7 +331,7 @@ class YukicoderProblem(_BaseProblem):
         self,
         destination: pathlib.Path,
         *,
-        headers: dict[str, str],
+        headers: dict[str, str] | None,
     ) -> None:
         url = f"{self.url}/testcase.zip"
 
@@ -377,22 +369,21 @@ class YukicoderProblem(_BaseProblem):
             stream=True,
             timeout=(connect_timeout, read_timeout),
         ) as resp:
+            resp.raise_for_status()
+
+            content_length_text = resp.headers.get("content-length")
+            content_length = (
+                int(content_length_text)
+                if content_length_text is not None and content_length_text.isdigit()
+                else None
+            )
+
             logger.info(
                 "download:yukicoder response: status=%s, content-type=%s, content-length=%s",
                 resp.status_code,
                 resp.headers.get("content-type"),
-                resp.headers.get("content-length"),
+                content_length_text,
             )
-
-            if resp.status_code in {400, 401, 403}:
-                body = resp.content[:500]
-                raise NotLoggedInError(
-                    f"Failed to download yukicoder testcase.zip: "
-                    f"status={resp.status_code}, content-type={resp.headers.get('content-type')}, "
-                    f"body-prefix={body!r}"
-                )
-
-            resp.raise_for_status()
 
             with destination.open("wb") as out:
                 for chunk in resp.iter_content(chunk_size=chunk_size):
@@ -417,19 +408,24 @@ class YukicoderProblem(_BaseProblem):
                     ):
                         mib = total / 1024 / 1024
                         speed = mib / elapsed if elapsed > 0 else 0.0
-                        logger.info(
-                            "download:yukicoder progress: %.1f MiB, %.2f MiB/s",
-                            mib,
-                            speed,
-                        )
-                        last_reported_at = now
 
-        if not zipfile.is_zipfile(destination):
-            body = destination.read_bytes()[:500]
-            raise NotLoggedInError(
-                f"Downloaded yukicoder testcase response is not a zip file: "
-                f"url={url}, bytes={total}, body-prefix={body!r}"
-            )
+                        if content_length:
+                            percent = total * 100.0 / content_length
+                            logger.info(
+                                "download:yukicoder progress: %.1f / %.1f MiB, %.1f%%, %.2f MiB/s",
+                                mib,
+                                content_length / 1024 / 1024,
+                                percent,
+                                speed,
+                            )
+                        else:
+                            logger.info(
+                                "download:yukicoder progress: %.1f MiB, %.2f MiB/s",
+                                mib,
+                                speed,
+                            )
+
+                        last_reported_at = now
 
         elapsed = time.perf_counter() - started_at
         mib = total / 1024 / 1024
@@ -451,15 +447,16 @@ class YukicoderProblem(_BaseProblem):
 
         with zipfile.ZipFile(zip_path) as fh:
             for info in fh.infolist():
-                if info.is_dir():
+                filename = info.filename
+                if filename.endswith("/"):
                     continue
 
-                path = pathlib.PurePosixPath(info.filename)
+                path = pathlib.PurePosixPath(filename)
                 self._validate_zip_member_path(path)
 
-                if path.parts and path.parts[0] == "test_in":
+                if filename.startswith("test_in/"):
                     inputs[path.stem] = info
-                elif path.parts and path.parts[0] == "test_out":
+                elif filename.startswith("test_out/"):
                     outputs[path.stem] = info
 
             common_names = sorted(inputs.keys() & outputs.keys())
@@ -511,6 +508,12 @@ class YukicoderProblem(_BaseProblem):
                 if dirname == "/problems":
                     return cls(problem_id=n)
         return None
+
+    def _is_logged_in(self, *, headers: dict[str, str] | None = None) -> bool:
+        url = "https://yukicoder.me"
+        resp = requests.get(url, headers=headers, allow_redirects=True, timeout=10)
+        resp.raise_for_status()
+        return "login-btn" not in str(resp.content)
 
 
 class AOJProblem(_BaseProblem):
