@@ -30,6 +30,9 @@ from competitive_verifier.models import (
 
 logger = getLogger(__name__)
 
+_ASCII_SPACE = 0x20
+_ASCII_DELETE = 0x7F
+
 
 class NotLoggedInError(RuntimeError):
     pass
@@ -237,11 +240,73 @@ class YukicoderProblem(_BaseProblem):
             raise ValueError(f"{name} must be an integer: {value!r}") from e
 
     @staticmethod
-    def _headers() -> dict[str, str] | None:
-        yukicoder_token = os.environ.get("YUKICODER_TOKEN")
-        if not yukicoder_token:
-            return None
-        return {"Authorization": f"Bearer {yukicoder_token}"}
+    def _validate_yukicoder_token(token: str) -> str:
+        if not token:
+            raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
+
+        if token.startswith("YUKICODER_TOKEN="):
+            raise NotLoggedInError(
+                "YUKICODER_TOKEN must contain only the token value, "
+                "not a 'YUKICODER_TOKEN=...' assignment."
+            )
+
+        if token.lower().startswith("bearer "):
+            raise NotLoggedInError(
+                "YUKICODER_TOKEN must contain only the token value, "
+                "not a 'Bearer ...' authorization header value."
+            )
+
+        if token != token.strip():
+            raise NotLoggedInError(
+                "YUKICODER_TOKEN contains leading or trailing whitespace."
+            )
+
+        bad_control_chars: list[str] = []
+        for index, ch in enumerate(token):
+            code = ord(ch)
+            if code < _ASCII_SPACE or code == _ASCII_DELETE:
+                name = {
+                    0x09: "TAB",
+                    0x0A: "LF",
+                    0x0D: "CR",
+                    0x1B: "ESC",
+                    _ASCII_DELETE: "DEL",
+                }.get(code, "control")
+                bad_control_chars.append(f"offset {index}: 0x{code:02X} ({name})")
+
+        if bad_control_chars:
+            extra = ""
+            if "\x1b[" in token:
+                extra = (
+                    " It looks like an ANSI escape sequence was included, "
+                    "possibly by pressing an arrow key while entering the token."
+                )
+
+            raise NotLoggedInError(
+                "YUKICODER_TOKEN contains control characters: "
+                + ", ".join(bad_control_chars)
+                + "."
+                + extra
+            )
+
+        non_visible_ascii: list[str] = []
+        for index, ch in enumerate(token):
+            code = ord(ch)
+            if code <= _ASCII_SPACE or code >= _ASCII_DELETE:
+                non_visible_ascii.append(f"offset {index}: U+{code:04X}")
+
+        if non_visible_ascii:
+            raise NotLoggedInError(
+                "YUKICODER_TOKEN contains characters that are not visible ASCII: "
+                + ", ".join(non_visible_ascii)
+            )
+
+        return token
+
+    @classmethod
+    def _yukicoder_headers(cls) -> dict[str, str]:
+        token = cls._validate_yukicoder_token(os.environ.get("YUKICODER_TOKEN", ""))
+        return {"Authorization": f"Bearer {token}"}
 
     def download_system_cases(self) -> Iterable[TestCaseData] | bool:
         test_directory = self.test_directory
@@ -249,7 +314,7 @@ class YukicoderProblem(_BaseProblem):
             logger.info("download:already exists: %s", self.url)
             return True
 
-        headers = self._headers()
+        headers = self._yukicoder_headers()
         if not self._is_logged_in(headers=headers):
             raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
 
@@ -287,7 +352,7 @@ class YukicoderProblem(_BaseProblem):
             shutil.rmtree(tmp_root, ignore_errors=True)
 
     def _download_cases(self) -> list[TestCaseData]:
-        headers = self._headers()
+        headers = self._yukicoder_headers()
         if not self._is_logged_in(headers=headers):
             raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
 
