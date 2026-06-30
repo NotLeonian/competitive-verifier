@@ -304,7 +304,7 @@ class YukicoderProblem(_BaseProblem):
         return token
 
     @classmethod
-    def _yukicoder_headers(cls) -> dict[str, str]:
+    def yukicoder_headers(cls) -> dict[str, str]:
         token = cls._validate_yukicoder_token(os.environ.get("YUKICODER_TOKEN", ""))
         return {"Authorization": f"Bearer {token}"}
 
@@ -314,7 +314,7 @@ class YukicoderProblem(_BaseProblem):
             logger.info("download:already exists: %s", self.url)
             return True
 
-        headers = self._yukicoder_headers()
+        headers = self.yukicoder_headers()
         if not self._is_logged_in(headers=headers):
             raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
 
@@ -352,7 +352,7 @@ class YukicoderProblem(_BaseProblem):
             shutil.rmtree(tmp_root, ignore_errors=True)
 
     def _download_cases(self) -> list[TestCaseData]:
-        headers = self._yukicoder_headers()
+        headers = self.yukicoder_headers()
         if not self._is_logged_in(headers=headers):
             raise NotLoggedInError("Required: $YUKICODER_TOKEN environment variable")
 
@@ -561,7 +561,7 @@ class YukicoderProblem(_BaseProblem):
         # example: https://yukicoder.me/problems/no/499
         # example: http://yukicoder.me/problems/1476
         result = urllib.parse.urlparse(url)
-        dirname, basename = posixpath.split(_normpath(result.path))
+        dirname, basename = posixpath.split(normalize_url_path(result.path))
         if result.scheme in ("", "http", "https") and result.netloc == "yukicoder.me":
             try:
                 n = int(basename)
@@ -629,7 +629,7 @@ class AOJProblem(_BaseProblem):
         if (
             result.scheme in ("", "http", "https")
             and result.netloc == "judge.u-aizu.ac.jp"
-            and _normpath(result.path) == "/onlinejudge/description.jsp"
+            and normalize_url_path(result.path) == "/onlinejudge/description.jsp"
             and querystring.get("id")
             and len(querystring["id"]) == 1
         ):
@@ -640,7 +640,7 @@ class AOJProblem(_BaseProblem):
         # example: https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/3/CGL_3_B
         m = re.match(
             r"^/(challenges|courses)/(sources|library/\d+|lesson/\d+)/(\w+)/(\w+)/(\w+)$",
-            _normpath(result.path),
+            normalize_url_path(result.path),
         )
         if (
             result.scheme in ("", "http", "https")
@@ -652,7 +652,7 @@ class AOJProblem(_BaseProblem):
 
         # example: https://onlinejudge.u-aizu.ac.jp/problems/0423
         # example: https://onlinejudge.u-aizu.ac.jp/problems/CGL_3_B
-        m = re.match(r"^/problems/(\w+)$", _normpath(result.path))
+        m = re.match(r"^/problems/(\w+)$", normalize_url_path(result.path))
         if (
             result.scheme in ("", "http", "https")
             and result.netloc == "onlinejudge.u-aizu.ac.jp"
@@ -702,7 +702,7 @@ class AOJArenaProblem(_BaseProblem):
         if (
             result.scheme in ("", "http", "https")
             and result.netloc == "onlinejudge.u-aizu.ac.jp"
-            and _normpath(result.path) == "/services/room.html"
+            and normalize_url_path(result.path) == "/services/room.html"
         ):
             fragment = result.fragment.split("/")
             if len(fragment) == 3 and fragment[1] == "problems":  # noqa: PLR2004
@@ -721,7 +721,7 @@ class LocalProblem(TestCaseProvider):
         return iter_testcases(directory=self.path, recursive=True)
 
 
-def _normpath(path: str) -> str:
+def normalize_url_path(path: str) -> str:
     """A wrapper of posixpath.normpath.
 
     posixpath.normpath doesn't collapse a leading duplicated slashes.

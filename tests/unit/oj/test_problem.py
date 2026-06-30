@@ -1,11 +1,13 @@
 import pytest
 
 from competitive_verifier.oj.problem import (
-    _normpath,  # pyright: ignore[reportPrivateUsage]
+    NotLoggedInError,
+    YukicoderProblem,
+    normalize_url_path,
     problem_from_url,
 )
 
-test_normpath_params: list[tuple[str, str]] = [
+test_normalize_url_path_params: list[tuple[str, str]] = [
     ("hoge/foo/bar", "hoge/foo/bar"),
     ("/foo/bar", "/foo/bar"),
     ("//foo/bar", "/foo/bar"),
@@ -14,11 +16,11 @@ test_normpath_params: list[tuple[str, str]] = [
 
 @pytest.mark.parametrize(
     ("path", "expected"),
-    test_normpath_params,
-    ids=[t[0] for t in test_normpath_params],
+    test_normalize_url_path_params,
+    ids=[t[0] for t in test_normalize_url_path_params],
 )
-def test_normpath(path: str, expected: str):
-    assert _normpath(path) == expected
+def test_normalize_url_path(path: str, expected: str):
+    assert normalize_url_path(path) == expected
 
 
 test_problem_repr_params = [
@@ -84,3 +86,34 @@ test_problem_repr_params = [
 )
 def test_problem_repr(url: str, expected: str):
     assert repr(problem_from_url(url)) == expected
+
+
+def test_yukicoder_token_rejects_ansi_escape(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("YUKICODER_TOKEN", "dummy-token\x1b[C")
+
+    with pytest.raises(NotLoggedInError, match="control characters"):
+        YukicoderProblem.yukicoder_headers()
+
+
+def test_yukicoder_token_rejects_surrounding_whitespace(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("YUKICODER_TOKEN", "dummy-token ")
+
+    with pytest.raises(NotLoggedInError, match="whitespace"):
+        YukicoderProblem.yukicoder_headers()
+
+
+def test_yukicoder_token_rejects_assignment_text(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("YUKICODER_TOKEN", "YUKICODER_TOKEN=dummy-token")
+
+    with pytest.raises(NotLoggedInError, match="assignment"):
+        YukicoderProblem.yukicoder_headers()
+
+
+def test_yukicoder_token_accepts_visible_ascii(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("YUKICODER_TOKEN", "abcDEF0123._-+/=")
+
+    assert YukicoderProblem.yukicoder_headers() == {
+        "Authorization": "Bearer abcDEF0123._-+/="
+    }
