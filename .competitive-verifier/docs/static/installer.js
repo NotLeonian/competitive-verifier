@@ -23,7 +23,7 @@
   function yamlTextProperty(name, text) {
     const arr = text.split(/\r?\n/)
     arr.splice(0, 0, `${name}: |`)
-    return arr.join('\n' + inputStringHeadSpace)
+    return arr.join(`\n${inputStringHeadSpace}`)
   }
 
   /**
@@ -100,7 +100,7 @@
   function buildActionYaml() {
     try {
       const branch = inputBranch.value.trim()
-      const parallelSize = parseInt(inputParallelSize.value.trim())
+      const parallelSize = parseInt(inputParallelSize.value.trim(), 10)
       const configToml = inputConfigToml.value.trim()
       const include = inputInclude.value.trim()
       const exclude = inputExclude.value.trim()
@@ -304,7 +304,7 @@ jobs:
 `
 
       if (initializeForResolving.length > 0) {
-        actionYaml += stepDefinition(["      # Initialize your own environment for resolving.", ...initializeForResolving]) + "\n"
+        actionYaml += `${stepDefinition(["      # Initialize your own environment for resolving.", ...initializeForResolving])}\n`
       }
 
       actionYaml += `
@@ -329,7 +329,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     env:
-      SPLIT_SIZE: "${parseInt(inputParallelSize.value.trim())}"
+      SPLIT_SIZE: "${parallelSize}"
     strategy:
       matrix:
         # prettier-ignore
@@ -364,7 +364,7 @@ jobs:
           cache-pip: true
 `
       if (initializeForVerification.length > 0) {
-        actionYaml += stepDefinition(["      # Initialize your own environment for verification.", ...initializeForVerification]) + "\n"
+        actionYaml += `${stepDefinition(["      # Initialize your own environment for verification.", ...initializeForVerification])}\n`
       }
 
       actionYaml += `
@@ -612,8 +612,8 @@ jobs:
       const badgeVerifyRaw = document.getElementById('badge-verify-raw')
       const badgeVerifyLink = document.getElementById('badge-verify-link')
       const badgeVerifyImg = document.getElementById('badge-verify-img')
-      const link = repoRoot + "/actions"
-      const img = repoRoot + "/actions/workflows/verify.yml/badge.svg"
+      const link = `${repoRoot}/actions`
+      const img = `${repoRoot}/actions/workflows/verify.yml/badge.svg`
       badgeVerifyRaw.value = `[![Actions Status](${img})](${link})`
       badgeVerifyLink.href = link
       badgeVerifyImg.src = img
@@ -646,9 +646,9 @@ jobs:
     if (repsitory.endsWith('.git')) {
       repsitory = repsitory.substring(0, repsitory.length - 4)
     }
-    let found = repsitory.match(/github.com\/([^/]+)\/([^\/]+)$/)
+    let found = repsitory.match(/github.com\/([^/]+)\/([^/]+)$/)
     if (!found) {
-      found = repsitory.match(/^([^\/]+)\/([^\/]+)$/)
+      found = repsitory.match(/^([^/]+)\/([^/]+)$/)
     }
     return found
   }
