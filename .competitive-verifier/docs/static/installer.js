@@ -1,4 +1,4 @@
-(async function () {
+(async () => {
   /**
    *  @param {string[]} lines
    *  @return {string} string with head space
@@ -23,7 +23,7 @@
   function yamlTextProperty(name, text) {
     const arr = text.split(/\r?\n/)
     arr.splice(0, 0, `${name}: |`)
-    return arr.join('\n' + inputStringHeadSpace)
+    return arr.join(`\n${inputStringHeadSpace}`)
   }
 
   /**
@@ -31,7 +31,7 @@
    *  @return {string} yaml array
    */
   function parallelIndexMatrix(size) {
-    if (isNaN(size)) {
+    if (Number.isNaN(size)) {
       throw new Error('Parallel size must be integer.')
     } else if (size < 1) {
       throw new Error('Parallel size must be positive.')
@@ -100,7 +100,7 @@
   function buildActionYaml() {
     try {
       const branch = inputBranch.value.trim()
-      const parallelSize = parseInt(inputParallelSize.value.trim())
+      const parallelSize = parseInt(inputParallelSize.value.trim(), 10)
       const configToml = inputConfigToml.value.trim()
       const include = inputInclude.value.trim()
       const exclude = inputExclude.value.trim()
@@ -212,11 +212,11 @@
             '  run: dotnet tool install -g CompetitiveVerifierCsResolver',
             '# required only if you have unit test.',
             '- name: Unit test',
-            '  run: dotnet test $UNITTEST_CSPROJ --logger "CompetitiveVerifier;OutDirectory=${{runner.temp}}/VerifierCsUnitTestResult" --no-build  -c Release',
+            `  run: dotnet test $UNITTEST_CSPROJ --logger "CompetitiveVerifier;OutDirectory=\${{runner.temp}}/VerifierCsUnitTestResult" --no-build  -c Release`,
             '  env:',
             '    UNITTEST_CSPROJ: YourUnittest.csproj',
             '- name: Resolve',
-            '  run: dotnet run --project $VERIFY_CSPROJ --no-launch-profile --no-build -c Release | tee ${{runner.temp}}/problems.json',
+            `  run: dotnet run --project $VERIFY_CSPROJ --no-launch-profile --no-build -c Release | tee \${{runner.temp}}/problems.json`,
             '  env:',
             '    VERIFY_CSPROJ: YourVerify.csproj',
             '- name: cs-resolve',
@@ -227,8 +227,8 @@
             '    # Specify patterns',
             includeParam,
             excludeParam,
-            '    unittest-result: ${{runner.temp}}/VerifierCsUnitTestResult/*.csv',
-            '    problems: ${{runner.temp}}/problems.json',
+            `    unittest-result: \${{runner.temp}}/VerifierCsUnitTestResult/*.csv`,
+            `    problems: \${{runner.temp}}/problems.json`,
           )
 
           initializeForVerification.push(...setup)
@@ -304,7 +304,7 @@ jobs:
 `
 
       if (initializeForResolving.length > 0) {
-        actionYaml += stepDefinition(["      # Initialize your own environment for resolving.", ...initializeForResolving]) + "\n"
+        actionYaml += `${stepDefinition(["      # Initialize your own environment for resolving.", ...initializeForResolving])}\n`
       }
 
       actionYaml += `
@@ -329,7 +329,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     env:
-      SPLIT_SIZE: "${parseInt(inputParallelSize.value.trim())}"
+      SPLIT_SIZE: "${parallelSize}"
     strategy:
       matrix:
         # prettier-ignore
@@ -364,7 +364,7 @@ jobs:
           cache-pip: true
 `
       if (initializeForVerification.length > 0) {
-        actionYaml += stepDefinition(["      # Initialize your own environment for verification.", ...initializeForVerification]) + "\n"
+        actionYaml += `${stepDefinition(["      # Initialize your own environment for verification.", ...initializeForVerification])}\n`
       }
 
       actionYaml += `
@@ -404,14 +404,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2147483647
-  
+
       - name: Download verify_files.json and all artifacts
         id: all-artifacts
         uses: competitive-verifier/actions/download-verify-artifact@v2
         with:
           download-all: true
           artifact-root: .artifacts/
-  
+
       - name: Extract bundled
         shell: bash
         run: |
@@ -424,7 +424,7 @@ jobs:
           fi
         env:
           SRCDIR: .artifacts/Bundled-\${{ runner.os }}
-  
+
       - name: Set up competitive-verifier
         uses: competitive-verifier/actions/setup@v2
         with:
@@ -602,7 +602,7 @@ jobs:
       outputCreateActionLink.href = createUrl
 
       const editUrl = `${repoRoot}/edit/${inputBranch.value}/.github/workflows/verify.yml`;
-      (async function () {
+      (async () => {
         const editResponse = await fetch(`https://api.github.com/repos/${repoUser}/${repoName}/contents/.github/workflows/verify.yml`)
         if (editResponse.ok)
           outputCreateActionLink.href = editUrl
@@ -612,8 +612,8 @@ jobs:
       const badgeVerifyRaw = document.getElementById('badge-verify-raw')
       const badgeVerifyLink = document.getElementById('badge-verify-link')
       const badgeVerifyImg = document.getElementById('badge-verify-img')
-      const link = repoRoot + "/actions"
-      const img = repoRoot + "/actions/workflows/verify.yml/badge.svg"
+      const link = `${repoRoot}/actions`
+      const img = `${repoRoot}/actions/workflows/verify.yml/badge.svg`
       badgeVerifyRaw.value = `[![Actions Status](${img})](${link})`
       badgeVerifyLink.href = link
       badgeVerifyImg.src = img
@@ -646,9 +646,9 @@ jobs:
     if (repsitory.endsWith('.git')) {
       repsitory = repsitory.substring(0, repsitory.length - 4)
     }
-    let found = repsitory.match(/github.com\/([^\/]+)\/([^\/]+)$/)
+    let found = repsitory.match(/github.com\/([^/]+)\/([^/]+)$/)
     if (!found) {
-      found = repsitory.match(/^([^\/]+)\/([^\/]+)$/)
+      found = repsitory.match(/^([^/]+)\/([^/]+)$/)
     }
     return found
   }
