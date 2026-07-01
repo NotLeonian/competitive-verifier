@@ -62,16 +62,16 @@
 *.zsh   text diff=bash
 
 # Java
-*.java text diff=java
+*.java  text diff=java
 
 # Go
-*.go text diff=golang
+*.go    text diff=golang
 
 # Rust
-*.rs text diff=rust
+*.rs    text diff=rust
 
 # Awk
-*.awk text
+*.awk   text
 
 # HTML
 *.html  text diff=html
@@ -84,7 +84,7 @@
 *.js    text
 
 # JSON
-*.json text
+*.json  text
 
 # YAML
 *.yml   text
