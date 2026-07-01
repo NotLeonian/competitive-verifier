@@ -404,14 +404,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2147483647
-  
+
       - name: Download verify_files.json and all artifacts
         id: all-artifacts
         uses: competitive-verifier/actions/download-verify-artifact@v2
         with:
           download-all: true
           artifact-root: .artifacts/
-  
+
       - name: Extract bundled
         shell: bash
         run: |
@@ -424,7 +424,7 @@ jobs:
           fi
         env:
           SRCDIR: .artifacts/Bundled-\${{ runner.os }}
-  
+
       - name: Set up competitive-verifier
         uses: competitive-verifier/actions/setup@v2
         with:
@@ -602,7 +602,7 @@ jobs:
       outputCreateActionLink.href = createUrl
 
       const editUrl = `${repoRoot}/edit/${inputBranch.value}/.github/workflows/verify.yml`;
-      (async function () {
+      (async () => {
         const editResponse = await fetch(`https://api.github.com/repos/${repoUser}/${repoName}/contents/.github/workflows/verify.yml`)
         if (editResponse.ok)
           outputCreateActionLink.href = editUrl
@@ -646,7 +646,7 @@ jobs:
     if (repsitory.endsWith('.git')) {
       repsitory = repsitory.substring(0, repsitory.length - 4)
     }
-    let found = repsitory.match(/github.com\/([^\/]+)\/([^\/]+)$/)
+    let found = repsitory.match(/github.com\/([^/]+)\/([^\/]+)$/)
     if (!found) {
       found = repsitory.match(/^([^\/]+)\/([^\/]+)$/)
     }
