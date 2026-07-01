@@ -39,3 +39,17 @@ indent_size = 2
 # Generated JSON schema files
 [*.schema.json]
 indent_size = 2
+
+# Git bundle files
+[*.bundle]
+end_of_line = unset
+charset = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+
+# Test fixtures
+[*.{hello,in,out,txt}]
+end_of_line = unset
+charset = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
