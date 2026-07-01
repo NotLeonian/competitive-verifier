@@ -1,4 +1,4 @@
-(async function () {
+(async () => {
   /**
    *  @param {string[]} lines
    *  @return {string} string with head space
@@ -31,7 +31,7 @@
    *  @return {string} yaml array
    */
   function parallelIndexMatrix(size) {
-    if (isNaN(size)) {
+    if (Number.isNaN(size)) {
       throw new Error('Parallel size must be integer.')
     } else if (size < 1) {
       throw new Error('Parallel size must be positive.')
@@ -212,11 +212,11 @@
             '  run: dotnet tool install -g CompetitiveVerifierCsResolver',
             '# required only if you have unit test.',
             '- name: Unit test',
-            '  run: dotnet test $UNITTEST_CSPROJ --logger "CompetitiveVerifier;OutDirectory=${{runner.temp}}/VerifierCsUnitTestResult" --no-build  -c Release',
+            `  run: dotnet test $UNITTEST_CSPROJ --logger "CompetitiveVerifier;OutDirectory=\${{runner.temp}}/VerifierCsUnitTestResult" --no-build  -c Release`,
             '  env:',
             '    UNITTEST_CSPROJ: YourUnittest.csproj',
             '- name: Resolve',
-            '  run: dotnet run --project $VERIFY_CSPROJ --no-launch-profile --no-build -c Release | tee ${{runner.temp}}/problems.json',
+            `  run: dotnet run --project $VERIFY_CSPROJ --no-launch-profile --no-build -c Release | tee \${{runner.temp}}/problems.json`,
             '  env:',
             '    VERIFY_CSPROJ: YourVerify.csproj',
             '- name: cs-resolve',
@@ -227,8 +227,8 @@
             '    # Specify patterns',
             includeParam,
             excludeParam,
-            '    unittest-result: ${{runner.temp}}/VerifierCsUnitTestResult/*.csv',
-            '    problems: ${{runner.temp}}/problems.json',
+            `    unittest-result: \${{runner.temp}}/VerifierCsUnitTestResult/*.csv`,
+            `    problems: \${{runner.temp}}/problems.json`,
           )
 
           initializeForVerification.push(...setup)
