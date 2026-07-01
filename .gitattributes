@@ -55,3 +55,50 @@
 *.pyc   binary
 *.pyo   binary
 *.pyd   binary
+
+# Shell
+*.sh    text diff=bash
+*.bash  text diff=bash
+*.zsh   text diff=bash
+
+# Java
+*.java text diff=java
+
+# Go
+*.go text diff=golang
+
+# Rust
+*.rs text diff=rust
+
+# Awk
+*.awk text
+
+# HTML
+*.html  text diff=html
+
+# CSS
+*.css   text diff=css
+*.scss  text diff=css
+
+# JavaScript
+*.js    text
+
+# JSON
+*.json text
+
+# YAML
+*.yml   text
+*.yaml  text
+
+# Configuration and lock files
+*.toml  text
+*.lock  text
+
+# Git bundle files
+*.bundle binary
+
+# Test fixtures
+*.hello text -eol
+*.in    text -eol
+*.out   text -eol
+*.txt   text=auto -eol
