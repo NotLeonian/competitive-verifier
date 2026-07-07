@@ -67,6 +67,8 @@ class IntegrationData:
     def check_environment(self) -> bool:
         return type(self).environment_skip_reason() is None
 
-    def expected_verify_json(self) -> dict[str, Any]: ...
+    def expected_verify_json(self) -> dict[str, Any]:
+        raise NotImplementedError
 
-    def expected_verify_result(self) -> dict[str, Any]: ...
+    def expected_verify_result(self) -> dict[str, Any]:
+        raise NotImplementedError
