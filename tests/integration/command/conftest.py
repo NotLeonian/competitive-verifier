@@ -119,7 +119,9 @@ def user_defined_and_python_data(
     file_paths: FilePaths,
     set_config_dir: ConfigDirSetter,
 ) -> UserDefinedAndPythonData:
-    return UserDefinedAndPythonData(monkeypatch, set_config_dir, file_paths)
+    d = UserDefinedAndPythonData(monkeypatch, set_config_dir, file_paths)
+    d.skip_if_environment_unavailable()
+    return d
 
 
 @pytest.fixture
@@ -158,5 +160,5 @@ def integration_data(
     cls = request.param
     assert issubclass(cls, IntegrationData)
     d = cls(monkeypatch, set_config_dir, file_paths)
-    assert d.check_environment()
+    d.skip_if_environment_unavailable()
     return d

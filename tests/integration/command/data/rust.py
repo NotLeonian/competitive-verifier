@@ -1,12 +1,10 @@
-import shutil
 from typing import Any
 
 from .integration_data import IntegrationData
 
 
 class RustWithoutConfigData(IntegrationData):
-    def check_environment(self) -> bool:
-        return bool(shutil.which("rustc"))
+    required_commands = ("cargo", "rustc")
 
     @classmethod
     def input_name(cls) -> str:

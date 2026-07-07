@@ -1,4 +1,7 @@
+import functools
 import pathlib
+import shutil
+import subprocess
 from typing import Any
 
 from competitive_verifier.oj.gnu import time_command
@@ -7,6 +10,16 @@ from .integration_data import IntegrationData
 
 
 class UserDefinedAndPythonData(IntegrationData):
+    required_commands = ("awk", "find", "ls", "normalizer", "python", "sed", "true")
+
+    @classmethod
+    def environment_skip_reason(cls) -> str | None:
+        if reason := super().environment_skip_reason():
+            return reason
+        if not _awk_supports_include():
+            return "UserDefinedAndPythonData requires GNU awk for @include support"
+        return None
+
     @property
     def bundle_euc_ke_path(self):
         return self.config_dir_path / "bundled/encoding/EUC-KR.txt"
@@ -1461,3 +1474,18 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
             },
         }
+
+
+@functools.cache
+def _awk_supports_include() -> bool:
+    awk = shutil.which("awk")
+    if awk is None:
+        return False
+
+    result = subprocess.run(
+        [awk, "--version"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0 and "GNU Awk" in result.stdout + result.stderr
