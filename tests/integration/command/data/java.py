@@ -1,12 +1,10 @@
-import shutil
 from typing import Any
 
 from .integration_data import IntegrationData
 
 
 class JavaData(IntegrationData):
-    def check_environment(self) -> bool:
-        return bool(shutil.which("javac"))
+    required_commands = ("java", "javac")
 
     def expected_verify_json(self) -> dict[str, Any]:
         return {

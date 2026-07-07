@@ -1,4 +1,3 @@
-import shutil
 from typing import Any
 
 import pytest
@@ -8,8 +7,7 @@ from .integration_data import IntegrationData
 
 
 class GoWithoutConfigData(IntegrationData):
-    def check_environment(self) -> bool:
-        return bool(shutil.which("go"))
+    required_commands = ("go",)
 
     @classmethod
     def input_name(cls) -> str:

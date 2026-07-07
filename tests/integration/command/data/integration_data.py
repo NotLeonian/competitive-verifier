@@ -1,4 +1,5 @@
 import pathlib
+import shutil
 from typing import Any
 
 import pytest
@@ -7,6 +8,7 @@ from ..types import ConfigDirSetter, FilePaths
 
 
 class IntegrationData:
+    required_commands: tuple[str, ...] = ()
     config_dir_path: pathlib.Path
     targets_path: pathlib.Path
     file_paths: FilePaths
@@ -44,9 +46,29 @@ class IntegrationData:
 
     def assert_oj_resolve(self): ...
 
+    @classmethod
+    def missing_commands(cls) -> tuple[str, ...]:
+        return tuple(
+            command
+            for command in cls.required_commands
+            if shutil.which(command) is None
+        )
+
+    @classmethod
+    def environment_skip_reason(cls) -> str | None:
+        if missing_commands := cls.missing_commands():
+            return f"{cls.__name__} requires commands: {', '.join(missing_commands)}"
+        return None
+
+    def skip_if_environment_unavailable(self) -> None:
+        if reason := type(self).environment_skip_reason():
+            pytest.skip(reason)
+
     def check_environment(self) -> bool:
-        return True
+        return type(self).environment_skip_reason() is None
 
-    def expected_verify_json(self) -> dict[str, Any]: ...
+    def expected_verify_json(self) -> dict[str, Any]:
+        raise NotImplementedError
 
-    def expected_verify_result(self) -> dict[str, Any]: ...
+    def expected_verify_result(self) -> dict[str, Any]:
+        raise NotImplementedError

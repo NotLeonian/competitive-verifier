@@ -1,4 +1,3 @@
-import shutil
 from typing import Any
 
 import pytest
@@ -8,8 +7,7 @@ from .integration_data import IntegrationData
 
 
 class CppWithoutConfigData(IntegrationData):
-    def check_environment(self) -> bool:
-        return bool(shutil.which("g++") and shutil.which("clang++"))
+    required_commands = ("clang++", "g++")
 
     @classmethod
     def input_name(cls) -> str:
