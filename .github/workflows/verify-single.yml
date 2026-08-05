@@ -23,7 +23,7 @@ jobs:
     if: inputs.enabled
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: go test
         id: go-unittest
@@ -65,7 +65,7 @@ jobs:
           java-version: "17"
 
       - name: Install dependencies (Go)
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         if: ${{ inputs.name == 'go' }}
         with:
           # go.mod などもないのでキャッシュできない
