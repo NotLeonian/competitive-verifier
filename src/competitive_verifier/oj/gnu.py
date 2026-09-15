@@ -129,6 +129,6 @@ def check_gnu_time(gnu_time: str) -> bool:
         raise  # NameError is not a runtime error caused by the environment, but a coding mistake
     except AttributeError:
         raise  # AttributeError is also a mistake
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.debug("Failed to check gnu_time: %s", gnu_time, exc_info=True)
     return False

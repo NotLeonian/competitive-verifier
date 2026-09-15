@@ -98,7 +98,7 @@ class PageRenderData(RenderBaseModel):
 
     timestamp: Annotated[
         datetime.datetime,
-        PlainSerializer(lambda x: str(x), return_type=str, when_used="json"),
+        PlainSerializer(str, return_type=str, when_used="json"),
     ]
     attributes: dict[str, Any]
     testcases: list[EnvTestcaseResult] | None = None

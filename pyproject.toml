@@ -174,6 +174,7 @@ allowed-confusables = ["ノ"]
 
 select = ["ALL"]
 ignore = [
+    "CPY001",
     "D100",
     "D101",
     "D102",
@@ -222,7 +223,6 @@ convention = "google"
 "__init__.py" = ["D104", "F401"]
 "tests/**" = [
     "ARG",
-    "CPY001",
     "DTZ",
     "S101",
     "S311",
@@ -238,7 +238,9 @@ convention = "google"
     "PLR0911",
     "PLR2004",
     "PLR0913",
+    "PLR0917",
 ]
+"tests/unit/test_log.py" = ["LOG"]
 "src/competitive_verifier/*/main.py" = ["BLE001"]
 "src/competitive_verifier/**" = ["T201"]
 "src/competitive_verifier/oj/languages/**" = [
