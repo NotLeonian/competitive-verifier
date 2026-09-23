@@ -242,6 +242,7 @@ class TestCommandDownload:
                 t.name: t.output_path.read_bytes() for t in testcases
             } == expected_outputs
 
+    @pytest.mark.skip("Arena api is Gone")
     @pytest.mark.integration
     def test_aizu_onlinejudge_arena(self, download_config_dir: pathlib.Path):
         url = "https://onlinejudge.u-aizu.ac.jp/services/room.html#RitsCamp19Day2/problems/A"
