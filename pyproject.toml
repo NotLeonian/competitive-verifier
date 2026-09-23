@@ -44,7 +44,7 @@ pytest-cov = "^7.0.0"
 
 [tool.poetry.group.dev.dependencies]
 poethepoet = "^0.43.0"
-ruff = "^0.14.10"
+ruff = "^0.16.2"
 pyright = "^1.1.407"
 types-requests = "^2.33.0.20260518"
 
@@ -204,6 +204,7 @@ allowed-confusables = ["ノ"]
 
 select = ["ALL"]
 ignore = [
+    "CPY001",
     "D100",
     "D101",
     "D102",
@@ -267,7 +268,9 @@ convention = "google"
     "PLR0911",
     "PLR2004",
     "PLR0913",
+    "PLR0917",
 ]
+"tests/unit/test_log.py" = ["LOG"]
 "src/competitive_verifier/*/main.py" = ["BLE001"]
 "src/competitive_verifier/**" = ["T201"]
 "src/competitive_verifier/oj/languages/**" = [

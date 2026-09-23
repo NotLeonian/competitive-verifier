@@ -970,7 +970,7 @@ def test_single_case_error(
 
     mocker.patch("competitive_verifier.oj.gnu.time_command", return_value="time")
     for cmd in ["", ":no_exists:"]:
-        with subtests.test(msg=cmd if cmd else "<empty>"):
+        with subtests.test(msg=cmd or "<empty>"):
             caplog.clear()
             assert (
                 single_case(
