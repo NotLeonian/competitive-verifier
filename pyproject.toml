@@ -25,14 +25,14 @@ competitive-verifier = "competitive_verifier.app:main"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-colorlog = "^6.10.1"
+colorlog = "^6.12.0"
 colorama = "^0.4.6"
-pydantic = "^2.12.5"
+pydantic = "^2.13.5"
 pyyaml = "^6.0.3"
 importlab = "^0.8.1"
-charset-normalizer = "^3.4.4"
+charset-normalizer = "^3.5.1"
 tomli = { version = "^2.0.1", python = "<3.11" }
-requests = "^2.33.0"
+requests = "^2.34.2"
 appdirs = "^1.4.4"
 natsort = "^8.4.0"
 
@@ -43,10 +43,10 @@ pytest-order = "^1.5.0"
 pytest-cov = "^7.1.0"
 
 [tool.poetry.group.dev.dependencies]
-poethepoet = "^0.43.0"
+poethepoet = "^0.48.0"
 ruff = "^0.16.9"
 pyright = "^1.1.414"
-types-requests = "^2.33.0.20260518"
+types-requests = "^2.33.0.20260906"
 
 [tool.poe]
 envfile.optional = [".env"]
