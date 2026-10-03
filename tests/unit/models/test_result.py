@@ -258,6 +258,7 @@ def test_file_result_need_verification(
     dt: datetime,
     expected: NeedVerification,
 ):
+    assert obj.need_verification(dt) is expected
     assert obj.need_verification(base_time=dt) is expected
     assert bool(expected) == (expected is not NeedVerification.NO)
 

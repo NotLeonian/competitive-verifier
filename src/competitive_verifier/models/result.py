@@ -143,8 +143,8 @@ class FileResult(BaseModel):
 
     def need_verification(
         self,
-        *,
         base_time: datetime.datetime | None = None,
+        *,
         content_hash: str | None = None,
     ) -> NeedVerification:
         """Whether the file has changed since this result.
