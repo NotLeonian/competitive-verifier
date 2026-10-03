@@ -128,10 +128,10 @@ class FileResult(BaseModel):
 
     content_hash: str | None = Field(
         default=None,
-        description="Digest of the file and its transitive dependencies"
-        " at verification time.",
+        description="Digest of the file, its transitive dependencies,"
+        " and verification settings at verification time.",
     )
-    """Digest of the file and its transitive dependencies at verification time.
+    """Digest of the sources and verification settings at verification time.
     """
 
     newest: bool = Field(

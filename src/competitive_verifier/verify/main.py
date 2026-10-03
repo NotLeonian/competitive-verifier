@@ -131,8 +131,8 @@ class Verify(
             default="timestamp",
             help="How to detect whether a file has changed since the prev-result:"
             " 'timestamp' (default) compares its modification time with the"
-            " previous verification time; 'hash' compares a content hash of the"
-            " file and its transitive dependencies.",
+            " previous verification time; 'hash' compares a hash of the file,"
+            " its transitive dependencies, and verification settings.",
         )
 
         parser.add_argument(

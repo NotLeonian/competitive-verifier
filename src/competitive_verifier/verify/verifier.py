@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import json
 import pathlib
 import time
 from abc import ABC, abstractmethod
@@ -57,6 +58,8 @@ class InputContainer(ABC):
     prev_result: VerifyCommandResult | None
     change_detection: ChangeDetection
     split_state: SplitState | None
+    default_tle: float | None
+    default_mle: float | None
 
     def __init__(
         self,
@@ -66,24 +69,42 @@ class InputContainer(ABC):
         prev_result: VerifyCommandResult | None,
         split_state: SplitState | None,
         change_detection: ChangeDetection = "timestamp",
+        default_tle: float | None = None,
+        default_mle: float | None = None,
     ) -> None:
         self.verifications = verifications
         self.verification_time = verification_time
         self.prev_result = prev_result
         self.change_detection = change_detection
         self.split_state = split_state
+        self.default_tle = default_tle
+        self.default_mle = default_mle
 
     @abstractmethod
     def get_file_timestamp(self, path: pathlib.Path) -> datetime.datetime: ...
 
     def file_content_hash(self, path: pathlib.Path) -> str | None:
-        """Digest of the file and its transitive dependencies.
+        """Digest of the sources and verification settings for the file.
 
         ``None`` if any dependency is missing.
         """
         if path not in self.verifications.files:
             return None
-        return content_hash(self.verifications.transitive_depends_on[path])
+        source_hash = content_hash(self.verifications.transitive_depends_on[path])
+        if source_hash is None:
+            return None
+        cache_inputs = {
+            "source_hash": source_hash,
+            "verifications": [
+                v.model_dump(mode="json")
+                for v in self.verifications.files[path].verification_list
+            ],
+            "default_tle": self.default_tle,
+            "default_mle": self.default_mle,
+        }
+        return hashlib.sha256(
+            json.dumps(cache_inputs, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
 
     def file_need_verification(
         self,
@@ -162,8 +183,6 @@ class InputContainer(ABC):
 
 class BaseVerifier(InputContainer):
     timeout: float
-    default_tle: float | None
-    default_mle: float | None
     split_state: SplitState | None
 
     _result: VerifyCommandResult | None
@@ -186,11 +205,11 @@ class BaseVerifier(InputContainer):
             prev_result=prev_result,
             split_state=split_state,
             change_detection=change_detection,
+            default_tle=default_tle,
+            default_mle=default_mle,
         )
         self._input = verifications
         self.timeout = timeout
-        self.default_tle = default_tle
-        self.default_mle = default_mle
         self._result = None
 
     @property

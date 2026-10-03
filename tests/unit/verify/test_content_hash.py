@@ -90,16 +90,81 @@ def _input() -> dict[str, Any]:
 
 
 def test_file_content_hash_covers_transitive_dependencies():
-    assert _file_content_hash(_input()) == content_hash(
-        [pathlib.Path("foo.py"), pathlib.Path("bar.py")]
+    obj = _input()
+    obj["files"]["bar.py"]["dependencies"] = ["baz.py"]
+    obj["files"]["baz.py"] = {}
+    pathlib.Path("baz.py").write_bytes(b"print(3)")
+    before = _file_content_hash(obj)
+    assert before is not None
+    pathlib.Path("baz.py").write_bytes(b"print(4)")
+    assert _file_content_hash(obj) != before
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("command", "false"),
+        ("command", {"command": "true", "env": {"MODE": "strict"}}),
+        ("command", {"command": "true", "cwd": "other"}),
+        ("compile", "compile foo.py"),
+        ("input", "other-cases"),
+        ("name", "other-verification"),
+        ("tle", 1.0),
+        ("mle", 64.0),
+        ("error", 1e-6),
+        ("tempdir", "other-tempdir"),
+    ],
+)
+def test_file_content_hash_changes_with_verification_settings(field: str, value: Any):
+    obj = _input()
+    before = _file_content_hash(obj)
+    assert before is not None
+    obj["files"]["foo.py"]["verification"][field] = value
+    assert _file_content_hash(obj) != before
+
+
+def test_file_content_hash_changes_with_problem_url():
+    obj = _input()
+    obj["files"]["foo.py"]["verification"] = {
+        "type": "problem",
+        "command": "true",
+        "problem": "https://judge.yosupo.jp/problem/aplusb",
+    }
+    before = _file_content_hash(obj)
+    assert before is not None
+    obj["files"]["foo.py"]["verification"]["problem"] = (
+        "https://judge.yosupo.jp/problem/many_aplusb"
     )
-    assert _file_content_hash(_input(), "bar.py") == content_hash(
-        [pathlib.Path("bar.py")]
-    )
+    assert _file_content_hash(obj) != before
+
+
+def test_file_content_hash_normalizes_verification_list_and_key_order():
+    obj = _input()
+    verification = obj["files"]["foo.py"]["verification"]
+    verification["command"] = {"command": "true", "env": {"A": "1", "B": "2"}}
+    before = _file_content_hash(obj)
+    assert before is not None
+    verification["command"]["env"] = {"B": "2", "A": "1"}
+    obj["files"]["foo.py"]["verification"] = [verification]
+    assert _file_content_hash(obj) == before
+
+
+def test_file_content_hash_ignores_documentation_and_other_verifications():
+    obj = _input()
+    before = _file_content_hash(obj)
+    assert before is not None
+    obj["files"]["foo.py"]["document_attributes"] = {"TITLE": "New title"}
+    obj["files"]["bar.py"]["verification"] = {"type": "command", "command": "false"}
+    assert _file_content_hash(obj) == before
 
 
 def test_file_content_hash_none_for_unknown_file():
     assert _file_content_hash(_input(), "unknown.py") is None
+
+
+def test_file_content_hash_none_for_missing_dependency():
+    pathlib.Path("bar.py").unlink()
+    assert _file_content_hash(_input()) is None
 
 
 def test_file_content_hash_ignores_testdata():

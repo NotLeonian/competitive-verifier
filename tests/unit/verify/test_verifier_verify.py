@@ -25,6 +25,7 @@ from competitive_verifier.verify.verifier import (
     ChangeDetection,
     SplitState,
     Verifier,
+    content_hash,
 )
 from tests import LogComparer
 
@@ -526,6 +527,85 @@ def test_verify_content_hash_during_execution(
     verifier.change_detection = "hash"
     assert verifier.file_need_verification(source, file_result) is (
         changed_file is not None
+    )
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "unchanged",
+        "command",
+        "compile",
+        "problem",
+        "added",
+        "default_tle",
+        "default_mle",
+        "legacy_hash",
+    ],
+)
+def test_verify_reuses_only_matching_configuration(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    change: str,
+):
+    source = pathlib.Path("source.py")
+    source.write_bytes(b"unchanged source")
+    verification = {
+        "type": "problem",
+        "command": "run source.py",
+        "compile": "compile source.py",
+        "problem": "https://judge.yosupo.jp/problem/aplusb",
+    }
+    verification_list = [verification]
+
+    def create_verifier(
+        prev_result: VerifyCommandResult | None = None,
+        *,
+        default_tle: float | None = None,
+        default_mle: float | None = None,
+    ) -> Verifier:
+        return Verifier(
+            VerificationInput.model_validate(
+                {"files": {source: {"verification": verification_list}}}
+            ),
+            timeout=10,
+            default_tle=default_tle,
+            default_mle=default_mle,
+            prev_result=prev_result,
+            split_state=None,
+            use_git_timestamp=False,
+            change_detection="hash",
+        )
+
+    mocker.patch.object(ProblemVerification, "is_testdata_cached", return_value=True)
+    verifier = create_verifier()
+    initial_run = mocker.patch.object(
+        verifier, "run_verification", return_value=(SUCCESS, None)
+    )
+    previous = verifier.verify(download=False)
+    initial_run.assert_called_once()
+    assert previous.is_success()
+
+    if change in {"command", "compile", "problem"}:
+        verification[change] += "-changed"
+    elif change == "added":
+        verification_list.append({**verification, "name": "additional verification"})
+    elif change == "legacy_hash":
+        previous.files[source].content_hash = content_hash([source])
+
+    verifier = create_verifier(
+        VerifyCommandResult.model_validate_json(previous.model_dump_json()),
+        default_tle=1.0 if change == "default_tle" else None,
+        default_mle=64.0 if change == "default_mle" else None,
+    )
+    subsequent_run = mocker.patch.object(
+        verifier, "run_verification", return_value=(SUCCESS, None)
+    )
+    result = verifier.verify(download=False)
+    assert result.is_success()
+    assert result.files[source].newest is (change != "unchanged")
+    assert subsequent_run.call_count == (
+        0 if change == "unchanged" else len(verification_list)
     )
 
 
