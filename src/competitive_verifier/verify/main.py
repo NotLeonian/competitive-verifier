@@ -17,7 +17,7 @@ from competitive_verifier.arg import (
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import VerificationInput, VerifyCommandResult
 
-from .verifier import SplitState, Verifier
+from .verifier import ChangeDetection, SplitState, Verifier
 
 logger = getLogger(__name__)
 
@@ -37,6 +37,7 @@ class Verify(
     default_mle: float | None = None
 
     prev_result: pathlib.Path | None = None
+    change_detection: ChangeDetection = "timestamp"
 
     download: bool = True
 
@@ -56,6 +57,7 @@ class Verify(
                 self.prev_result,
                 extra={"github": GitHubMessageParams(file=self.prev_result)},
             )
+            return None
 
     def write_result(self, result: VerifyCommandResult):
         super().write_result(result)
@@ -123,6 +125,15 @@ class Verify(
             required=False,
             help="Previous result json file",
         )
+        parser.add_argument(
+            "--change-detection",
+            choices=("timestamp", "hash"),
+            default="timestamp",
+            help="How to detect whether a file has changed since the prev-result:"
+            " 'timestamp' (default) compares its modification time with the"
+            " previous verification time; 'hash' compares a hash of the file,"
+            " its transitive dependencies, and verification settings.",
+        )
 
         parser.add_argument(
             "--no-download",
@@ -165,6 +176,7 @@ class Verify(
             default_tle=self.default_tle,
             default_mle=self.default_mle,
             prev_result=prev_result,
+            change_detection=self.change_detection,
             split_state=self.split_state,
         )
         result = verifier.verify(download=self.download)
