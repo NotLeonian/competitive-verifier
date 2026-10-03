@@ -7,7 +7,13 @@ from .file import (
 )
 from .path import ForcePosixPath, RelativeDirectoryPath, SortedPathList, SortedPathSet
 from .problem import Problem, TestCaseData, TestCaseFile, TestCaseProvider
-from .result import FileResult, TestcaseResult, VerificationResult, VerifyCommandResult
+from .result import (
+    FileResult,
+    NeedVerification,
+    TestcaseResult,
+    VerificationResult,
+    VerifyCommandResult,
+)
 from .result_status import JudgeStatus, ResultStatus
 from .shell import ShellCommand, ShellCommandLike
 from .verification import (
@@ -33,6 +39,7 @@ __all__ = [
     "ForcePosixPath",
     "JudgeStatus",
     "LocalProblemVerification",
+    "NeedVerification",
     "Problem",
     "ProblemVerification",
     "RelativeDirectoryPath",
