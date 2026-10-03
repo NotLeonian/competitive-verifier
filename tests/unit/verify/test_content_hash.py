@@ -24,6 +24,20 @@ def test_content_hash_changes_with_content():
     assert content_hash([pathlib.Path("foo.py"), pathlib.Path("bar.py")]) != before
 
 
+def test_content_hash_preserves_file_boundaries_with_nul_bytes():
+    files = [pathlib.Path("a"), pathlib.Path("b")]
+    files[0].write_bytes(b"x")
+    files[1].write_bytes(b"\0b\0y")
+    before = content_hash(files)
+    assert before is not None
+
+    files[0].write_bytes(b"x\0b\0")
+    files[1].write_bytes(b"y")
+    after = content_hash(files)
+    assert after is not None
+    assert after != before
+
+
 def test_content_hash_changes_with_path():
     before = content_hash([pathlib.Path("foo.py")])
     pathlib.Path("foo.py").rename("baz.py")

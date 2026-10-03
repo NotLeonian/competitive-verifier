@@ -40,10 +40,10 @@ def content_hash(files: Iterable[pathlib.Path]) -> str | None:
             content = file.read_bytes()
         except OSError:
             return None
-        digest.update(file.as_posix().encode())
-        digest.update(b"\0")
-        digest.update(content)
-        digest.update(b"\0")
+        # Length prefixes preserve field boundaries even when content contains NUL.
+        for field in (file.as_posix().encode(), content):
+            digest.update(len(field).to_bytes(8, "big"))
+            digest.update(field)
     return digest.hexdigest()
 
 

@@ -43,8 +43,7 @@ class _BaseProblem(Problem):
         return iter_testcases(directory=self.test_directory)
 
     def is_testdata_cached(self) -> bool:
-        test_directory = self.test_directory
-        return test_directory.exists() and any(test_directory.iterdir())
+        return any(self.iter_system_cases())
 
     def download_system_cases(self) -> Iterable[TestCaseData] | bool:
         test_directory = self.test_directory

@@ -125,17 +125,41 @@ def test_yukicoder_token_accepts_visible_ascii(monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.mark.allow_mkdir
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://onlinejudge.u-aizu.ac.jp/problems/ITP1_1_A",
+        "https://yukicoder.me/problems/no/1088",
+    ],
+)
+@pytest.mark.parametrize("extension", ["in", "out"])
 def test_base_problem_is_testdata_cached(
-    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    url: str,
+    extension: str,
 ):
     monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, tmp_path.as_posix())
-    p = YukicoderProblem(problem_no=1088)
+    p = problem_from_url(url)
+    assert p is not None
     assert p.is_testdata_cached() is False
 
     p.test_directory.mkdir(parents=True)
     assert p.is_testdata_cached() is False
 
+    (p.test_directory / "README.txt").write_text("Test data cache")
+    (p.test_directory / "subdir").mkdir()
+    assert p.is_testdata_cached() is False
+
+    (p.test_directory / f"sample_00.{extension}").write_text("1 2\n")
+    assert p.is_testdata_cached() is False
+
+    other_extension = "out" if extension == "in" else "in"
+    (p.test_directory / f"sample_01.{other_extension}").write_text("3\n")
+    assert p.is_testdata_cached() is False
+
     (p.test_directory / "sample_00.in").write_text("1 2\n")
+    (p.test_directory / "sample_00.out").write_text("3\n")
     assert p.is_testdata_cached() is True
 
 

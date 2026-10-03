@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
+from competitive_verifier.config import COMPETITIVE_VERIFY_CONFIG_PATH
 from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import (
     ConstVerification,
@@ -17,6 +18,7 @@ from competitive_verifier.models import (
     VerificationResult,
     VerifyCommandResult,
 )
+from competitive_verifier.oj.problem import YukicoderProblem
 from competitive_verifier.verify.verifier import BaseVerifier, SplitState
 from tests import LogComparer
 
@@ -774,6 +776,44 @@ def test_verify_not_downloaded(
             github=GitHubMessageParams(),
         ),
     ]
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("extension", ["in", "out"])
+def test_verify_rejects_incomplete_testdata_cache(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
+    extension: str,
+):
+    monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, tmp_path.as_posix())
+    problem = YukicoderProblem(problem_no=1088)
+    problem.test_directory.mkdir(parents=True)
+    (problem.test_directory / f"sample_00.{extension}").write_text("1 2\n")
+    verifier = MockVerifier(
+        {
+            "files": {
+                "test/foo.py": {
+                    "verification": ProblemVerification(
+                        command="false", problem=problem.url
+                    ),
+                },
+            },
+        },
+        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+    )
+    download = mocker.patch("competitive_verifier.verify.verifier.run_download")
+    run = mocker.patch.object(
+        verifier, "run_verification", return_value=(ResultStatus.SUCCESS, None)
+    )
+
+    result = verifier.verify(download=False)
+
+    assert [
+        v.status for v in result.files[pathlib.Path("test/foo.py")].verifications
+    ] == [ResultStatus.FAILURE]
+    download.assert_not_called()
+    run.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_perf_counter")
