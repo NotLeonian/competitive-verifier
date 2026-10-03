@@ -64,14 +64,14 @@ test-quick = "pytest -m 'not integration'"
 test-integration = "pytest -m integration"
 test-use-prev-dest = "poe test --use-prev-dest"
 
-test-cov = { cmd = 'pytest -m="${integration:-}" --cov=${cov} --cov-branch --cov-report=html ${FILE_PATHS}', args = [
-    { name = "integration", type = "boolean", default = "not integration" },
+test-cov = { cmd = 'pytest -m="${mark}" --cov=${cov} --cov-branch --cov-report=html ${FILE_PATHS}', args = [
+    { name = "mark", default = "not integration" },
     { name = "cov", default = "." },
     { name = "FILE_PATHS", positional = true, multiple = true },
 ] }
 
-test-cov-watch = { shell = 'while true; do poe test-cov --mark="${integration:-integration}" --cov=${cov} ; sleep ${sleep}; done', args = [
-    { name = "integration", type = "boolean", default = "not integration" },
+test-cov-watch = { shell = 'while true; do poe test-cov --mark="${mark}" --cov=${cov} ; sleep ${sleep}; done', args = [
+    { name = "mark", default = "not integration" },
     { name = "cov", default = "." },
     { name = "sleep", default = "2s" },
 ] }

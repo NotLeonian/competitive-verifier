@@ -225,13 +225,7 @@ def test_config_dict_defined():
     }
 
 
-class ErrorDetailsWithUrl(ErrorDetails):
-    url: str
-
-
-test_oj_resolve_config_load_error_params: dict[
-    str, tuple[str, list[ErrorDetailsWithUrl]]
-] = {
+test_oj_resolve_config_load_error_params: dict[str, tuple[str, list[ErrorDetails]]] = {
     "cpp_no_CXX": (
         textwrap.dedent(
             r"""
@@ -246,7 +240,6 @@ test_oj_resolve_config_load_error_params: dict[
                 "loc": ("languages", "cpp", "environments", 0, "CXX"),
                 "msg": "Field required",
                 "type": "missing",
-                "url": "https://errors.pydantic.dev/2.12/v/missing",
             },
         ],
     ),
@@ -269,7 +262,6 @@ test_oj_resolve_config_load_error_params: dict[
                 "loc": ("languages", "java", "execute"),
                 "msg": 'Value error, You cannot overwrite "execute" for Java language',
                 "type": "value_error",
-                "url": "https://errors.pydantic.dev/2.12/v/value_error",
             },
             {
                 "ctx": {
@@ -281,7 +273,6 @@ test_oj_resolve_config_load_error_params: dict[
                 "loc": ("languages", "java", "compile"),
                 "msg": 'Value error, You cannot overwrite "compile" for Java language',
                 "type": "value_error",
-                "url": "https://errors.pydantic.dev/2.12/v/value_error",
             },
         ],
     ),
@@ -305,7 +296,6 @@ test_oj_resolve_config_load_error_params: dict[
                 "loc": ("languages", "awk", "execute"),
                 "msg": "Field required",
                 "type": "missing",
-                "url": "https://errors.pydantic.dev/2.12/v/missing",
             },
         ],
     ),
@@ -330,14 +320,12 @@ test_oj_resolve_config_load_error_params: dict[
                 "loc": ("languages", "awk", "execute"),
                 "msg": "Field required",
                 "type": "missing",
-                "url": "https://errors.pydantic.dev/2.12/v/missing",
             },
             {
                 "input": {},
                 "loc": ("languages", "txt", "execute"),
                 "msg": "Field required",
                 "type": "missing",
-                "url": "https://errors.pydantic.dev/2.12/v/missing",
             },
         ],
     ),
@@ -354,7 +342,7 @@ def test_oj_resolve_config_load_error(toml: str, expected_error: list[ErrorDetai
         with pytest.raises(ValidationError) as excinfo:
             VerificationConfig.load(fp)
         e: ValidationError = excinfo.value
-        errors = e.errors()
+        errors = e.errors(include_url=False)
         assert len(errors) == len(expected_error)
         for i, ex in enumerate(errors):
             expected_ctx = expected_error[i].get("ctx")
