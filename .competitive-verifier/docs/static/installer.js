@@ -287,7 +287,7 @@ permissions:
 
 # Allow one concurrent deployment
 concurrency:
-  group: "pages"
+  group: "\${{ github.workflow }}-\${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
