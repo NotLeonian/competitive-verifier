@@ -59,7 +59,7 @@ class UserDefinedAndPythonData(IntegrationData):
                         {
                             "command": {
                                 "command": f"awk -f {pathlib.Path('awk/aplusb.test.awk')}",
-                                "env": {"AWKPATH": str(self.targets_path)},
+                                "env": {"AWKPATH": "."},
                             },
                             "compile": f"ls {self.config_dir_path / 'cache/problems/8e3916c7805235eb07ec2a58660d89c6'}",
                             "name": "awk",
@@ -78,7 +78,7 @@ class UserDefinedAndPythonData(IntegrationData):
                         {
                             "command": {
                                 "command": f"awk -f {pathlib.Path('awk/aplusb_direct.awk')}",
-                                "env": {"AWKPATH": str(self.targets_path)},
+                                "env": {"AWKPATH": "."},
                             },
                             "compile": f"ls {self.config_dir_path / 'cache/problems/8e3916c7805235eb07ec2a58660d89c6'}",
                             "name": "awk",
@@ -101,7 +101,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": "awk -f awk/myaplusb1.test.awk",
                                 "env": {
-                                    "AWKPATH": str(self.targets_path),
+                                    "AWKPATH": ".",
                                 },
                             },
                             "compile": f"ls {self.config_dir_path / 'cache/localcase/fe34e9ca8a1b0c7dc6064caa76df4ceb'}",
@@ -126,7 +126,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": "awk -f awk/myaplusb2.test.awk",
                                 "env": {
-                                    "AWKPATH": str(self.targets_path),
+                                    "AWKPATH": ".",
                                 },
                             },
                             "compile": f"ls {self.config_dir_path / 'cache/localcase/1ddebc75fd9eacc1b706e14eca475e9b'}",
@@ -151,7 +151,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": "awk -f awk/myaplusb3.test.awk",
                                 "env": {
-                                    "AWKPATH": str(self.targets_path),
+                                    "AWKPATH": ".",
                                 },
                             },
                             "compile": f"ls {self.config_dir_path / 'cache/localcase/1ae5fd5805b72f60d16a9c648d4fe262'}",
@@ -227,7 +227,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": ["python", "python/success1.py"],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "compile": {
@@ -238,7 +238,7 @@ class UserDefinedAndPythonData(IntegrationData):
                                     "python/success1.py",
                                 ],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "problem": "https://judge.yosupo.jp/problem/aplusb",
@@ -271,7 +271,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": ["python", "python/failure.wa.py"],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "compile": {
@@ -282,7 +282,7 @@ class UserDefinedAndPythonData(IntegrationData):
                                     "python/failure.wa.py",
                                 ],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "problem": "https://judge.yosupo.jp/problem/aplusb",
@@ -307,7 +307,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": ["python", "python/failure.mle.py"],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "compile": {
@@ -318,7 +318,7 @@ class UserDefinedAndPythonData(IntegrationData):
                                     "python/failure.mle.py",
                                 ],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "problem": "https://judge.yosupo.jp/problem/aplusb",
@@ -359,7 +359,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": ["python", "python/success2.py"],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "compile": {
@@ -370,7 +370,7 @@ class UserDefinedAndPythonData(IntegrationData):
                                     "python/success2.py",
                                 ],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "problem": "https://judge.yosupo.jp/problem/aplusb",
@@ -400,7 +400,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": ["python", "python/failure.re.py"],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "compile": {
@@ -411,7 +411,7 @@ class UserDefinedAndPythonData(IntegrationData):
                                     "python/failure.re.py",
                                 ],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "problem": "https://judge.yosupo.jp/problem/aplusb",
@@ -441,7 +441,7 @@ class UserDefinedAndPythonData(IntegrationData):
                             "command": {
                                 "command": ["python", "python/failure.tle.py"],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "compile": {
@@ -452,7 +452,7 @@ class UserDefinedAndPythonData(IntegrationData):
                                     "python/failure.tle.py",
                                 ],
                                 "env": {
-                                    "PYTHONPATH": str(self.targets_path),
+                                    "PYTHONPATH": ".",
                                 },
                             },
                             "problem": "https://onlinejudge.u-aizu.ac.jp/courses/lesson/2/ITP1/1/ITP1_1_A",
@@ -474,7 +474,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "document_attributes": {"links": []},
                     "verification": [],
                 },
-            }
+            },
         }
 
     def expected_verify_result(self) -> dict[str, Any]:
@@ -482,6 +482,7 @@ class UserDefinedAndPythonData(IntegrationData):
             "total_seconds": 14892.72,
             "files": {
                 "awk/aplusb.test.awk": {
+                    "content_hash": "f12af15dc2097a2f3ee7ffc93343263c",
                     "newest": True,
                     "verifications": [
                         {
@@ -569,6 +570,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/aplusb_direct.awk": {
+                    "content_hash": "3327d03aa99ad8992336d8d7825d38a6",
                     "newest": True,
                     "verifications": [
                         {
@@ -656,6 +658,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/myaplusb1.test.awk": {
+                    "content_hash": "1a590d2d33fdff207019d77d94dfb51f",
                     "newest": True,
                     "verifications": [
                         {
@@ -767,6 +770,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/myaplusb2.test.awk": {
+                    "content_hash": "47a36f7a335201f42a4accfb4a8209f0",
                     "newest": True,
                     "verifications": [
                         {
@@ -878,6 +882,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "awk/myaplusb3.test.awk": {
+                    "content_hash": "07664bcbdca591d1a1e059a2df52a2cb",
                     "newest": True,
                     "verifications": [
                         {
@@ -1001,6 +1006,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     ],
                 },
                 "python/failure.mle.py": {
+                    "content_hash": "ba598be0710ea5187c969683bcf9818b",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1094,6 +1100,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "newest": True,
                 },
                 "python/failure.wa.py": {
+                    "content_hash": "6f80b28c113bd58f15d2d857c0143b2e",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1181,6 +1188,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "newest": True,
                 },
                 "python/failure.tle.py": {
+                    "content_hash": "478482a916fbb31864c55a72cb0a1310",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1202,6 +1210,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "newest": True,
                 },
                 "python/success1.py": {
+                    "content_hash": "d9bb2406ae37acc331b348987966fdc2",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1289,6 +1298,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "newest": True,
                 },
                 "python/success2.py": {
+                    "content_hash": "5c07d1faa8bb0d89de4376ff8b18ee5d",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1376,6 +1386,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "newest": True,
                 },
                 "python/failure.re.py": {
+                    "content_hash": "5321ef5e972b59729046162fdfda5d0c",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1463,6 +1474,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "newest": True,
                 },
                 "python/skip.py": {
+                    "content_hash": "f8cf65674142151740ae0b1b4ad4e2a9",
                     "verifications": [
                         {
                             "status": "skipped",

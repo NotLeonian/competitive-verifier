@@ -1,6 +1,11 @@
+import pathlib
+
 import pytest
 
+from competitive_verifier.config import COMPETITIVE_VERIFY_CONFIG_PATH
 from competitive_verifier.oj.problem import (
+    LibraryCheckerProblem,
+    LocalProblem,
     NotLoggedInError,
     YukicoderProblem,
     normalize_url_path,
@@ -117,3 +122,69 @@ def test_yukicoder_token_accepts_visible_ascii(monkeypatch: pytest.MonkeyPatch):
     assert YukicoderProblem.yukicoder_headers() == {
         "Authorization": "Bearer abcDEF0123._-+/="
     }
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://onlinejudge.u-aizu.ac.jp/problems/ITP1_1_A",
+        "https://yukicoder.me/problems/no/1088",
+    ],
+)
+@pytest.mark.parametrize("extension", ["in", "out"])
+def test_base_problem_is_testdata_cached(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    url: str,
+    extension: str,
+):
+    monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, tmp_path.as_posix())
+    p = problem_from_url(url)
+    assert p is not None
+    assert p.is_testdata_cached() is False
+
+    p.test_directory.mkdir(parents=True)
+    assert p.is_testdata_cached() is False
+
+    (p.test_directory / "README.txt").write_text("Test data cache")
+    (p.test_directory / "subdir").mkdir()
+    assert p.is_testdata_cached() is False
+
+    (p.test_directory / f"sample_00.{extension}").write_text("1 2\n")
+    assert p.is_testdata_cached() is False
+
+    other_extension = "out" if extension == "in" else "in"
+    (p.test_directory / f"sample_01.{other_extension}").write_text("3\n")
+    assert p.is_testdata_cached() is False
+
+    (p.test_directory / "sample_00.in").write_text("1 2\n")
+    (p.test_directory / "sample_00.out").write_text("3\n")
+    assert p.is_testdata_cached() is True
+
+
+@pytest.mark.allow_mkdir
+def test_library_checker_is_testdata_cached(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, tmp_path.as_posix())
+    p = LibraryCheckerProblem(problem_id="aplusb")
+    assert p.is_testdata_cached() is False
+
+    source = p.repo_path / "sample" / "aplusb"
+    source.mkdir(parents=True)
+    (source / "info.toml").write_text("")
+    assert p.is_testdata_cached() is False
+
+    (source / "in").mkdir()
+    (source / "out").mkdir()
+    (source / "in" / "example_00.in").write_text("1 2\n")
+    assert p.is_testdata_cached() is False
+
+    (source / "out" / "example_00.out").write_text("3\n")
+    assert p.is_testdata_cached() is True
+
+
+@pytest.mark.allow_mkdir
+def test_local_problem_is_testdata_cached(tmp_path: pathlib.Path):
+    assert LocalProblem(tmp_path / "missing").is_testdata_cached() is True
