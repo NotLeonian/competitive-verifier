@@ -32,7 +32,7 @@ class GoWithoutConfigData(IntegrationData):
                                 "command": [
                                     "go",
                                     "run",
-                                    f"{self.targets_path}/helloworld.aoj.go",
+                                    "./helloworld.aoj.go",
                                 ],
                                 "env": {"GO111MODULE": "off"},
                             },
@@ -69,6 +69,7 @@ class GoWithoutConfigData(IntegrationData):
         return {
             "files": {
                 "helloworld.aoj.go": {
+                    "content_hash": "e0180841b249009fb7650173ab74a360",
                     "newest": True,
                     "verifications": [
                         {
@@ -90,6 +91,7 @@ class GoWithoutConfigData(IntegrationData):
                     ],
                 },
                 "helloworld_test.go": {
+                    "content_hash": "58864a4a33d1dbf4633151c5252a3021",
                     "newest": True,
                     "verifications": [
                         {
@@ -137,7 +139,7 @@ class GoWithConfigData(GoWithoutConfigData):
                     "verification": [
                         {
                             "command": f"{self.config_dir_path / 'cache/problems/e128a4d2859247e106283caaf0d12563'}/helloworld.aoj.go",
-                            "compile": f"env GO111MODULE=off go build -o {self.config_dir_path / 'cache/problems/e128a4d2859247e106283caaf0d12563'}/helloworld.aoj.go {self.targets_path}/helloworld.aoj.go",
+                            "compile": f"env GO111MODULE=off go build -o {self.config_dir_path / 'cache/problems/e128a4d2859247e106283caaf0d12563'}/helloworld.aoj.go ./helloworld.aoj.go",
                             "name": "go",
                             "problem": "https://onlinejudge.u-aizu.ac.jp/courses/lesson/2/ITP1/1/ITP1_1_A",
                             "type": "problem",

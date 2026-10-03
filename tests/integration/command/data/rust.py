@@ -68,10 +68,7 @@ class RustWithoutConfigData(IntegrationData):
                     },
                     "verification": [
                         {
-                            "command": str(
-                                self.targets_path
-                                / "target/release/aizu-online-judge-itp1-1-a"
-                            ),
+                            "command": "target/release/aizu-online-judge-itp1-1-a",
                             "compile": {
                                 "command": [
                                     "cargo",
@@ -80,7 +77,7 @@ class RustWithoutConfigData(IntegrationData):
                                     "--bin",
                                     "aizu-online-judge-itp1-1-a",
                                 ],
-                                "cwd": str(self.targets_path / "verification/src/bin"),
+                                "cwd": "verification/src/bin",
                             },
                             "name": "Rust",
                             "problem": "https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_1_A",
@@ -102,10 +99,7 @@ class RustWithoutConfigData(IntegrationData):
                     },
                     "verification": [
                         {
-                            "command": str(
-                                self.targets_path
-                                / "target/release/library-checker-aplusb"
-                            ),
+                            "command": "target/release/library-checker-aplusb",
                             "compile": {
                                 "command": [
                                     "cargo",
@@ -114,7 +108,7 @@ class RustWithoutConfigData(IntegrationData):
                                     "--bin",
                                     "library-checker-aplusb",
                                 ],
-                                "cwd": str(self.targets_path / "verification/src/bin"),
+                                "cwd": "verification/src/bin",
                             },
                             "name": "Rust",
                             "problem": "https://judge.yosupo.jp/problem/aplusb",
@@ -129,6 +123,7 @@ class RustWithoutConfigData(IntegrationData):
         return {
             "files": {
                 "verification/src/bin/aizu-online-judge-itp1-1-a.rs": {
+                    "content_hash": "1133230e2946eba25835cd40cd37b4fc",
                     "newest": True,
                     "verifications": [
                         {
@@ -150,6 +145,7 @@ class RustWithoutConfigData(IntegrationData):
                     ],
                 },
                 "verification/src/bin/library-checker-aplusb.rs": {
+                    "content_hash": "f54f0cea1b69287aa58572cca0c7d859",
                     "newest": True,
                     "verifications": [
                         {

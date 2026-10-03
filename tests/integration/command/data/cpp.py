@@ -53,7 +53,7 @@ class CppWithoutConfigData(IntegrationData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/standalone/4e17a93c916bd2ca29bdf880cce422dc/a.out'}",
                                 "aplusb.main.cpp",
@@ -71,7 +71,7 @@ class CppWithoutConfigData(IntegrationData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/standalone/4e17a93c916bd2ca29bdf880cce422dc/a.out'}",
                                 "aplusb.main.cpp",
@@ -107,7 +107,7 @@ class CppWithoutConfigData(IntegrationData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/problems/8e3916c7805235eb07ec2a58660d89c6/a.out'}",
                                 "aplusb.test.cpp",
@@ -125,7 +125,7 @@ class CppWithoutConfigData(IntegrationData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/problems/8e3916c7805235eb07ec2a58660d89c6/a.out'}",
                                 "aplusb.test.cpp",
@@ -158,6 +158,7 @@ class CppWithoutConfigData(IntegrationData):
         return {
             "files": {
                 "aplusb.main.cpp": {
+                    "content_hash": "57cdef1b75cae34f02cbc6465fafbd2d",
                     "newest": True,
                     "verifications": [
                         {
@@ -175,6 +176,7 @@ class CppWithoutConfigData(IntegrationData):
                     ],
                 },
                 "aplusb.test.cpp": {
+                    "content_hash": "f291d1cc1fa4ef491bfa97ba659525ca",
                     "newest": True,
                     "verifications": [
                         {
@@ -400,7 +402,7 @@ class CppWithConfigData(CppWithoutConfigData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/standalone/4e17a93c916bd2ca29bdf880cce422dc/a.out'}",
                                 "aplusb.main.cpp",
@@ -417,7 +419,7 @@ class CppWithConfigData(CppWithoutConfigData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/standalone/4e17a93c916bd2ca29bdf880cce422dc/a.out'}",
                                 "aplusb.main.cpp",
@@ -452,7 +454,7 @@ class CppWithConfigData(CppWithoutConfigData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/problems/8e3916c7805235eb07ec2a58660d89c6/a.out'}",
                                 "aplusb.test.cpp",
@@ -469,7 +471,7 @@ class CppWithConfigData(CppWithoutConfigData):
                                 "-Wall",
                                 "-g",
                                 "-I",
-                                str(self.targets_path),
+                                ".",
                                 "-o",
                                 f"{self.config_dir_path / 'cache/problems/8e3916c7805235eb07ec2a58660d89c6/a.out'}",
                                 "aplusb.test.cpp",
