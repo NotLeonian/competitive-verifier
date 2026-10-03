@@ -146,12 +146,23 @@ class FileResult(BaseModel):
         base_time: datetime.datetime | None = None,
         *,
         content_hash: str | None = None,
-    ) -> NeedVerification:
-        """Whether the file has changed since this result.
+    ) -> bool:
+        """Whether the file needs verification.
 
         Pass ``base_time`` to compare against the file's modification time,
         or ``content_hash`` to compare against the recorded content hash.
         """
+        return bool(
+            self.get_verification_reason(base_time=base_time, content_hash=content_hash)
+        )
+
+    def get_verification_reason(
+        self,
+        *,
+        base_time: datetime.datetime | None = None,
+        content_hash: str | None = None,
+    ) -> NeedVerification:
+        """Return why the file needs verification, or ``NeedVerification.NO``."""
         if len(self.verifications) == 0:
             return NeedVerification.NO_RESULT
         if base_time is not None:

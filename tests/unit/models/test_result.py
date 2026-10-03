@@ -258,8 +258,12 @@ def test_file_result_need_verification(
     dt: datetime,
     expected: NeedVerification,
 ):
-    assert obj.need_verification(dt) is expected
-    assert obj.need_verification(base_time=dt) is expected
+    should_verify = expected is not NeedVerification.NO
+    result = obj.need_verification(dt)
+    assert result is should_verify
+    assert obj.need_verification(base_time=dt) is should_verify
+    assert json.dumps(result) == ("true" if should_verify else "false")
+    assert obj.get_verification_reason(base_time=dt) is expected
     assert bool(expected) == (expected is not NeedVerification.NO)
 
 
@@ -305,7 +309,10 @@ def test_file_result_need_verification_content_hash(
     content_hash: str | None,
     expected: NeedVerification,
 ):
-    assert obj.need_verification(content_hash=content_hash) is expected
+    assert obj.need_verification(content_hash=content_hash) is (
+        expected is not NeedVerification.NO
+    )
+    assert obj.get_verification_reason(content_hash=content_hash) is expected
 
 
 test_is_success_params = [

@@ -94,9 +94,9 @@ class InputContainer(ABC):
             return False
         if self.change_detection == "timestamp":
             base_time = min(self.verification_time, self.get_file_timestamp(path))
-            reason = file_result.need_verification(base_time=base_time)
+            reason = file_result.get_verification_reason(base_time=base_time)
         elif self.change_detection == "hash":
-            reason = file_result.need_verification(
+            reason = file_result.get_verification_reason(
                 content_hash=self.file_content_hash(path)
             )
         else:
