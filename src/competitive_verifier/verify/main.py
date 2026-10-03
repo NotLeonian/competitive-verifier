@@ -57,6 +57,7 @@ class Verify(
                 self.prev_result,
                 extra={"github": GitHubMessageParams(file=self.prev_result)},
             )
+            return None
 
     def write_result(self, result: VerifyCommandResult):
         super().write_result(result)
