@@ -14,12 +14,18 @@ from competitive_verifier.models import (
     FileResult,
     ProblemVerification,
     ResultStatus,
+    Verification,
     VerificationInput,
     VerificationResult,
     VerifyCommandResult,
 )
 from competitive_verifier.oj.problem import YukicoderProblem
-from competitive_verifier.verify.verifier import BaseVerifier, SplitState
+from competitive_verifier.verify.verifier import (
+    BaseVerifier,
+    ChangeDetection,
+    SplitState,
+    Verifier,
+)
 from tests import LogComparer
 
 SUCCESS = ResultStatus.SUCCESS
@@ -453,6 +459,73 @@ def test_verify(
     mocker.patch.object(pathlib.Path, "exists", return_value=True)
     assert verifier.verify(download=False) == VerifyCommandResult.model_validate(
         expected
+    )
+
+
+@pytest.mark.parametrize("change_detection", ["timestamp", "hash"])
+@pytest.mark.parametrize("lightweight", [False, True])
+@pytest.mark.parametrize("changed_file", [None, "source.py", "dependency.py"])
+def test_verify_content_hash_during_execution(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    change_detection: ChangeDetection,
+    lightweight: bool,
+    changed_file: str | None,
+):
+    source = pathlib.Path("source.py")
+    dependency = pathlib.Path("dependency.py")
+    source.write_bytes(b"original source")
+    dependency.write_bytes(b"original dependency")
+    verification_class = (
+        ConstVerification if lightweight else NotSkippableConstVerification
+    )
+    verifier = Verifier(
+        VerificationInput.model_validate(
+            {
+                "files": {
+                    source: {
+                        "dependencies": [dependency],
+                        "verification": verification_class(status=SUCCESS),
+                    },
+                    dependency: {},
+                },
+            }
+        ),
+        timeout=10,
+        default_tle=None,
+        default_mle=None,
+        prev_result=None,
+        split_state=None,
+        use_git_timestamp=False,
+        change_detection=change_detection,
+    )
+    original_hash = verifier.file_content_hash(source)
+    assert original_hash is not None
+
+    def run_verification(
+        verification: Verification,
+        *,
+        deadline: float = float("inf"),
+    ) -> tuple[ResultStatus, None]:
+        if changed_file is not None:
+            pathlib.Path(changed_file).write_bytes(b"changed during verification")
+        return SUCCESS, None
+
+    run = mocker.patch.object(
+        verifier, "run_verification", side_effect=run_verification
+    )
+    result = verifier.verify(download=False)
+    run.assert_called_once()
+    assert result.is_success()
+    file_result = result.files[source]
+    if changed_file is None:
+        assert file_result.content_hash == original_hash
+    else:
+        assert file_result.content_hash is None
+
+    verifier.change_detection = "hash"
+    assert verifier.file_need_verification(source, file_result) is (
+        changed_file is not None
     )
 
 

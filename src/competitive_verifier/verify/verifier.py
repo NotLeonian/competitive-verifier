@@ -306,14 +306,19 @@ class BaseVerifier(InputContainer):
 
         for p, f in current_verification_files.items():
             with log.group(f"Verify: {p.as_posix()}"):
+                file_hash = self.file_content_hash(p)
+                verifications = self._enumerate_verifications(
+                    p,
+                    f,
+                    download=download,
+                    deadline=deadline,
+                )
+                # Don't cache a result for sources that changed during verification.
+                if file_hash != self.file_content_hash(p):
+                    file_hash = None
                 file_results[p] = FileResult(
-                    verifications=self._enumerate_verifications(
-                        p,
-                        f,
-                        download=download,
-                        deadline=deadline,
-                    ),
-                    content_hash=self.file_content_hash(p),
+                    verifications=verifications,
+                    content_hash=file_hash,
                 )
 
         sippable_file_results = self.skippable_results()
@@ -352,6 +357,7 @@ class BaseVerifier(InputContainer):
         if self.is_first:
             for p, f in self.skippable_verification_files.items():
                 logger.info("Start skippable: %s", p)
+                file_hash = self.file_content_hash(p)
                 verifications = list[VerificationResult]()
                 prev_time = time.perf_counter()
 
@@ -360,9 +366,11 @@ class BaseVerifier(InputContainer):
                     verifications.append(
                         self.create_command_result(rs, prev_time, name=v.name)
                     )
+                if file_hash != self.file_content_hash(p):
+                    file_hash = None
                 results[p] = FileResult(
                     verifications=verifications,
-                    content_hash=self.file_content_hash(p),
+                    content_hash=file_hash,
                     newest=True,
                 )
         return results
