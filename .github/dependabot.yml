@@ -4,6 +4,16 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    rebase-strategy: disabled
+    groups:
+      dependencies:
+        patterns:
+          - '*'
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    rebase-strategy: disabled
     groups:
       dependencies:
         patterns:
