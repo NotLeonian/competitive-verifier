@@ -21,6 +21,7 @@ from competitive_verifier.models import (
     VerificationTimeoutError,
     VerifyCommandResult,
 )
+from competitive_verifier.models.verification import BaseProblemVerification
 from competitive_verifier.resource import try_ulimit_stack
 from competitive_verifier.verify.split_state import SplitState
 
@@ -109,13 +110,19 @@ class InputContainer(ABC):
     def file_testdata_hash(self, path: pathlib.Path) -> str | None:
         """Digest of the test data of the file's verifications.
 
-        ``None`` if the test data of any verification can't be identified.
+        Ignore checks without test data. ``None`` if no checks use test data or
+        the test data of any problem verification can't be identified.
         """
         f = self.verifications.files.get(path)
         if f is None:
             return None
+        problem_verifications = [
+            v for v in f.verification_list if isinstance(v, BaseProblemVerification)
+        ]
+        if not problem_verifications:
+            return None
         digest = hashlib.sha256()
-        for v in f.verification_list:
+        for v in problem_verifications:
             testdata_hash = v.testdata_hash()
             if testdata_hash is None:
                 return None

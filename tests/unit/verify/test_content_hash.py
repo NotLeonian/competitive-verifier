@@ -5,7 +5,13 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
-from competitive_verifier.models import ProblemVerification, VerificationInput
+from competitive_verifier.models import (
+    FileResult,
+    ProblemVerification,
+    ResultStatus,
+    VerificationInput,
+    VerificationResult,
+)
 from competitive_verifier.verify.verifier import InputContainer, content_hash
 
 pytestmark = pytest.mark.allow_mkdir
@@ -254,3 +260,53 @@ def test_file_testdata_hash_combines_verifications(mocker: MockerFixture):
         "files": {"foo.py": {"verification": {"type": "command", "command": "true"}}}
     }
     assert _file_testdata_hash(obj) is None
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"type": "command", "command": "true"},
+        {"type": "const", "status": "success"},
+    ],
+)
+@pytest.mark.parametrize("extra_first", [False, True])
+@pytest.mark.parametrize("local", [False, True])
+def test_file_testdata_hash_preserves_problem_hash_with_other_checks(
+    mocker: MockerFixture,
+    extra: dict[str, str],
+    extra_first: bool,
+    local: bool,
+):
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    (cases / "a.in").write_bytes(b"1 2\n")
+    output = cases / "a.out"
+    output.write_bytes(b"3\n")
+    problem_hash = mocker.patch.object(
+        ProblemVerification, "testdata_hash", return_value="initial"
+    )
+    obj = _input() if local else _problem()
+    verification = obj["files"]["foo.py"]["verification"]
+    obj["files"]["foo.py"]["verification"] = (
+        [extra, verification] if extra_first else [verification, extra]
+    )
+    container = HashInputContainer(VerificationInput.model_validate(obj))
+    container.change_detection = "hash"
+    source = pathlib.Path("foo.py")
+    previous = FileResult(
+        content_hash=container.file_content_hash(source),
+        testdata_hash=container.file_testdata_hash(source),
+        verifications=[VerificationResult(status=ResultStatus.SUCCESS, elapsed=0)],
+    )
+    assert previous.testdata_hash is not None
+    assert not container.file_need_verification(source, previous)
+
+    output.write_bytes(b"4\n")
+    problem_hash.return_value = "updated"
+    assert container.file_need_verification(source, previous)
+
+    output.unlink()
+    (cases / "a.in").unlink()
+    cases.rmdir()
+    problem_hash.return_value = None
+    assert container.file_testdata_hash(source) is None
