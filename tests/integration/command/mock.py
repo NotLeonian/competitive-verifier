@@ -162,6 +162,7 @@ def update_cloned_repository():  # pragma: no cover
 def _match_aplusb(t: tarfile.TarInfo) -> tarfile.TarInfo | None:
     if (
         t.path.startswith("library-checker-problems/sample/aplusb")
+        or t.path.startswith("library-checker-problems/common")
         or (t.isdir() and "library-checker-problems/sample/aplusb".startswith(t.path))
         or t.isfile()
     ):

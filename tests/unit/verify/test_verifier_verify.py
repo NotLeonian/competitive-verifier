@@ -781,7 +781,16 @@ def test_verify_reuses_only_matching_configuration(
 @pytest.mark.parametrize("download", [False, True])
 @pytest.mark.parametrize(
     "cache_change",
-    ["input", "output", "missing_input", "missing_output"],
+    [
+        "input",
+        "output",
+        "missing_input",
+        "missing_output",
+        "checker_source",
+        "common_header",
+        "judging_config",
+        "checker_binary",
+    ],
 )
 def test_verify_regenerates_stale_library_checker_cases_after_no_download(
     testtemp: pathlib.Path,
@@ -796,6 +805,13 @@ def test_verify_regenerates_stale_library_checker_cases_after_no_download(
     (directory / "in").mkdir(parents=True)
     (directory / "out").mkdir()
     (directory / "info.toml").write_text("")
+    for path in [
+        directory / "checker.cpp",
+        problem.repo_path / "generate.py",
+        problem.repo_path / "common/testlib.h",
+    ]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("original judging source")
     input_path = directory / "in" / "example_00.in"
     input_path.write_bytes(b"1 2\n")
     output = directory / "out" / "example_00.out"
@@ -833,15 +849,16 @@ def test_verify_regenerates_stale_library_checker_cases_after_no_download(
             change_detection="hash",
         )
 
-    def generate_cases() -> None:
+    def generate_cases(*args: object, **kwargs: object) -> None:
         input_path.write_bytes(b"1 2\n")
         output.write_bytes(b"3\n")
         problem.hash_json.write_text(manifest)
+        if not problem.checker.exists():
+            problem.checker.write_text(f"compiled checker: {problem.testdata_hash()}")
 
     mocker.patch.object(LibraryCheckerProblem, "update_cloned_repository")
-    generate = mocker.patch.object(
-        LibraryCheckerProblem,
-        "generate_test_cases",
+    generate = mocker.patch(
+        "competitive_verifier.oj.problem.subprocess.check_call",
         side_effect=generate_cases,
     )
     run = mocker.patch.object(
@@ -873,8 +890,16 @@ def test_verify_regenerates_stale_library_checker_cases_after_no_download(
         output.write_bytes(b"modified output\n")
     elif cache_change == "missing_input":
         input_path.unlink()
-    else:
+    elif cache_change == "missing_output":
         output.unlink()
+    else:
+        changed_path = {
+            "checker_source": directory / "checker.cpp",
+            "common_header": problem.repo_path / "common/testlib.h",
+            "judging_config": directory / "info.toml",
+            "checker_binary": problem.checker,
+        }[cache_change]
+        changed_path.write_bytes(b"changed judging source or binary")
     reverified = create_verifier(reused).verify(download=download)
     assert reverified.files[source].newest
     if download:
@@ -889,7 +914,12 @@ def test_verify_regenerates_stale_library_checker_cases_after_no_download(
         reverified = create_verifier(reverified).verify()
         assert reverified.is_success()
         assert generate.call_count == 2
-    assert reverified.files[source].testdata_hash == current.files[source].testdata_hash
+    assert reverified.files[
+        source
+    ].testdata_hash == create_verifier().file_testdata_hash(source)
+    assert (
+        reverified.files[source].testdata_hash != current.files[source].testdata_hash
+    ) is (cache_change in {"checker_source", "common_header", "judging_config"})
     reused = create_verifier(reverified).verify()
     assert not reused.files[source].newest
     assert generate.call_count == 2

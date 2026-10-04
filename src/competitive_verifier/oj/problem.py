@@ -115,12 +115,32 @@ class LibraryCheckerProblem(Problem):
         return True
 
     @property
-    def checker(self) -> pathlib.Path | None:
+    def checker(self) -> pathlib.Path:
         return self.source_directory / self.checker_exe_name
+
+    @property
+    def _checker_stamp(self) -> pathlib.Path:
+        return self.problem_directory / "checker-hash.json"
+
+    def _checker_matches(self, expected_hash: str | None) -> bool:
+        if expected_hash is None:
+            return False
+        try:
+            return json.loads(self._checker_stamp.read_bytes()) == {
+                "testdata_hash": expected_hash,
+                "checker_hash": hashlib.sha256(self.checker.read_bytes()).hexdigest(),
+            }
+        except (OSError, RuntimeError, ValueError):
+            return False
 
     def generate_test_cases(self) -> None:
         self.update_cloned_repository()
         path = self.repo_path
+        expected_hash = self.testdata_hash()
+        if not self._checker_matches(expected_hash):
+            # generate.py uses timestamps; force a rebuild when contents disagree.
+            self.checker.unlink(missing_ok=True)
+        self._checker_stamp.unlink(missing_ok=True)
 
         spec = str(self.source_directory / "info.toml")
         command = [sys.executable, str(path / "generate.py"), spec]
@@ -134,6 +154,14 @@ class LibraryCheckerProblem(Problem):
             )
             raise
 
+        if expected_hash is not None and expected_hash == self.testdata_hash():
+            stamp = {
+                "testdata_hash": expected_hash,
+                "checker_hash": hashlib.sha256(self.checker.read_bytes()).hexdigest(),
+            }
+            self.problem_directory.mkdir(parents=True, exist_ok=True)
+            self._checker_stamp.write_text(json.dumps(stamp))
+
     @property
     def hash_json(self) -> pathlib.Path:
         """The committed per-case digests of the generated test data."""
@@ -143,13 +171,49 @@ class LibraryCheckerProblem(Problem):
         self.update_cloned_repository()
 
     def testdata_hash(self) -> str | None:
+        """Identify cases and judging sources without relying on file timestamps."""
         try:
-            return hashlib.sha256(self.hash_json.read_bytes()).hexdigest()
+            source = self.source_directory
+            paths = {
+                self.hash_json,
+                source / "info.toml",
+                self.repo_path / "generate.py",
+            }
+            # Follow generate.py's dependency scope, excluding its generated files.
+            for directory in (source, self.repo_path / "common"):
+                for path in directory.rglob("*"):
+                    if directory == source and path.relative_to(source).parts[0] in {
+                        "in",
+                        "out",
+                    }:
+                        continue
+                    if (
+                        path.is_file()
+                        and path.suffix not in {"", ".exe"}
+                        and path.name != "params.h"
+                    ):
+                        paths.add(path)
+            digest = hashlib.sha256()
+            for path in sorted(paths):
+                for field in (
+                    path.relative_to(self.repo_path).as_posix().encode(),
+                    path.read_bytes(),
+                ):
+                    digest.update(len(field).to_bytes(8, "big"))
+                    digest.update(field)
+            for name in ("CXX", "CXXFLAGS"):
+                value = json.dumps(os.getenv(name)).encode()
+                digest.update(len(value).to_bytes(8, "big"))
+                digest.update(value)
+            return digest.hexdigest()
         except (OSError, RuntimeError):
             return None
 
     def cached_testdata_hash(self) -> str | None:
         try:
+            expected_hash = self.testdata_hash()
+            if not self._checker_matches(expected_hash):
+                return None
             manifest = self.hash_json.read_bytes()
             actual = {
                 path.name: hashlib.sha256(path.read_bytes()).hexdigest()
@@ -158,9 +222,9 @@ class LibraryCheckerProblem(Problem):
             }
             if not actual or actual != json.loads(manifest):
                 return None
-            return hashlib.sha256(manifest).hexdigest()
         except (OSError, RuntimeError, ValueError):
             return None
+        return expected_hash
 
     @property
     def source_directory(self):

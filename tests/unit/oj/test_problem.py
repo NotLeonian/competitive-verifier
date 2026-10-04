@@ -1,6 +1,9 @@
 import hashlib
 import json
+import os
 import pathlib
+import subprocess
+from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
@@ -239,7 +242,29 @@ def library_checker_repo(
     repo_path = tmp_path / "cache" / "library-checker-problems"
     (repo_path / "sample" / "aplusb").mkdir(parents=True)
     (repo_path / "sample" / "aplusb" / "info.toml").write_text("")
+    (repo_path / "sample" / "aplusb" / "checker.cpp").write_text("checker source")
+    (repo_path / "sample" / "aplusb" / "checker.h").write_text("checker header")
+    (repo_path / "common").mkdir()
+    (repo_path / "common" / "testlib.h").write_text("shared checker header")
+    (repo_path / "generate.py").write_text("generator")
     return repo_path
+
+
+@pytest.fixture
+def library_checker_generator(
+    library_checker_repo: pathlib.Path, mocker: MockerFixture
+) -> MagicMock:
+    mocker.patch.object(LibraryCheckerProblem, "update_cloned_repository")
+    problem = LibraryCheckerProblem(problem_id="aplusb")
+
+    def generate(*args: object, **kwargs: object) -> None:
+        # Simulate generate.py retaining a binary whose timestamp looks current.
+        if not problem.checker.exists():
+            problem.checker.write_text(f"compiled checker: {problem.testdata_hash()}")
+
+    return mocker.patch(
+        "competitive_verifier.oj.problem.subprocess.check_call", side_effect=generate
+    )
 
 
 @pytest.mark.allow_mkdir
@@ -255,11 +280,13 @@ def test_library_checker_testdata_hash(
     assert problem.testdata_hash() is None
 
     hash_json.write_bytes(b'{"example_00.in": "0" * 64}')
-    assert problem.testdata_hash() == hashlib.sha256(hash_json.read_bytes()).hexdigest()
-    assert problem.testdata_hash() == problem.testdata_hash()
+    original_hash = problem.testdata_hash()
+    assert original_hash is not None
+    assert problem.testdata_hash() == original_hash
 
     hash_json.write_bytes(b'{"example_00.in": "1" * 64}')
-    assert problem.testdata_hash() == hashlib.sha256(hash_json.read_bytes()).hexdigest()
+    assert problem.testdata_hash() is not None
+    assert problem.testdata_hash() != original_hash
 
     update.assert_not_called()
 
@@ -274,10 +301,23 @@ def test_library_checker_testdata_hash_unknown_problem():
 
 @pytest.mark.allow_mkdir
 @pytest.mark.parametrize(
-    "change", ["input", "output", "missing", "extra", "manifest", "invalid_manifest"]
+    "change",
+    [
+        "input",
+        "output",
+        "missing",
+        "extra",
+        "manifest",
+        "invalid_manifest",
+        "checker",
+        "missing_checker",
+        "missing_stamp",
+        "invalid_stamp",
+    ],
 )
 def test_library_checker_cached_testdata_hash(
     library_checker_repo: pathlib.Path,
+    library_checker_generator: MagicMock,
     mocker: MockerFixture,
     change: str,
 ):
@@ -298,6 +338,7 @@ def test_library_checker_cached_testdata_hash(
     assert problem.cached_testdata_hash() is None
     input_path.write_bytes(b"1 2\n")
     output_path.write_bytes(b"3\n")
+    problem.generate_test_cases()
     expected = problem.testdata_hash()
     assert expected is not None
     assert problem.cached_testdata_hash() == expected
@@ -313,11 +354,104 @@ def test_library_checker_cached_testdata_hash(
         (directory / "out" / "extra.out").write_bytes(b"3\n")
     elif change == "manifest":
         problem.hash_json.write_text(manifest.replace("example_00", "example_01"))
-    else:
+    elif change == "invalid_manifest":
         problem.hash_json.write_text("invalid json")
+    elif change == "checker":
+        problem.checker.write_bytes(b"different checker")
+    elif change == "missing_checker":
+        problem.checker.unlink()
+    elif change == "missing_stamp":
+        (problem.problem_directory / "checker-hash.json").unlink()
+    else:
+        (problem.problem_directory / "checker-hash.json").write_text("invalid json")
 
     assert problem.cached_testdata_hash() is None
-    update.assert_not_called()
+    update.assert_called_once()
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize(
+    "changed_path",
+    [
+        "sample/aplusb/checker.cpp",
+        "sample/aplusb/checker.h",
+        "sample/aplusb/info.toml",
+        "common/testlib.h",
+        "generate.py",
+    ],
+)
+def test_library_checker_rebuilds_changed_judging_sources(
+    library_checker_repo: pathlib.Path,
+    library_checker_generator: MagicMock,
+    changed_path: str,
+):
+    problem = LibraryCheckerProblem(problem_id="aplusb")
+    directory = problem.source_directory
+    (directory / "in").mkdir()
+    (directory / "out").mkdir()
+    (directory / "in" / "example_00.in").write_bytes(b"1 2\n")
+    (directory / "out" / "example_00.out").write_bytes(b"3\n")
+    manifest = json.dumps(
+        {
+            "example_00.in": hashlib.sha256(b"1 2\n").hexdigest(),
+            "example_00.out": hashlib.sha256(b"3\n").hexdigest(),
+        }
+    )
+    problem.hash_json.write_text(manifest)
+    problem.generate_test_cases()
+    previous = problem.cached_testdata_hash()
+    assert previous is not None
+    binary = problem.checker.read_bytes()
+    changed = library_checker_repo / changed_path
+    timestamps = changed.stat()
+    changed.write_text(changed.read_text() + "\nchanged judging source")
+    os.utime(changed, ns=(timestamps.st_atime_ns, timestamps.st_mtime_ns))
+
+    assert problem.hash_json.read_text() == manifest
+    assert problem.testdata_hash() not in {None, previous}
+    assert problem.cached_testdata_hash() is None
+    problem.generate_test_cases()
+    assert problem.checker.read_bytes() != binary
+    assert problem.cached_testdata_hash() == problem.testdata_hash()
+    assert library_checker_generator.call_count == 2
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("failure", ["exception", "changed_sources"])
+def test_library_checker_does_not_stamp_incomplete_generation(
+    library_checker_repo: pathlib.Path,
+    library_checker_generator: MagicMock,
+    failure: str,
+):
+    problem = LibraryCheckerProblem(problem_id="aplusb")
+    for extension, data in {"in": b"1 2\n", "out": b"3\n"}.items():
+        (problem.source_directory / extension).mkdir()
+        (problem.source_directory / extension / f"a.{extension}").write_bytes(data)
+    problem.hash_json.write_text(
+        json.dumps(
+            {
+                "a.in": hashlib.sha256(b"1 2\n").hexdigest(),
+                "a.out": hashlib.sha256(b"3\n").hexdigest(),
+            }
+        )
+    )
+    problem.generate_test_cases()
+    expected = problem.testdata_hash()
+    assert expected is not None
+    assert problem.cached_testdata_hash() == expected
+
+    def generate(*args: object, **kwargs: object) -> None:
+        if failure == "exception":
+            raise subprocess.CalledProcessError(1, "generate.py")
+        (problem.source_directory / "checker.cpp").write_text("changed during build")
+
+    library_checker_generator.side_effect = generate
+    if failure == "exception":
+        with pytest.raises(subprocess.CalledProcessError):
+            problem.generate_test_cases()
+    else:
+        problem.generate_test_cases()
+    assert problem.cached_testdata_hash() is None
 
 
 def test_library_checker_sync_testdata(mocker: MockerFixture):
