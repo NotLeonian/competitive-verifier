@@ -301,9 +301,12 @@ class OjResolver:
                         AdditionalSource(name="bundle error", path=dest_path)
                     )
 
+            # Generated commands must also work after moving the checkout.
             verifications = list(
                 chain.from_iterable(
-                    self.env_to_verifications(vs, attr=attr, path=path, basedir=basedir)
+                    self.env_to_verifications(
+                        vs, attr=attr, path=path, basedir=pathlib.Path()
+                    )
                     for vs in language.list_environments(path, basedir=basedir)
                 )
             )

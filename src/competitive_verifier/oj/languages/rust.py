@@ -362,23 +362,27 @@ class RustLanguageEnvironment(LanguageEnvironment):
     def get_compile_command(
         self, path: pathlib.Path, *, basedir: pathlib.Path, tempdir: pathlib.Path
     ) -> ShellCommand:
-        path = basedir / path
-        metadata = _cargo_metadata(cwd=path.parent)
-        target = _ensure_target(metadata, path)
+        source_path = (basedir / path).resolve()
+        metadata = _cargo_metadata(cwd=source_path.parent)
+        target = _ensure_target(metadata, source_path)
         return ShellCommand(
             command=["cargo", "build", "--release", *_target_option(target)],
-            cwd=path.parent,
+            cwd=(basedir / path).parent,
         )
 
     def get_execute_command(
         self, path: pathlib.Path, *, basedir: pathlib.Path, tempdir: pathlib.Path
     ) -> str:
-        path = basedir / path
-        metadata = _cargo_metadata(cwd=path.parent)
-        target = _ensure_target(metadata, path)
+        absolute_basedir = basedir.resolve()
+        source_path = (basedir / path).resolve()
+        metadata = _cargo_metadata(cwd=source_path.parent)
+        target = _ensure_target(metadata, source_path)
+        target_directory = pathlib.Path(metadata["target_directory"])
+        if target_directory.is_relative_to(absolute_basedir):
+            target_directory = basedir / target_directory.relative_to(absolute_basedir)
         return str(
             pathlib.Path(
-                metadata["target_directory"],
+                target_directory,
                 "release",
                 *([] if _is_bin(target) else ["examples"]),
                 target["name"],
