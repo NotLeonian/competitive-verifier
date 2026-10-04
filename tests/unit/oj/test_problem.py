@@ -193,6 +193,43 @@ def test_local_problem_is_testdata_cached(tmp_path: pathlib.Path):
     assert LocalProblem(tmp_path / "missing").is_testdata_cached() is True
 
 
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("extension", ["in", "out"])
+@pytest.mark.parametrize("error_type", [PermissionError, FileNotFoundError])
+def test_local_problem_testdata_hash_unreadable_case(
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+    extension: str,
+    error_type: type[OSError],
+):
+    (tmp_path / "a.in").write_bytes(b"1 2\n")
+    (tmp_path / "a.out").write_bytes(b"3\n")
+    problem = LocalProblem(tmp_path)
+    assert problem.testdata_hash() is not None
+    original_read_bytes = pathlib.Path.read_bytes
+
+    def read_bytes(path: pathlib.Path) -> bytes:
+        if path == tmp_path / f"a.{extension}":
+            raise error_type("Cannot read local case")
+        return original_read_bytes(path)
+
+    mocker.patch.object(
+        pathlib.Path, "read_bytes", autospec=True, side_effect=read_bytes
+    )
+    assert problem.testdata_hash() is None
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("operation", ["is_dir", "glob"])
+def test_local_problem_testdata_hash_directory_error(
+    tmp_path: pathlib.Path, mocker: MockerFixture, operation: str
+):
+    mocker.patch.object(
+        pathlib.Path, operation, side_effect=PermissionError("Cannot access cases")
+    )
+    assert LocalProblem(tmp_path).testdata_hash() is None
+
+
 @pytest.fixture
 def library_checker_repo(
     tmp_path: pathlib.Path,

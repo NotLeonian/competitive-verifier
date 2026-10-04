@@ -759,16 +759,19 @@ class LocalProblem(TestCaseProvider):
         return iter_testcases(directory=self.path, recursive=True)
 
     def testdata_hash(self) -> str | None:
-        if not self.path.is_dir():
+        try:
+            if not self.path.is_dir():
+                return None
+            digest = hashlib.sha256()
+            for case in sorted(self.iter_system_cases(), key=lambda c: c.name):
+                digest.update(case.name.encode())
+                digest.update(b"\0")
+                digest.update(case.input_path.read_bytes())
+                digest.update(b"\0")
+                digest.update(case.output_path.read_bytes())
+                digest.update(b"\0")
+        except OSError:
             return None
-        digest = hashlib.sha256()
-        for case in sorted(self.iter_system_cases(), key=lambda c: c.name):
-            digest.update(case.name.encode())
-            digest.update(b"\0")
-            digest.update(case.input_path.read_bytes())
-            digest.update(b"\0")
-            digest.update(case.output_path.read_bytes())
-            digest.update(b"\0")
         return digest.hexdigest()
 
 

@@ -618,6 +618,86 @@ def test_verify_testdata_hash_during_execution(
     )
 
 
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("with_previous_result", [False, True])
+def test_verify_continues_after_local_case_read_error(
+    testtemp: pathlib.Path, mocker: MockerFixture, with_previous_result: bool
+):
+    source = pathlib.Path("source.py")
+    other_source = pathlib.Path("other.py")
+    source.write_text("source")
+    other_source.write_text("other source")
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    input_path = cases / "a.in"
+    input_path.write_bytes(b"1 2\n")
+    (cases / "a.out").write_bytes(b"3\n")
+    verifications = VerificationInput.model_validate(
+        {
+            "files": {
+                source: {
+                    "verification": LocalProblemVerification(
+                        command="true", input=cases
+                    )
+                },
+                other_source: {
+                    "verification": NotSkippableConstVerification(status=SUCCESS)
+                },
+            }
+        }
+    )
+
+    def create_verifier(previous: VerifyCommandResult | None = None) -> Verifier:
+        return Verifier(
+            verifications,
+            timeout=10,
+            default_tle=None,
+            default_mle=None,
+            prev_result=previous,
+            split_state=None,
+            use_git_timestamp=False,
+            change_detection="hash",
+        )
+
+    def run_verification(
+        verification: Verification, *, deadline: float = float("inf")
+    ) -> tuple[ResultStatus, None]:
+        if isinstance(verification, LocalProblemVerification):
+            input_path.read_bytes()
+        return SUCCESS, None
+
+    run = mocker.patch.object(
+        Verifier, "run_verification", side_effect=run_verification
+    )
+    previous = (
+        create_verifier().verify(download=False) if with_previous_result else None
+    )
+    if previous is not None:
+        assert previous.is_success()
+        assert previous.files[source].testdata_hash is not None
+        other_source.write_text("changed source")
+    run.reset_mock()
+    original_read_bytes = pathlib.Path.read_bytes
+
+    def read_bytes(path: pathlib.Path) -> bytes:
+        if path == input_path:
+            raise PermissionError("Cannot read local input")
+        return original_read_bytes(path)
+
+    mocker.patch.object(
+        pathlib.Path, "read_bytes", autospec=True, side_effect=read_bytes
+    )
+    result = create_verifier(previous).verify(download=False)
+
+    assert not result.is_success()
+    assert result.files[source].newest
+    assert result.files[source].verifications[0].status == FAILURE
+    assert result.files[source].testdata_hash is None
+    assert result.files[other_source].newest
+    assert result.files[other_source].verifications[0].status == SUCCESS
+    assert run.call_count == 2
+
+
 @pytest.mark.parametrize(
     "change",
     [
