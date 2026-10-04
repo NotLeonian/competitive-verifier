@@ -240,4 +240,6 @@ def test_library_checker_sync_testdata(mocker: MockerFixture):
 
 
 def test_base_problem_sync_testdata(mocker: MockerFixture):
-    assert YukicoderProblem(problem_no=1088).sync_testdata() is None
+    download = mocker.patch.object(YukicoderProblem, "download_system_cases")
+    YukicoderProblem(problem_no=1088).sync_testdata()
+    download.assert_not_called()
