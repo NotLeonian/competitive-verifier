@@ -2,6 +2,7 @@ import logging
 import os
 import pathlib
 import re
+import subprocess
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -12,12 +13,135 @@ from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import (
     FileResult,
     ResultStatus,
+    VerificationInput,
     VerificationResult,
     VerifyCommandResult,
 )
+from competitive_verifier.oj.problem import LibraryCheckerProblem
 from competitive_verifier.verify import Verify
-from competitive_verifier.verify.verifier import SplitState
+from competitive_verifier.verify.verifier import SplitState, Verifier
 from tests import LogComparer
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("has_metadata", [False, True])
+@pytest.mark.parametrize("split_index", [None, 0, 1])
+def test_sync_failure_writes_results_and_preserves_unaffected_files(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    has_metadata: bool,
+    split_index: int | None,
+):
+    affected = [pathlib.Path("a_affected.py"), pathlib.Path("d_affected.py")]
+    fresh = pathlib.Path("b_new.py")
+    reused = pathlib.Path("c_reused.py")
+    verifications = VerificationInput.model_validate(
+        {
+            "files": {
+                **{
+                    path: {
+                        "verification": {
+                            "type": "problem",
+                            "command": "true",
+                            "problem": "https://judge.yosupo.jp/problem/aplusb",
+                        }
+                    }
+                    for path in affected
+                },
+                fresh: {"verification": {"type": "command", "command": "fresh"}},
+                reused: {"verification": {"type": "command", "command": "reused"}},
+            }
+        }
+    )
+    for path in verifications.files:
+        path.write_text("source")
+    pathlib.Path("verify.json").write_text(verifications.model_dump_json())
+    mocker.patch.object(
+        LibraryCheckerProblem,
+        "testdata_hash",
+        return_value="previous" if has_metadata else None,
+    )
+    mocker.patch.object(
+        LibraryCheckerProblem,
+        "cached_testdata_hash",
+        return_value="previous" if has_metadata else None,
+    )
+    verifier = Verifier(
+        verifications,
+        timeout=10,
+        default_tle=None,
+        default_mle=None,
+        prev_result=None,
+        split_state=None,
+        use_git_timestamp=False,
+        change_detection="hash",
+    )
+    previous = VerifyCommandResult(
+        total_seconds=0,
+        files={
+            path: FileResult(
+                content_hash=verifier.file_content_hash(path),
+                testdata_hash=verifier.file_testdata_hash(path),
+                verifications=[
+                    VerificationResult(status=ResultStatus.SUCCESS, elapsed=0)
+                ],
+            )
+            for path in [*affected, reused]
+        },
+    )
+    pathlib.Path("prev.json").write_text(previous.model_dump_json())
+    mocker.patch.object(
+        LibraryCheckerProblem,
+        "update_cloned_repository",
+        side_effect=subprocess.CalledProcessError(
+            128, ["git", "pull" if has_metadata else "clone"]
+        ),
+    )
+    run = mocker.patch.object(
+        Verifier, "run_verification", return_value=(ResultStatus.SUCCESS, None)
+    )
+    download = mocker.patch("competitive_verifier.verify.verifier.run_download")
+    parsed = app.ArgumentParser().parse(
+        [
+            "verify",
+            "--verify-json",
+            "verify.json",
+            "--prev-result",
+            "prev.json",
+            "--output",
+            "result.json",
+            "--change-detection",
+            "hash",
+            "--check-error",
+            *(
+                []
+                if split_index is None
+                else ["--split", "2", "--split-index", str(split_index)]
+            ),
+        ]
+    )
+    assert parsed.run() is False
+    result = VerifyCommandResult.parse_file_relative("result.json")
+    selected = (
+        {affected[0], fresh, affected[1]}
+        if split_index is None
+        else ({affected[0]} if split_index == 0 else {fresh, affected[1]})
+    )
+    assert result.files.keys() == previous.files.keys() | selected
+    for path in affected:
+        current = result.files[path]
+        assert current.newest is (path in selected)
+        if path in selected:
+            assert [v.status for v in current.verifications] == [ResultStatus.FAILURE]
+        else:
+            assert current.verifications == previous.files[path].verifications
+    assert not result.files[reused].newest
+    assert result.files[reused].verifications == previous.files[reused].verifications
+    assert run.call_count == download.call_count == int(fresh in selected)
+    if fresh in selected:
+        assert result.files[fresh].is_success(allow_skip=False)
+        assert result.files[fresh].newest
+
 
 test_get_split_state_params = [
     (None, None, None),

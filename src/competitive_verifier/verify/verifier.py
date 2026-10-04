@@ -235,6 +235,15 @@ class BaseVerifier(InputContainer):
         self._input = verifications
         self.timeout = timeout
         self._result = None
+        self._testdata_sync_errors: dict[pathlib.Path, Exception] = {}
+
+    def file_need_verification(
+        self, path: pathlib.Path, file_result: FileResult
+    ) -> bool:
+        if path in self._testdata_sync_errors:
+            logger.info("%s needs verification: failed to sync test data", path)
+            return True
+        return super().file_need_verification(path, file_result)
 
     @property
     def is_first(self) -> bool:
@@ -256,6 +265,8 @@ class BaseVerifier(InputContainer):
         try:
             if time.perf_counter() > deadline:
                 raise VerificationTimeoutError  # noqa: TRY301
+            if error := self._testdata_sync_errors.get(p):
+                raise error  # noqa: TRY301
             if download:
                 run_download(f, check=True, group_log=False)
             else:
@@ -405,10 +416,19 @@ class BaseVerifier(InputContainer):
         return rs, None
 
     def sync_testdata(self) -> None:
-        """Sync the test data sources so ``file_testdata_hash`` reflects upstream."""
-        for f in self.verification_files.values():
-            for v in f.verification_list:
-                v.sync_testdata()
+        """Sync test data sources, deferring per-file failures to verification."""
+        self._testdata_sync_errors.clear()
+        for p, f in self.verification_files.items():
+            try:
+                for v in f.verification_list:
+                    v.sync_testdata()
+            except Exception as error:  # noqa: PERF203
+                self._testdata_sync_errors[p] = error
+                logger.exception(
+                    "Failed to sync test data: %s",
+                    p,
+                    extra={"github": log.GitHubMessageParams(file=p)},
+                )
 
     def skippable_results(self) -> dict[pathlib.Path, FileResult]:
         """Run skippable verification."""
