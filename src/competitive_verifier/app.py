@@ -21,6 +21,7 @@ class HelpError(Exception):
 
 
 class NoSubcommand(BaseArguments):
+    # Pydantic's discriminated union requires Literal, including its None case.
     subcommand: Literal[None] = None  # noqa: PYI061
 
     def run(self) -> bool:

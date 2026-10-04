@@ -7,6 +7,7 @@ from competitive_verifier.log import GitHubMessageParams
 
 @dataclass
 class LogComparer:  # noqa: PLW1641
+    # dataclass makes this mutable comparison helper unhashable (__hash__ = None).
     message: str
     level: int | None = None
     args: tuple[object, ...] | Mapping[str, object] | None = None

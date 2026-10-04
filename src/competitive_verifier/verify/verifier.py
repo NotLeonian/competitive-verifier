@@ -33,6 +33,11 @@ def _now() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc).astimezone()
 
 
+def _check_deadline(current_time: float, deadline: float) -> None:
+    if current_time > deadline:
+        raise VerificationTimeoutError
+
+
 def content_hash(files: Iterable[pathlib.Path]) -> str | None:
     """Digest of the paths and contents of ``files``, independent of their order.
 
@@ -271,19 +276,8 @@ class BaseVerifier(InputContainer):
         logger.debug("%r", f)
         verifications = list[VerificationResult]()
         try:
-            if time.perf_counter() > deadline:
-                raise VerificationTimeoutError  # noqa: TRY301
-            if error := self._testdata_sync_errors.get(p):
-                raise error  # noqa: TRY301
-            if download:
-                run_download(f, check=True, group_log=False)
-            else:
-                for v in f.verification_list:
-                    if not v.is_testdata_cached():
-                        raise RuntimeError(  # noqa: TRY301
-                            f"The test data of {v} is not downloaded."
-                            " Run `competitive-verifier download`."
-                        )
+            _check_deadline(time.perf_counter(), deadline)
+            self._prepare_testdata(p, f, download=download)
         except VerificationTimeoutError:
             verifications.append(
                 self.create_command_result(ResultStatus.SKIPPED, time.perf_counter())
@@ -306,8 +300,7 @@ class BaseVerifier(InputContainer):
             logger.debug("command=%r", ve)
             prev_time = time.perf_counter()
             try:
-                if prev_time > deadline:
-                    raise VerificationTimeoutError  # noqa: TRY301
+                _check_deadline(prev_time, deadline)
 
                 rs, error_message = self.run_verification(ve, deadline=deadline)
                 if error_message:
@@ -345,6 +338,21 @@ class BaseVerifier(InputContainer):
                     )
                 )
         return verifications, testdata_hash
+
+    def _prepare_testdata(
+        self, path: pathlib.Path, file: VerificationFile, *, download: bool
+    ) -> None:
+        if error := self._testdata_sync_errors.get(path):
+            raise error
+        if download:
+            run_download(file, check=True, group_log=False)
+            return
+        for verification in file.verification_list:
+            if not verification.is_testdata_cached():
+                raise RuntimeError(
+                    f"The test data of {verification} is not downloaded."
+                    " Run `competitive-verifier download`."
+                )
 
     def verify(self, *, download: bool = True) -> VerifyCommandResult:
         start_time = time.perf_counter()
@@ -414,8 +422,7 @@ class BaseVerifier(InputContainer):
         if not verification.run_compile_command():
             return ResultStatus.FAILURE, "Failed to compile"
 
-        if time.perf_counter() > deadline:
-            raise VerificationTimeoutError
+        _check_deadline(time.perf_counter(), deadline)
 
         rs = verification.run(self, deadline=deadline)
 
@@ -427,16 +434,19 @@ class BaseVerifier(InputContainer):
         """Sync test data sources, deferring per-file failures to verification."""
         self._testdata_sync_errors.clear()
         for p, f in self.verification_files.items():
-            try:
-                for v in f.verification_list:
-                    v.sync_testdata()
-            except Exception as error:  # noqa: PERF203
-                self._testdata_sync_errors[p] = error
-                logger.exception(
-                    "Failed to sync test data: %s",
-                    p,
-                    extra={"github": log.GitHubMessageParams(file=p)},
-                )
+            self._sync_file_testdata(p, f)
+
+    def _sync_file_testdata(self, path: pathlib.Path, file: VerificationFile) -> None:
+        try:
+            for verification in file.verification_list:
+                verification.sync_testdata()
+        except Exception as error:
+            self._testdata_sync_errors[path] = error
+            logger.exception(
+                "Failed to sync test data: %s",
+                path,
+                extra={"github": log.GitHubMessageParams(file=path)},
+            )
 
     def skippable_results(self) -> dict[pathlib.Path, FileResult]:
         """Run skippable verification."""

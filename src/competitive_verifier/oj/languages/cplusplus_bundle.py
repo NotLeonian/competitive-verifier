@@ -281,7 +281,7 @@ class BundleError(Exception):
     pass
 
 
-class BundleErrorAt(BundleError):  # noqa: N818
+class BundleLocationError(BundleError):
     def __init__(
         self, path: pathlib.Path, line: int, message: str, *args: Any, **kwargs: Any
     ):
@@ -289,6 +289,10 @@ class BundleErrorAt(BundleError):  # noqa: N818
             path = path.resolve().relative_to(pathlib.Path.cwd())
         message = f"{path!s}: line {line}: {message}"
         super().__init__(message, *args, **kwargs)
+
+
+# Compatibility for callers that used the previous exception name.
+BundleErrorAt = BundleLocationError
 
 
 class Bundler:
@@ -334,7 +338,7 @@ class Bundler:
         for dir_ in self.iquotes:
             if (dir_ / path).exists():
                 return (dir_ / path).resolve()
-        raise BundleErrorAt(path, -1, "no such header")
+        raise BundleLocationError(path, -1, "no such header")
 
     def update(self, path: pathlib.Path) -> None:
         if path.resolve() in self.pragma_once:
@@ -346,7 +350,7 @@ class Bundler:
 
         # 再帰的に自分自身を #include してたら諦める
         if path in self.path_stack:
-            raise BundleErrorAt(path, -1, "cycle found in inclusion relations")
+            raise BundleLocationError(path, -1, "cycle found in inclusion relations")
         self.path_stack.add(path)
         try:
             code = path.read_bytes()
@@ -382,11 +386,11 @@ class Bundler:
                     re.match(rb"\s*#\s*(else\s*|elif\s.*)", uncommented_line)
                     and preprocess_if_nest == 0
                 ):
-                    raise BundleErrorAt(path, i + 1, "unmatched #else / #elif")
+                    raise BundleLocationError(path, i + 1, "unmatched #else / #elif")
                 if re.match(rb"\s*#\s*endif\s*", uncommented_line):
                     preprocess_if_nest -= 1
                     if preprocess_if_nest < 0:
-                        raise BundleErrorAt(path, i + 1, "unmatched #endif")
+                        raise BundleLocationError(path, i + 1, "unmatched #endif")
                 is_toplevel = preprocess_if_nest == 0 or (
                     preprocess_if_nest == 1 and include_guard_macro is not None
                 )
@@ -398,11 +402,11 @@ class Bundler:
                     logger.debug("%s: line %s: #pragma once", path, i + 1)
                     if non_guard_line_found:
                         # 先頭以外で #pragma once されてた場合は諦める
-                        raise BundleErrorAt(
+                        raise BundleLocationError(
                             path, i + 1, "#pragma once found in a non-first line"
                         )
                     if include_guard_macro is not None:
-                        raise BundleErrorAt(
+                        raise BundleLocationError(
                             path,
                             i + 1,
                             "#pragma once found in an include guard with #ifndef",
@@ -468,7 +472,7 @@ class Bundler:
                         include_guard_macro = None
                     if include_guard_endif_found:
                         # include guard の外側にコードが書かれているとまずいので検出する
-                        raise BundleErrorAt(
+                        raise BundleLocationError(
                             path, i + 1, "found codes out of include guard"
                         )
 
@@ -521,7 +525,7 @@ class Bundler:
                     logger.debug('%s: line %s: #include "%s"', path, i + 1, included)
                     if not is_toplevel:
                         # #if の中から #include されると #pragma once 系の判断が不可能になるので諦める
-                        raise BundleErrorAt(
+                        raise BundleLocationError(
                             path,
                             i + 1,
                             "unable to process #include in #if / #ifdef / #ifndef other than include guards",
@@ -538,14 +542,14 @@ class Bundler:
                 self.result_lines.append(line)
 
             # #if #endif の対応が壊れてたら諦める
-            last_index = i + 1  # pyright: ignore[reportPossiblyUnboundVariable]
+            last_index = len(lines)
 
             if preprocess_if_nest != 0:
-                raise BundleErrorAt(
+                raise BundleLocationError(
                     path, last_index, "unmatched #if / #ifdef / #ifndef"
                 )
             if include_guard_macro is not None and not include_guard_endif_found:
-                raise BundleErrorAt(path, last_index, "unmatched #ifndef")
+                raise BundleLocationError(path, last_index, "unmatched #ifndef")
 
         finally:
             # 中で return することがあるので finally 節に入れておく

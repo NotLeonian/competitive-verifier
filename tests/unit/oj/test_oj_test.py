@@ -1156,7 +1156,10 @@ def test_timeout(
 class TestMeasureCommand:
     @pytest.fixture
     def mock_run(self, mocker: MockerFixture, request: pytest.FixtureRequest):
-        mocker.patch("shutil.which", side_effect=lambda cmd: cmd == "dummy_command")  # pyright: ignore[reportUnknownLambdaType]
+        def which(cmd: str) -> str | None:
+            return cmd if cmd == "dummy_command" else None
+
+        mocker.patch("shutil.which", side_effect=which)
         ret = getattr(request, "param", None)
         if ret is None:
             ret = CompletedProcess[str]("dummy_command 1", returncode=0)

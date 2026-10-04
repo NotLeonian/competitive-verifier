@@ -261,19 +261,19 @@ class LibraryCheckerProblem(Problem):
         if self.repo_path in self._is_repository_updated:
             return
 
-        try:
-            subprocess.check_call(
-                ["git", "--version"],  # noqa: S607
-                stdout=sys.stderr,
-                stderr=sys.stderr,
-            )
-        except FileNotFoundError:
-            logger.exception(
+        git = shutil.which("git")
+        if git is None:
+            logger.error(
                 "git command not found",
-                exc_info=False,
                 extra={"github": GitHubMessageParams()},
             )
-            raise
+            raise FileNotFoundError("git command not found")
+
+        subprocess.check_call(
+            [git, "--version"],
+            stdout=sys.stderr,
+            stderr=sys.stderr,
+        )
 
         path = self.repo_path
         if not path.exists():
@@ -281,7 +281,7 @@ class LibraryCheckerProblem(Problem):
             url = "https://github.com/yosupo06/library-checker-problems"
             logger.info("$ git clone %s %s", url, path)
             subprocess.check_call(
-                ["git", "clone", url, str(path)],  # noqa: S607
+                [git, "clone", url, str(path)],
                 stdout=sys.stderr,
                 stderr=sys.stderr,
             )
@@ -289,7 +289,7 @@ class LibraryCheckerProblem(Problem):
             # sync the problem repository
             logger.info("$ git -C %s pull", path)
             subprocess.check_call(
-                ["git", "-C", str(path), "pull"],  # noqa: S607
+                [git, "-C", str(path), "pull"],
                 stdout=sys.stderr,
                 stderr=sys.stderr,
             )
@@ -806,9 +806,11 @@ class AOJArenaProblem(_BaseProblem):
             and result.netloc == "onlinejudge.u-aizu.ac.jp"
             and normalize_url_path(result.path) == "/services/room.html"
         ):
-            fragment = result.fragment.split("/")
-            if len(fragment) == 3 and fragment[1] == "problems":  # noqa: PLR2004
-                return cls(arena_id=fragment[0], alphabet=fragment[2].upper())
+            match result.fragment.split("/"):
+                case [arena_id, "problems", alphabet]:
+                    return cls(arena_id=arena_id, alphabet=alphabet.upper())
+                case _:
+                    return None
         return None
 
 

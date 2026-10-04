@@ -4,7 +4,8 @@ import shutil
 import subprocess
 import sys
 import tarfile
-from typing import Any, Literal
+from dataclasses import dataclass
+from typing import Any
 
 import requests
 
@@ -17,44 +18,7 @@ from .utils import md5_number
 
 
 class MockVerifyCommandResult(verifier.VerifyCommandResult):
-    def model_dump_json(  # type: ignore[override]
-        self,
-        *,
-        indent: Any = None,
-        include: Any = None,
-        exclude: Any = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = False,
-        round_trip: bool = False,
-        warnings: bool | Literal["none", "warn", "error"] = True,
-    ) -> str:  # pragma: no cover
-        return self.model_copy()._dump_super(  # noqa: SLF001
-            indent=indent,
-            include=include,
-            exclude=exclude,
-            by_alias=by_alias,
-            exclude_unset=exclude_unset,
-            exclude_defaults=exclude_defaults,
-            exclude_none=exclude_none,
-            round_trip=round_trip,
-            warnings=warnings,
-        )
-
-    def _dump_super(
-        self,
-        *,
-        indent: Any = None,
-        include: Any = None,
-        exclude: Any = None,
-        by_alias: bool = False,
-        exclude_unset: bool = False,
-        exclude_defaults: bool = False,
-        exclude_none: bool = False,
-        round_trip: bool = False,
-        warnings: bool | Literal["none", "warn", "error"] = True,
-    ) -> str:
+    def model_dump_json(self, **kwargs: Any) -> str:
         def rewriteVerifyCommandResult(result: verifier.VerifyCommandResult):
             result.total_seconds = len(result.files) * 1234.56 + 78
             result.files = {k: rewriteFileResult(k, v) for k, v in result.files.items()}
@@ -105,34 +69,28 @@ class MockVerifyCommandResult(verifier.VerifyCommandResult):
             case.memory = md5_number(seed + b"memory") % 10000 / 100
             return case
 
-        rewriteVerifyCommandResult(self)
-        return super().model_dump_json(
-            indent=indent,
-            include=include,
-            exclude=exclude,
-            by_alias=by_alias,
-            exclude_unset=exclude_unset,
-            exclude_defaults=exclude_defaults,
-            exclude_none=exclude_none,
-            round_trip=round_trip,
-            warnings=warnings,
-        )
+        result = self.model_copy(deep=True)
+        rewriteVerifyCommandResult(result)
+        return super(MockVerifyCommandResult, result).model_dump_json(**kwargs)
 
 
-_library_checker_problems_tar_gz: bytes | None = None
+@dataclass
+class _LibraryCheckerCache:
+    archive: bytes | None = None
+
+
+_library_checker_cache = _LibraryCheckerCache()
 
 
 def update_cloned_repository():  # pragma: no cover
-    global _library_checker_problems_tar_gz  # noqa: PLW0603
-
     gz_path = config.get_cache_dir() / "library-checker-problems.tar.gz"
     repo_gz_path = config.get_cache_dir() / "repo.tar.gz"
     repo_path = config.get_cache_dir() / "library-checker-problems"
     if repo_path.is_dir():
         return
 
-    if not gz_path.exists() and _library_checker_problems_tar_gz:
-        gz_path.write_bytes(_library_checker_problems_tar_gz)
+    if not gz_path.exists() and _library_checker_cache.archive:
+        gz_path.write_bytes(_library_checker_cache.archive)
     if gz_path.exists():
         shutil.unpack_archive(gz_path, config.get_cache_dir())
         return
@@ -154,7 +112,7 @@ def update_cloned_repository():  # pragma: no cover
 
     with tarfile.open(gz_path, "w:gz") as gzp:
         gzp.add(master_dir, "library-checker-problems", filter=_match_aplusb)
-    _library_checker_problems_tar_gz = gz_path.read_bytes()
+    _library_checker_cache.archive = gz_path.read_bytes()
 
     shutil.move(master_dir, repo_path)
 

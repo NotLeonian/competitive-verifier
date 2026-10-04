@@ -1,4 +1,3 @@
-# pyright: reportUnknownVariableType=false, reportUnknownMemberType=false
 # Python Version: 3.x
 import concurrent.futures
 import functools
@@ -8,6 +7,7 @@ import platform
 import sys
 from collections.abc import Sequence
 from logging import getLogger
+from typing import Protocol, cast
 
 import importlab.environment
 import importlab.fs
@@ -18,6 +18,20 @@ from competitive_verifier.models import ShellCommand
 from .base import Language, LanguageEnvironment
 
 logger = getLogger(__name__)
+
+
+class _ImportGraph(Protocol):
+    def deps_list(self) -> list[tuple[str, list[str]]]: ...
+
+
+class _ImportGraphFactory(Protocol):
+    def create(
+        self,
+        env: importlab.environment.Environment,
+        filenames: list[str],
+        *,
+        trim: bool = False,
+    ) -> _ImportGraph: ...
 
 
 class PythonLanguageEnvironment(LanguageEnvironment):
@@ -61,11 +75,12 @@ def _python_list_depending_files(
     )
     try:
         executor = concurrent.futures.ThreadPoolExecutor()
+        graph_factory = cast("_ImportGraphFactory", importlab.graph.ImportGraph)
         future = executor.submit(
-            importlab.graph.ImportGraph.create,  # pyright: ignore[reportUnknownArgumentType]
+            graph_factory.create,
             env,
             [str(path)],
-            True,
+            trim=True,
         )
 
         timeout = 5.0 if platform.uname().system == "Windows" else 1.0

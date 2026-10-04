@@ -1,8 +1,6 @@
 # The file is inspired by Tyrrrz/GitHubActionsTestLogger
 # https://github.com/Tyrrrz/GitHubActionsTestLogger/blob/04fe7796a047dbd0e3cd6a46339b2a50f5125317/GitHubActionsTestLogger/TestSummary.cs
 
-# ruff: noqa: PLR2004
-
 import os
 import pathlib
 from collections import Counter
@@ -21,6 +19,10 @@ SUCCESS = ResultStatus.SUCCESS
 FAILURE = ResultStatus.FAILURE
 SKIPPED = ResultStatus.SKIPPED
 
+_WHOLE_SECONDS_THRESHOLD = 10
+_MIN_VISIBLE_MEGABYTES = 0.001
+_WHOLE_MEGABYTES_THRESHOLD = 100
+
 
 def to_human_str_seconds(total_seconds: float) -> str:
     hours = int(total_seconds // 3600)
@@ -33,7 +35,7 @@ def to_human_str_seconds(total_seconds: float) -> str:
         return f"{hours}h {minutes}m"
     if minutes > 0:
         return f"{minutes}m {int(seconds)}s"
-    if total_seconds >= 10:
+    if total_seconds >= _WHOLE_SECONDS_THRESHOLD:
         return f"{int(seconds)}s"
     if total_seconds > 1:
         return f"{total_seconds:.1f}s"
@@ -41,9 +43,9 @@ def to_human_str_seconds(total_seconds: float) -> str:
 
 
 def to_human_str_mega_bytes(total_mega_bytes: float) -> str:
-    if total_mega_bytes < 0.001:
+    if total_mega_bytes < _MIN_VISIBLE_MEGABYTES:
         return "0MB"
-    if total_mega_bytes < 100:
+    if total_mega_bytes < _WHOLE_MEGABYTES_THRESHOLD:
         return f"{total_mega_bytes:.3g}MB"
     return f"{int(total_mega_bytes)}MB"
 

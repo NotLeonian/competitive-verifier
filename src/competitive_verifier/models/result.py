@@ -2,7 +2,7 @@ import datetime
 import enum
 import pathlib
 from logging import getLogger
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -94,7 +94,7 @@ class VerificationResult(BaseModel):
 
     @field_validator("status", mode="before")
     @classmethod
-    def verification_list(cls, v: Any) -> Any:  # noqa: ANN401
+    def verification_list(cls, v: object) -> object:
         return v.lower() if isinstance(v, str) else v
 
     def need_reverifying(self, base_time: datetime.datetime) -> bool:

@@ -17,6 +17,6 @@ class OjVerifyGoConfig(OjVerifyUserDefinedConfig):
     )
 
 
-class GoLanguage(UserDefinedLanguage):
-    extension: Literal["go"] = "go"  # pyright: ignore[reportIncompatibleVariableOverride]
-    config: OjVerifyGoConfig = Field(default_factory=OjVerifyGoConfig)  # pyright: ignore[reportIncompatibleVariableOverride]
+class GoLanguage(UserDefinedLanguage[Literal["go"], OjVerifyGoConfig]):
+    extension: Literal["go"] = "go"
+    config: OjVerifyGoConfig = Field(default_factory=OjVerifyGoConfig)

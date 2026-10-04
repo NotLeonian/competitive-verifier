@@ -8,7 +8,7 @@ from logging import getLogger
 from typing import Literal
 
 import yaml
-from pydantic import Field
+from pydantic import Field, TypeAdapter, ValidationError
 
 from competitive_verifier import git
 from competitive_verifier.arg import VerboseArguments
@@ -193,12 +193,12 @@ def _get_action_query(languages: set[str]) -> dict[str, str]:
     if jekyll_config_path.exists():
         with jekyll_config_path.open("r") as fp:
             jekyll_config = yaml.safe_load(fp)
-        with contextlib.suppress(Exception):
-            exclude = jekyll_config.get("exclude")
+        with contextlib.suppress(AttributeError, ValidationError):
+            exclude = TypeAdapter[str | list[str] | None](
+                str | list[str] | None
+            ).validate_python(jekyll_config.get("exclude"), strict=True)
             if isinstance(exclude, list):
-                exclude = "\n".join(
-                    exclude  # pyright: ignore[reportUnknownArgumentType]
-                )
+                exclude = "\n".join(exclude)
             if exclude:
                 d["exclude"] = exclude
     return d
