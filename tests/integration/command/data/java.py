@@ -36,7 +36,7 @@ class JavaData(IntegrationData):
                             "command": ["java", "examples.Aplusb_main"],
                             "compile": [
                                 "javac",
-                                "examples/Aplusb_main.java",
+                                str(self.targets_path / "examples/Aplusb_main.java"),
                             ],
                             "name": "Java",
                             "tempdir": f"{self.config_dir_path / 'cache/standalone/382841ad26b555d39a8784691c59fce8'}",
@@ -61,7 +61,7 @@ class JavaData(IntegrationData):
                             "command": ["java", "examples.Aplusb_test"],
                             "compile": [
                                 "javac",
-                                "examples/Aplusb_test.java",
+                                str(self.targets_path / "examples/Aplusb_test.java"),
                             ],
                             "name": "Java",
                             "problem": "https://judge.yosupo.jp/problem/aplusb",
@@ -98,7 +98,9 @@ class JavaData(IntegrationData):
                             "command": ["java", "examples.HelloWorld_test"],
                             "compile": [
                                 "javac",
-                                "examples/HelloWorld_test.java",
+                                str(
+                                    self.targets_path / "examples/HelloWorld_test.java"
+                                ),
                             ],
                             "name": "Java",
                             "problem": "https://onlinejudge.u-aizu.ac.jp/courses/lesson/2/ITP1/1/ITP1_1_A",
@@ -126,6 +128,7 @@ class JavaData(IntegrationData):
                 },
                 "examples/Aplusb_test.java": {
                     "content_hash": "c7c353fb35eb05dbb94ad35790272af5",
+                    "testdata_hash": "86f51edad48ca302fc110d93bb6bc967",
                     "newest": True,
                     "verifications": [
                         {
