@@ -112,25 +112,22 @@ class InputContainer(ABC):
     ) -> str | None:
         """Digest of the expected or cached test data of the file's verifications.
 
-        Ignore checks without test data. ``None`` if no checks use test data or
-        the test data of any problem verification can't be identified.
+        Ignore checks without test data. Unknown identities retain their position
+        without suppressing known hashes. ``None`` if all identities are unknown.
         """
         f = self.verifications.files.get(path)
         if f is None:
             return None
-        problem_verifications = [
-            v for v in f.verification_list if isinstance(v, BaseProblemVerification)
+        hashes = [
+            v.cached_testdata_hash() if cached else v.testdata_hash()
+            for v in f.verification_list
+            if isinstance(v, BaseProblemVerification)
         ]
-        if not problem_verifications:
+        if all(value is None for value in hashes):
             return None
-        digest = hashlib.sha256()
-        for v in problem_verifications:
-            testdata_hash = v.cached_testdata_hash() if cached else v.testdata_hash()
-            if testdata_hash is None:
-                return None
-            digest.update(testdata_hash.encode())
-            digest.update(b"\0")
-        return digest.hexdigest()
+        return hashlib.sha256(
+            json.dumps(hashes, separators=(",", ":")).encode()
+        ).hexdigest()
 
     def file_need_verification(
         self,
