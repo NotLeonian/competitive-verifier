@@ -9,6 +9,9 @@ from pytest_mock import MockerFixture
 
 from competitive_verifier.config import COMPETITIVE_VERIFY_CONFIG_PATH
 
+# Temporary-directory fixtures must work even when mkdir is prohibited in tests.
+_mkdir = pathlib.Path.mkdir
+
 
 @pytest.fixture(autouse=True)
 def tmp_config_path(monkeypatch: pytest.MonkeyPatch):
@@ -43,7 +46,7 @@ def prohibit_mkdir(mocker: MockerFixture, request: pytest.FixtureRequest):
 class TempContext(nullcontext[pathlib.Path]):
     def __init__(self, enter_result: pathlib.Path) -> None:
         super().__init__(enter_result)
-        os.mkdir(enter_result)  # noqa: PTH102
+        _mkdir(enter_result)
 
     @property
     def name(self):

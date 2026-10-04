@@ -1451,7 +1451,7 @@ def test_verify_error(
         def is_lightweight(self) -> bool:
             return False
 
-        def run(self, *args: Any, **kwargs: Any):  # pyright: ignore[reportIncompatibleMethodOverride]
+        def run(self, *args: Any, **kwargs: Any):
             raise RuntimeError("ErrorVerification")
 
     verifier = MockVerifier(
@@ -1571,8 +1571,14 @@ def test_verify_failure(
 
 @pytest.mark.usefixtures("mock_perf_counter")
 def test_failure_result():
-    class ResultConstVerification(ConstVerification):
-        def run(self, *args: Any, **kwargs: Any):  # pyright: ignore[reportIncompatibleMethodOverride]
+    class ResultVerification(ProblemVerification):
+        status: ResultStatus
+
+        @property
+        def is_lightweight(self) -> bool:
+            return True
+
+        def run(self, *args: Any, **kwargs: Any) -> VerificationResult:
             return VerificationResult(
                 verification_name="mockresult",
                 status=self.status,
@@ -1587,8 +1593,10 @@ def test_failure_result():
                 "test/foo.py": {
                     "dependencies": ["lib/hoge1.py"],
                     "verification": [
-                        ResultConstVerification(
+                        ResultVerification(
                             name="foo",
+                            problem="https://example.com/problem",
+                            command="unused",
                             status=ResultStatus.FAILURE,
                         ),
                     ],

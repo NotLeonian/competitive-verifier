@@ -2227,7 +2227,7 @@ def check_common(
         ),
     ):
         path_str = target_file.relative_to(destination).as_posix()
-        with subtests.test(msg=path_str):  # pyright: ignore[reportUnknownMemberType]
+        with subtests.test(msg=path_str):
             front_matter, content = split_front_matter_raw(target_file.read_bytes())
             assert content == targets[path_str].content
             assert front_matter
@@ -3007,7 +3007,7 @@ def test_hand_docs(
     ]
 
     for t in markdowns:
-        with subtests.test(msg=t.path):  # pyright: ignore[reportUnknownMemberType]
+        with subtests.test(msg=t.path):
             front_matter, content = split_front_matter_raw(
                 (destination / f"{t.path}.md").read_bytes()
             )
@@ -3015,9 +3015,7 @@ def test_hand_docs(
             assert front_matter
             assert yaml.safe_load(front_matter) == t.front_matter
 
-    with subtests.test(  # pyright: ignore[reportUnknownMemberType]
-        msg="display/multi.md"
-    ):
+    with subtests.test(msg="display/multi.md"):
         front_matter, content = split_front_matter_raw(
             (destination / "display/multi.md").read_bytes()
         )
@@ -3218,9 +3216,7 @@ def test_hand_docs(
             "title": "Multi",
         }
 
-    with subtests.test(  # pyright: ignore[reportUnknownMemberType]
-        msg="display/multi-no-keep.txt"
-    ):
+    with subtests.test(msg="display/multi-no-keep.txt"):
         front_matter, content = split_front_matter_raw(
             (destination / "display/multi-no-keep.txt.md").read_bytes()
         )

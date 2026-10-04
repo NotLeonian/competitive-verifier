@@ -19,8 +19,6 @@ from competitive_verifier.util import read_text_normalized
 
 from .base import Language, LanguageEnvironment, OjVerifyLanguageConfig
 
-# ruff: noqa: PLR2004
-
 logger = getLogger(__name__)
 
 _metadata_by_manifest_path: dict[pathlib.Path, dict[str, Any]] = {}
@@ -215,7 +213,9 @@ def _list_dependencies_by_crate(
             for t in depended_package["targets"]
             if t != main_target and (_is_build(t) or _is_lib_or_proc_macro(t))
         ]
-        assert len(depended_targets) <= 2
+        # A package has at most one build script and one library target.
+        max_dependency_targets = 2
+        assert len(depended_targets) <= max_dependency_targets
         for depended_target in depended_targets:
             related_source_files = _related_source_files(
                 basedir,
@@ -296,14 +296,15 @@ def _related_source_files(
         ):
             dep_info = read_text_normalized(dep_info_path)
             for line in dep_info.splitlines():
-                parts = line.split(": ")
+                target_path, separator, dependencies = line.partition(": ")
                 if (
-                    len(parts) == 2
-                    and pathlib.Path(metadata["workspace_root"], parts[0])
+                    separator
+                    and ": " not in dependencies
+                    and pathlib.Path(metadata["workspace_root"], target_path)
                     == dep_info_path
                 ):
                     paths: list[pathlib.Path] = []
-                    it = iter(parts[1].split())
+                    it = iter(dependencies.split())
                     for s in it:
                         source_path = s
                         while source_path.endswith("\\"):

@@ -21,14 +21,22 @@ from competitive_verifier.verify.verifier import (
     InputContainer,
     SplitState,
     Verifier,
-    _now,  # pyright: ignore[reportPrivateUsage]
 )
 
 SUCCESS = ResultStatus.SUCCESS
 
 
-def test_now():
-    assert _now().tzinfo is not None
+def test_default_verification_time_has_timezone():
+    verifier = Verifier(
+        VerificationInput(),
+        timeout=1,
+        default_tle=None,
+        default_mle=None,
+        prev_result=None,
+        split_state=None,
+        use_git_timestamp=False,
+    )
+    assert verifier.verification_time.tzinfo is not None
 
 
 def test_get_file_timestamp_git_timestamp(mocker: MockerFixture):

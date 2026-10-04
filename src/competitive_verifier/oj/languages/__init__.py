@@ -54,6 +54,7 @@ else:  # pragma: no cover
 
 class OjVerifyLanguageConfigDict(BaseModel):
     model_config = ConfigDict(extra="allow")
+    # Pydantic requires a plain dict annotation to validate extra language configs.
     __pydantic_extra__: dict[str, OjVerifyUserDefinedConfig] = Field(  # pyright: ignore[reportIncompatibleVariableOverride]
         default_factory=dict[str, OjVerifyUserDefinedConfig]
     )

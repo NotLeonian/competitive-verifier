@@ -14,6 +14,6 @@ class OjVerifyRubyConfig(OjVerifyUserDefinedConfig):
     )
 
 
-class RubyLanguage(UserDefinedLanguage):
-    extension: Literal["rb"] = "rb"  # pyright: ignore[reportIncompatibleVariableOverride]
-    config: OjVerifyRubyConfig = Field(default_factory=OjVerifyRubyConfig)  # pyright: ignore[reportIncompatibleVariableOverride]
+class RubyLanguage(UserDefinedLanguage[Literal["rb"], OjVerifyRubyConfig]):
+    extension: Literal["rb"] = "rb"
+    config: OjVerifyRubyConfig = Field(default_factory=OjVerifyRubyConfig)

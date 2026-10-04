@@ -1,4 +1,5 @@
 import pathlib
+import shutil
 import subprocess
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -11,9 +12,11 @@ from competitive_verifier import git
 @pytest.fixture(scope="session")
 def mock_repo_make(integration_test_data_dir: pathlib.Path):
     bundle = integration_test_data_dir / "test-repository.bundle"
+    git_path = shutil.which("git")
+    assert git_path is not None
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        subprocess.run(["git", "clone", str(bundle), tmpdir], check=True)  # noqa: S607
+        subprocess.run([git_path, "clone", str(bundle), tmpdir], check=True)
         yield pathlib.Path(tmpdir).resolve()
 
 

@@ -4,6 +4,7 @@ import pathlib
 from collections.abc import Sequence
 from logging import getLogger
 from tempfile import TemporaryDirectory
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -95,9 +96,17 @@ class UserDefinedLanguageEnvironment(LanguageEnvironment):
         ).format_command(self.config.execute)
 
 
-class CommandLanguage(Language):
-    extension: str
-    config: OjVerifyCommandConfig[ShellCommandLike] | OjVerifyCommandConfig[None]
+ExtensionT = TypeVar("ExtensionT", bound=str)
+ConfigT = TypeVar(
+    "ConfigT",
+    bound=OjVerifyCommandConfig[ShellCommandLike] | OjVerifyCommandConfig[None],
+)
+UserConfigT = TypeVar("UserConfigT", bound=OjVerifyUserDefinedConfig)
+
+
+class CommandLanguage(Language, Generic[ExtensionT, ConfigT]):
+    extension: ExtensionT
+    config: ConfigT
 
     def list_attributes(
         self, path: pathlib.Path, *, basedir: pathlib.Path
@@ -155,9 +164,9 @@ class CommandLanguage(Language):
             )
 
 
-class UserDefinedLanguage(CommandLanguage):
-    config: OjVerifyUserDefinedConfig  # pyright: ignore[reportIncompatibleVariableOverride]
-
+class UserDefinedLanguage(
+    CommandLanguage[ExtensionT, UserConfigT], Generic[ExtensionT, UserConfigT]
+):
     def list_environments(
         self, path: pathlib.Path, *, basedir: pathlib.Path
     ) -> Sequence[LanguageEnvironment]:

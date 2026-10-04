@@ -293,7 +293,8 @@ class OjResolver:
                         additional_sources.append(
                             AdditionalSource(name="bundled", path=dest_path)
                         )
-                except Exception:  # noqa: BLE001
+                except Exception:
+                    logger.exception("Failed to bundle: %s", path)
                     dest_path = _write_bundled(
                         traceback.format_exc().encode(), path=path
                     )

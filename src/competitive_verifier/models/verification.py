@@ -205,6 +205,7 @@ class BaseProblemVerification(BaseVerification, ABC):
         *,
         deadline: float = float("inf"),
     ) -> VerificationResult | ResultStatus:
+        # oj depends on these verification models, so import it after initialization.
         from competitive_verifier import oj  # noqa: PLC0415
 
         if not params:
@@ -248,7 +249,7 @@ class ProblemVerification(BaseProblemVerification):
     """
 
     def _problem(self) -> TestCaseProvider | None:
-        # circular dependency
+        # oj depends on these verification models, so import it after initialization.
         from competitive_verifier.oj import problem_from_url  # noqa: PLC0415
 
         return problem_from_url(self.problem)
@@ -272,7 +273,7 @@ class LocalProblemVerification(BaseProblemVerification):
     """
 
     def _problem(self) -> TestCaseProvider | None:
-        # circular dependency
+        # oj depends on these verification models, so import it after initialization.
         from competitive_verifier.oj import LocalProblem  # noqa: PLC0415
 
         return LocalProblem(self.input)

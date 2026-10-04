@@ -1,4 +1,3 @@
-# pyright: reportGeneralTypeIssues=false
 import io
 import textwrap
 from typing import Any

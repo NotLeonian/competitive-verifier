@@ -3,15 +3,12 @@ import pathlib
 import pytest
 from pytest_mock import MockerFixture
 
-from competitive_verifier.oj.languages import rust
-from competitive_verifier.oj.languages.rust import (
-    _related_source_files,  # pyright: ignore[reportPrivateUsage]
-)
+from competitive_verifier.oj.languages import OjVerifyRustConfig, RustLanguage, rust
 
 
 @pytest.mark.allow_mkdir
 @pytest.mark.parametrize("source_name", ["main.rs", "main with spaces.rs"])
-def test_related_source_files_with_escaped_spaces(
+def test_list_dependencies_with_escaped_spaces(
     testtemp: pathlib.Path, mocker: MockerFixture, source_name: str
 ):
     source = testtemp / source_name
@@ -28,12 +25,14 @@ def test_related_source_files_with_escaped_spaces(
     mocker.patch.object(rust, "_cargo_checked_workspaces", {testtemp})
     mocker.patch.object(rust, "_related_source_files_by_workspace", {})
 
-    assert _related_source_files(
-        testtemp,
-        {
+    mocker.patch.object(
+        rust,
+        "_cargo_metadata",
+        return_value={
             "workspace_root": str(testtemp),
             "target_directory": str(testtemp / "target"),
             "workspace_members": ["example"],
+            "resolve": {"nodes": [{"id": "example", "deps": []}]},
             "packages": [
                 {
                     "id": "example",
@@ -43,4 +42,9 @@ def test_related_source_files_with_escaped_spaces(
                 }
             ],
         },
-    ) == {source: frozenset({dependency})}
+    )
+
+    language = RustLanguage(config=OjVerifyRustConfig())
+    assert language.list_dependencies(source, basedir=testtemp) == sorted(
+        [source, dependency]
+    )

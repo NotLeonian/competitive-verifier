@@ -15,26 +15,33 @@ class FileType(enum.Enum):
 
 
 class StatusIcon(str, enum.Enum):
-    def __new__(cls, file_type: FileType, result: str, _: object) -> "StatusIcon":
+    def __new__(cls, file_type: FileType, result: str) -> "StatusIcon":
         value = f"{file_type.name}_{result}"
         member = str.__new__(cls, value)
         member._value_ = value
         return member
 
-    def __init__(self, file_type: FileType, result: str, is_success: bool) -> None:  # noqa: FBT001
+    def __init__(self, file_type: FileType, result: str) -> None:
         super().__init__()
         self.file_type = file_type
         self.result = result
-        self.is_success = is_success
 
-    LIBRARY_ALL_AC = (FileType.LIBRARY, "ALL_AC", True)
-    LIBRARY_PARTIAL_AC = (FileType.LIBRARY, "PARTIAL_AC", True)
-    LIBRARY_SOME_WA = (FileType.LIBRARY, "SOME_WA", False)
-    LIBRARY_ALL_WA = (FileType.LIBRARY, "ALL_WA", False)
-    LIBRARY_NO_TESTS = (FileType.LIBRARY, "NO_TESTS", True)
-    TEST_ACCEPTED = (FileType.TEST, "ACCEPTED", True)
-    TEST_WRONG_ANSWER = (FileType.TEST, "WRONG_ANSWER", False)
-    TEST_WAITING_JUDGE = (FileType.TEST, "WAITING_JUDGE", True)
+    LIBRARY_ALL_AC = (FileType.LIBRARY, "ALL_AC")
+    LIBRARY_PARTIAL_AC = (FileType.LIBRARY, "PARTIAL_AC")
+    LIBRARY_SOME_WA = (FileType.LIBRARY, "SOME_WA")
+    LIBRARY_ALL_WA = (FileType.LIBRARY, "ALL_WA")
+    LIBRARY_NO_TESTS = (FileType.LIBRARY, "NO_TESTS")
+    TEST_ACCEPTED = (FileType.TEST, "ACCEPTED")
+    TEST_WRONG_ANSWER = (FileType.TEST, "WRONG_ANSWER")
+    TEST_WAITING_JUDGE = (FileType.TEST, "WAITING_JUDGE")
+
+    @property
+    def is_success(self) -> bool:
+        return self not in (
+            StatusIcon.LIBRARY_SOME_WA,
+            StatusIcon.LIBRARY_ALL_WA,
+            StatusIcon.TEST_WRONG_ANSWER,
+        )
 
     @property
     def is_failed(self) -> bool:

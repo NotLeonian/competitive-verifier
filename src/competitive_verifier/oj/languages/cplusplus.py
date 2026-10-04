@@ -15,8 +15,6 @@ from . import special_comments
 from .base import Language, LanguageEnvironment, OjVerifyLanguageConfig
 from .cplusplus_bundle import Bundler
 
-# ruff: noqa: N803
-
 logger = getLogger(__name__)
 
 
@@ -34,9 +32,9 @@ class CPlusPlusLanguageEnvironment(LanguageEnvironment):
     cxx: pathlib.Path
     cxx_flags: list[str]
 
-    def __init__(self, *, CXX: pathlib.Path, CXXFLAGS: list[str]):
-        self.cxx = CXX
-        self.cxx_flags = CXXFLAGS
+    def __init__(self, *, cxx: pathlib.Path, cxx_flags: list[str]):
+        self.cxx = cxx
+        self.cxx_flags = cxx_flags
 
     @property
     def name(self) -> str:
@@ -70,18 +68,18 @@ class CPlusPlusLanguageEnvironment(LanguageEnvironment):
 def _cplusplus_list_depending_files(
     path: pathlib.Path,
     *,
-    CXX: pathlib.Path,
-    CXXFLAGS: list[str],
+    cxx: pathlib.Path,
+    cxx_flags: list[str],
 ) -> list[pathlib.Path]:
     is_windows = platform.uname().system == "Windows"
-    command = [str(CXX), *CXXFLAGS, "-MM", str(path)]
+    command = [str(cxx), *cxx_flags, "-MM", str(path)]
     try:
         data = command_stdout(command)
     except Exception:
         logger.exception(
             "failed to analyze dependencies with %s: %s  (hint: Please check #include directives of the file and its dependencies."
             " The paths must exist, must not contain '\\', and must be case-sensitive.)",
-            CXX,
+            cxx,
             path,
             exc_info=False,
         )
@@ -95,9 +93,9 @@ def _cplusplus_list_depending_files(
 
 
 def _cplusplus_list_defined_macros(
-    path: pathlib.Path, *, CXX: pathlib.Path, CXXFLAGS: list[str]
+    path: pathlib.Path, *, cxx: pathlib.Path, cxx_flags: list[str]
 ) -> dict[str, str]:
-    command = [str(CXX), *CXXFLAGS, "-dM", "-E", str(path)]
+    command = [str(cxx), *cxx_flags, "-dM", "-E", str(path)]
     data = command_stdout(command)
     define: dict[str, str] = {}
     for line in data.splitlines():
@@ -124,31 +122,31 @@ class CPlusPlusLanguage(Language):
     config: OjVerifyCPlusPlusConfig = Field(default_factory=OjVerifyCPlusPlusConfig)
 
     def _list_environments(self) -> list[CPlusPlusLanguageEnvironment]:
-        default_CXXFLAGS = ["--std=c++17", "-O2", "-Wall", "-g"]  # noqa: N806
+        default_cxx_flags = ["--std=c++17", "-O2", "-Wall", "-g"]
         if platform.system() == "Windows" or "CYGWIN" in platform.system():
-            default_CXXFLAGS.append("-Wl,-stack,0x10000000")
+            default_cxx_flags.append("-Wl,-stack,0x10000000")
         if platform.system() == "Darwin":
-            default_CXXFLAGS.append("-Wl,-stack_size,0x10000000")
+            default_cxx_flags.append("-Wl,-stack_size,0x10000000")
         if (
             platform.uname().system == "Linux"
             and "Microsoft" in platform.uname().release
         ):
-            default_CXXFLAGS.append("-fsplit-stack")
+            default_cxx_flags.append("-fsplit-stack")
 
         if "CXXFLAGS" in os.environ and not self.config.environments:
             logger.warning(
                 "Usage of $CXXFLAGS envvar to specify options is deprecated and will be removed soon",
                 extra={"github": GitHubMessageParams()},
             )
-            default_CXXFLAGS = shlex.split(os.environ["CXXFLAGS"])  # noqa: N806
+            default_cxx_flags = shlex.split(os.environ["CXXFLAGS"])
 
         envs: list[CPlusPlusLanguageEnvironment] = []
         if self.config.environments:
             # configured: use specified CXX & CXXFLAGS
             envs.extend(
                 CPlusPlusLanguageEnvironment(
-                    CXX=pathlib.Path(env.CXX),
-                    CXXFLAGS=env.CXXFLAGS or default_CXXFLAGS,
+                    cxx=pathlib.Path(env.CXX),
+                    cxx_flags=env.CXXFLAGS or default_cxx_flags,
                 )
                 for env in self.config.environments
             )
@@ -161,7 +159,7 @@ class CPlusPlusLanguage(Language):
             )
             envs.append(
                 CPlusPlusLanguageEnvironment(
-                    CXX=pathlib.Path(os.environ["CXX"]), CXXFLAGS=default_CXXFLAGS
+                    cxx=pathlib.Path(os.environ["CXX"]), cxx_flags=default_cxx_flags
                 )
             )
 
@@ -172,7 +170,7 @@ class CPlusPlusLanguage(Language):
                 if path is not None:
                     envs.append(
                         CPlusPlusLanguageEnvironment(
-                            CXX=pathlib.Path(path), CXXFLAGS=default_CXXFLAGS
+                            cxx=pathlib.Path(path), cxx_flags=default_cxx_flags
                         )
                     )
 
@@ -196,8 +194,8 @@ class CPlusPlusLanguage(Language):
             for env in self._list_environments():
                 macros = _cplusplus_list_defined_macros(
                     path.resolve(),
-                    CXX=env.cxx,
-                    CXXFLAGS=[*env.cxx_flags, "-I", str(basedir)],
+                    cxx=env.cxx,
+                    cxx_flags=[*env.cxx_flags, "-I", str(basedir)],
                 )
 
                 # convert macros to attributes
@@ -232,8 +230,8 @@ class CPlusPlusLanguage(Language):
         env = self._list_environments()[0]
         return _cplusplus_list_depending_files(
             path.resolve(),
-            CXX=env.cxx,
-            CXXFLAGS=[*env.cxx_flags, "-I", str(basedir)],
+            cxx=env.cxx,
+            cxx_flags=[*env.cxx_flags, "-I", str(basedir)],
         )
 
     def bundle(self, path: pathlib.Path, *, basedir: pathlib.Path) -> bytes | None:

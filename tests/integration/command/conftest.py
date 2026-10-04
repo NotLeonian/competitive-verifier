@@ -1,3 +1,4 @@
+import importlib
 import inspect
 import os
 import pathlib
@@ -45,11 +46,11 @@ def check_necessary_commands() -> str | None:  # pragma: no cover
 @pytest.fixture(scope="session")
 def is_vscode_debug() -> bool:  # pragma: no cover
     try:
-        from debugpy import is_client_connected  # type: ignore  # noqa: PGH003, PLC0415
+        debugpy = importlib.import_module("debugpy")
     except ImportError:
         return False
 
-    return is_client_connected()  # pyright: ignore[reportUnknownVariableType]
+    return bool(debugpy.is_client_connected())
 
 
 @pytest.fixture(scope="session")

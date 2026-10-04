@@ -16,6 +16,6 @@ class OjVerifyHaskellConfig(OjVerifyUserDefinedConfig):
     )
 
 
-class HaskellLanguage(UserDefinedLanguage):
-    extension: Literal["hs"] = "hs"  # pyright: ignore[reportIncompatibleVariableOverride]
-    config: OjVerifyHaskellConfig = Field(default_factory=OjVerifyHaskellConfig)  # pyright: ignore[reportIncompatibleVariableOverride]
+class HaskellLanguage(UserDefinedLanguage[Literal["hs"], OjVerifyHaskellConfig]):
+    extension: Literal["hs"] = "hs"
+    config: OjVerifyHaskellConfig = Field(default_factory=OjVerifyHaskellConfig)

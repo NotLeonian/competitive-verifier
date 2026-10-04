@@ -16,7 +16,7 @@ def test_exec_group_log(
     mocker: MockerFixture,
 ):
     def mockrun(command: Any, **kwargs: dict[str, Any]):
-        print("mockrun", file=sys.stderr)  # noqa: T201
+        sys.stderr.write("mockrun\n")
 
     mocker.patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}, clear=True)
     mocker.patch("subprocess.run", side_effect=mockrun)

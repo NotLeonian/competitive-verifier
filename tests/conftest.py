@@ -1,6 +1,6 @@
 import os
 from logging import LogRecord
-from typing import TypeGuard, TypeVar
+from typing import TypeGuard, TypeVar, cast
 
 import pytest
 from pytest_mock import MockerFixture
@@ -47,8 +47,8 @@ TVal = TypeVar("TVal")
 
 
 def _typed_list(value: object, cls: type[TVal]) -> TypeGuard[list[TVal]]:
-    return (
-        isinstance(value, list) and all(isinstance(v, cls) for v in value)  # pyright: ignore[reportUnknownVariableType]
+    return isinstance(value, list) and all(
+        isinstance(v, cls) for v in cast("list[object]", value)
     )
 
 
