@@ -13,6 +13,7 @@ from competitive_verifier import git, log
 from competitive_verifier.download import download_files as run_download
 from competitive_verifier.models import (
     FileResult,
+    NeedVerification,
     ResultStatus,
     Verification,
     VerificationFile,
@@ -144,6 +145,13 @@ class InputContainer(ABC):
                 content_hash=self.file_content_hash(path),
                 testdata_hash=self.file_testdata_hash(path),
             )
+            if (
+                not reason
+                and file_result.testdata_hash is not None
+                and file_result.testdata_hash
+                != self.file_testdata_hash(path, cached=True)
+            ):
+                reason = NeedVerification.TESTDATA_CHANGED
         else:
             raise AssertionError(f"Unknown change_detection: {self.change_detection}")
         if reason:

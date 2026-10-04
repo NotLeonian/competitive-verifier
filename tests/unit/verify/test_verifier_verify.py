@@ -698,10 +698,17 @@ def test_verify_reuses_only_matching_configuration(
 
 
 @pytest.mark.allow_mkdir
+@pytest.mark.parametrize("download", [False, True])
+@pytest.mark.parametrize(
+    "cache_change",
+    ["input", "output", "missing_input", "missing_output"],
+)
 def test_verify_regenerates_stale_library_checker_cases_after_no_download(
     testtemp: pathlib.Path,
     mocker: MockerFixture,
     monkeypatch: pytest.MonkeyPatch,
+    download: bool,
+    cache_change: str,
 ):
     monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, str(testtemp / "config"))
     problem = LibraryCheckerProblem(problem_id="aplusb")
@@ -709,17 +716,17 @@ def test_verify_regenerates_stale_library_checker_cases_after_no_download(
     (directory / "in").mkdir(parents=True)
     (directory / "out").mkdir()
     (directory / "info.toml").write_text("")
-    (directory / "in" / "example_00.in").write_bytes(b"1 2\n")
+    input_path = directory / "in" / "example_00.in"
+    input_path.write_bytes(b"1 2\n")
     output = directory / "out" / "example_00.out"
     output.write_bytes(b"stale output\n")
-    (directory / "hash.json").write_text(
-        json.dumps(
-            {
-                "example_00.in": hashlib.sha256(b"1 2\n").hexdigest(),
-                "example_00.out": hashlib.sha256(b"3\n").hexdigest(),
-            }
-        )
+    manifest = json.dumps(
+        {
+            "example_00.in": hashlib.sha256(b"1 2\n").hexdigest(),
+            "example_00.out": hashlib.sha256(b"3\n").hexdigest(),
+        }
     )
+    problem.hash_json.write_text(manifest)
     source = pathlib.Path("source.py")
     source.write_text("source")
     verifications = VerificationInput.model_validate(
@@ -746,11 +753,16 @@ def test_verify_regenerates_stale_library_checker_cases_after_no_download(
             change_detection="hash",
         )
 
+    def generate_cases() -> None:
+        input_path.write_bytes(b"1 2\n")
+        output.write_bytes(b"3\n")
+        problem.hash_json.write_text(manifest)
+
     mocker.patch.object(LibraryCheckerProblem, "update_cloned_repository")
     generate = mocker.patch.object(
         LibraryCheckerProblem,
         "generate_test_cases",
-        side_effect=lambda: output.write_bytes(b"3\n"),
+        side_effect=generate_cases,
     )
     run = mocker.patch.object(
         Verifier, "run_verification", return_value=(SUCCESS, None)
@@ -774,6 +786,33 @@ def test_verify_regenerates_stale_library_checker_cases_after_no_download(
     assert not reused.files[source].newest
     generate.assert_called_once()
     assert run.call_count == 2
+
+    if cache_change == "input":
+        input_path.write_bytes(b"modified input\n")
+    elif cache_change == "output":
+        output.write_bytes(b"modified output\n")
+    elif cache_change == "missing_input":
+        input_path.unlink()
+    else:
+        output.unlink()
+    reverified = create_verifier(reused).verify(download=download)
+    assert reverified.files[source].newest
+    if download:
+        assert reverified.is_success()
+        assert generate.call_count == 2
+    else:
+        assert reverified.files[source].testdata_hash is None
+        assert reverified.is_success() is (
+            cache_change not in {"missing_input", "missing_output"}
+        )
+        generate.assert_called_once()
+        reverified = create_verifier(reverified).verify()
+        assert reverified.is_success()
+        assert generate.call_count == 2
+    assert reverified.files[source].testdata_hash == current.files[source].testdata_hash
+    reused = create_verifier(reverified).verify()
+    assert not reused.files[source].newest
+    assert generate.call_count == 2
 
 
 test_verify_timeout_params: list[
@@ -1432,7 +1471,7 @@ def test_verify_syncs_testdata_before_skip_selection(
     )
     synced_before_hash: list[int] = []
 
-    def file_testdata_hash(path: pathlib.Path) -> str:
+    def file_testdata_hash(path: pathlib.Path, *, cached: bool = False) -> str:
         synced_before_hash.append(update.call_count)
         return "testdata-foo"
 
@@ -1476,5 +1515,5 @@ def test_verify_syncs_testdata_before_skip_selection(
     assert result.files[pathlib.Path("test/foo.py")].verifications[0].status == SUCCESS
     assert update.call_count == (1 if synced else 0)
     if synced:
-        assert synced_before_hash == [1]
+        assert synced_before_hash == [1, 1]
     run_download.assert_not_called()

@@ -483,7 +483,7 @@ test_file_need_verification_params: list[
         ),
         True,
     ),
-    # Current test data unknown (not downloaded): assume unchanged, skip.
+    # Previously identified test data is no longer available: re-verify.
     (
         MockInputContainer(
             verification_time=datetime.datetime(2018, 12, 25),
@@ -503,7 +503,7 @@ test_file_need_verification_params: list[
                 ),
             ],
         ),
-        False,
+        True,
     ),
 ]
 
