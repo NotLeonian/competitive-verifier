@@ -2,7 +2,7 @@
 import abc
 import pathlib
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -53,9 +53,16 @@ class OjVerifyLanguageConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class OjVerifyUserDefinedConfig(OjVerifyLanguageConfig):
-    execute: ShellCommandLike
+CommandT = TypeVar("CommandT", bound=ShellCommandLike | None)
+
+
+class OjVerifyCommandConfig(OjVerifyLanguageConfig, Generic[CommandT]):
+    execute: CommandT
     compile: ShellCommandLike | None = None
     bundle: ShellCommandLike | None = None
     list_attributes: ShellCommandLike | None = None
     list_dependencies: ShellCommandLike | None = None
+
+
+class OjVerifyUserDefinedConfig(OjVerifyCommandConfig[ShellCommandLike]):
+    pass

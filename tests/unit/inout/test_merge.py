@@ -256,7 +256,7 @@ T = TypeVar("T", VerificationInput, VerifyCommandResult)
 
 @pytest.mark.parametrize(
     ("objects", "expected"),
-    inputs + results,
+    [*inputs, *results],
 )
 def test_merge(objects: list[T], expected: T):
     assert merge(objects) == expected

@@ -51,7 +51,13 @@ pip install -U poetry
 poetry install
 
 # test
-poetry run pytest
+poetry run poe test
+
+# type check
+poetry run poe mypy
+
+# lint and type check
+poetry run poe lint
 
 # format
 poetry run poe format

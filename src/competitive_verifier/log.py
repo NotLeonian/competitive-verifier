@@ -12,7 +12,7 @@ from logging import (
     LogRecord,
     basicConfig,
 )
-from typing import TextIO
+from typing import Literal, TextIO
 
 import colorlog
 from colorama import Fore, Style
@@ -41,6 +41,7 @@ class GitHubActionsHandler(Handler):
         self.stream = stream
 
     def emit(self, record: LogRecord) -> None:
+        command: Literal["error", "warning", "notice"]
         if record.levelno >= ERROR:
             command = "error"
         elif record.levelno >= WARNING:

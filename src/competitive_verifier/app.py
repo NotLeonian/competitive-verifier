@@ -49,12 +49,12 @@ Arguments = Annotated[
     | Migration,
     Field(discriminator="subcommand"),
 ]
-ARG_TYPES: tuple[type[BaseArguments], ...] = get_args(Arguments.__origin__)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
+ARG_TYPES: tuple[type[BaseArguments], ...] = get_args(get_args(Arguments)[0])
 
 
 class ArgumentParser(BaseParser):
-    def __init__(self, **kwargs: dict[str, Any]) -> None:
-        super().__init__(**kwargs)  # pyright: ignore[reportArgumentType]
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         subparsers = self.add_subparsers(dest="subcommand", parser_class=BaseParser)
 
         for s in ARG_TYPES:

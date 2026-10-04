@@ -8,8 +8,6 @@ from pytest_mock import MockerFixture
 
 from competitive_verifier.log import GitHubActionsHandler, GitHubMessageParams, group
 
-test_github_actions_handler_params = []
-
 
 def test_github_actions_handler(capsys: pytest.CaptureFixture[str]):
     handler = GitHubActionsHandler(stream=sys.stderr)

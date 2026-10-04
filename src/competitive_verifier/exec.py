@@ -69,11 +69,10 @@ def exec_command(
     if env:
         env = os.environ | env
 
-    with (
-        log.group(f"subprocess.run: {command}")
-        if group_log
-        else nullcontext(logger.info("subprocess.run: %s", command))
-    ):
+    if not group_log:
+        logger.info("subprocess.run: %s", command)
+
+    with log.group(f"subprocess.run: {command}") if group_log else nullcontext():
         return subprocess.run(
             command,
             shell=isinstance(command, str),
