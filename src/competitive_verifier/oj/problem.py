@@ -828,12 +828,14 @@ class LocalProblem(TestCaseProvider):
                 return None
             digest = hashlib.sha256()
             for case in sorted(self.iter_system_cases(), key=lambda c: c.name):
-                digest.update(case.name.encode())
-                digest.update(b"\0")
-                digest.update(case.input_path.read_bytes())
-                digest.update(b"\0")
-                digest.update(case.output_path.read_bytes())
-                digest.update(b"\0")
+                # Preserve field boundaries even when testcase data contains NUL.
+                for field in (
+                    case.name.encode(),
+                    case.input_path.read_bytes(),
+                    case.output_path.read_bytes(),
+                ):
+                    digest.update(len(field).to_bytes(8, "big"))
+                    digest.update(field)
         except OSError:
             return None
         return digest.hexdigest()

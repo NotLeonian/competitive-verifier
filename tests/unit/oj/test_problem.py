@@ -197,6 +197,39 @@ def test_local_problem_is_testdata_cached(tmp_path: pathlib.Path):
 
 
 @pytest.mark.allow_mkdir
+@pytest.mark.parametrize(
+    ("before", "after"),
+    [
+        ({"a": (b"a\0b", b"c")}, {"a": (b"a", b"b\0c")}),
+        ({"a": (b"\0", b"")}, {"a": (b"", b"\0")}),
+        (
+            {"a": (b"x", b"y\0b\0z\0w")},
+            {"a": (b"x", b"y"), "b": (b"z", b"w")},
+        ),
+    ],
+    ids=["input-output-boundary", "empty-field", "case-boundary"],
+)
+def test_local_problem_testdata_hash_preserves_boundaries_with_nul_bytes(
+    tmp_path: pathlib.Path,
+    before: dict[str, tuple[bytes, bytes]],
+    after: dict[str, tuple[bytes, bytes]],
+):
+    hashes: list[str] = []
+    for index, cases in enumerate((before, after)):
+        directory = tmp_path / str(index)
+        directory.mkdir()
+        for name, (input_data, output_data) in cases.items():
+            (directory / f"{name}.in").write_bytes(input_data)
+            (directory / f"{name}.out").write_bytes(output_data)
+        problem = LocalProblem(directory)
+        testdata_hash = problem.testdata_hash()
+        assert testdata_hash is not None
+        assert problem.testdata_hash() == testdata_hash
+        hashes.append(testdata_hash)
+    assert hashes[0] != hashes[1]
+
+
+@pytest.mark.allow_mkdir
 @pytest.mark.parametrize("extension", ["in", "out"])
 @pytest.mark.parametrize("error_type", [PermissionError, FileNotFoundError])
 def test_local_problem_testdata_hash_unreadable_case(

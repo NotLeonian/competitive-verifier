@@ -619,6 +619,63 @@ def test_verify_testdata_hash_during_execution(
 
 
 @pytest.mark.allow_mkdir
+def test_verify_rechecks_local_cases_with_nul_bytes(
+    testtemp: pathlib.Path, mocker: MockerFixture
+):
+    source = pathlib.Path("source.py")
+    source.write_text("source")
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    input_path = cases / "a.in"
+    output_path = cases / "a.out"
+    input_path.write_bytes(b"a\0b")
+    output_path.write_bytes(b"c")
+    verifications = VerificationInput.model_validate(
+        {
+            "files": {
+                source: {
+                    "verification": LocalProblemVerification(
+                        command="true", input=cases
+                    )
+                }
+            }
+        }
+    )
+
+    def verify(previous: VerifyCommandResult | None = None) -> VerifyCommandResult:
+        return Verifier(
+            verifications,
+            timeout=10,
+            default_tle=None,
+            default_mle=None,
+            prev_result=previous,
+            split_state=None,
+            use_git_timestamp=False,
+            change_detection="hash",
+        ).verify(download=False)
+
+    run = mocker.patch.object(
+        Verifier, "run_verification", return_value=(SUCCESS, None)
+    )
+    previous = verify()
+    assert previous.is_success()
+    assert previous.files[source].testdata_hash is not None
+    reused = verify(previous)
+    assert not reused.files[source].newest
+    run.assert_called_once()
+
+    input_path.write_bytes(b"a")
+    output_path.write_bytes(b"b\0c")
+    current = verify(reused)
+    assert current.is_success()
+    assert current.files[source].newest
+    assert current.files[source].testdata_hash != previous.files[source].testdata_hash
+    assert run.call_count == 2
+    assert not verify(current).files[source].newest
+    assert run.call_count == 2
+
+
+@pytest.mark.allow_mkdir
 @pytest.mark.parametrize("with_previous_result", [False, True])
 def test_verify_continues_after_local_case_read_error(
     testtemp: pathlib.Path, mocker: MockerFixture, with_previous_result: bool
