@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+import json
 import logging
 import os
 import pathlib
@@ -609,6 +611,85 @@ def test_verify_reuses_only_matching_configuration(
     assert subsequent_run.call_count == (
         0 if change == "unchanged" else len(verification_list)
     )
+
+
+@pytest.mark.allow_mkdir
+def test_verify_regenerates_stale_library_checker_cases_after_no_download(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, str(testtemp / "config"))
+    problem = LibraryCheckerProblem(problem_id="aplusb")
+    directory = problem.repo_path / "sample" / "aplusb"
+    (directory / "in").mkdir(parents=True)
+    (directory / "out").mkdir()
+    (directory / "info.toml").write_text("")
+    (directory / "in" / "example_00.in").write_bytes(b"1 2\n")
+    output = directory / "out" / "example_00.out"
+    output.write_bytes(b"stale output\n")
+    (directory / "hash.json").write_text(
+        json.dumps(
+            {
+                "example_00.in": hashlib.sha256(b"1 2\n").hexdigest(),
+                "example_00.out": hashlib.sha256(b"3\n").hexdigest(),
+            }
+        )
+    )
+    source = pathlib.Path("source.py")
+    source.write_text("source")
+    verifications = VerificationInput.model_validate(
+        {
+            "files": {
+                source: {
+                    "verification": ProblemVerification(
+                        command="true", problem=problem.url
+                    )
+                }
+            }
+        }
+    )
+
+    def create_verifier(previous: VerifyCommandResult | None = None) -> Verifier:
+        return Verifier(
+            verifications,
+            timeout=10,
+            default_tle=None,
+            default_mle=None,
+            prev_result=previous,
+            split_state=None,
+            use_git_timestamp=False,
+            change_detection="hash",
+        )
+
+    mocker.patch.object(LibraryCheckerProblem, "update_cloned_repository")
+    generate = mocker.patch.object(
+        LibraryCheckerProblem,
+        "generate_test_cases",
+        side_effect=lambda: output.write_bytes(b"3\n"),
+    )
+    run = mocker.patch.object(
+        Verifier, "run_verification", return_value=(SUCCESS, None)
+    )
+    previous = create_verifier().verify(download=False)
+    assert previous.is_success()
+    assert previous.files[source].testdata_hash is None
+    assert output.read_bytes() == b"stale output\n"
+    generate.assert_not_called()
+    run.assert_called_once()
+
+    current = create_verifier(previous).verify()
+    assert current.is_success()
+    assert current.files[source].newest
+    assert current.files[source].testdata_hash is not None
+    assert output.read_bytes() == b"3\n"
+    generate.assert_called_once()
+    assert run.call_count == 2
+
+    reused = create_verifier(current).verify()
+    assert not reused.files[source].newest
+    generate.assert_called_once()
+    assert run.call_count == 2
 
 
 test_verify_timeout_params: list[

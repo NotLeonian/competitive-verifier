@@ -1,4 +1,5 @@
 import hashlib
+import json
 import pathlib
 
 import pytest
@@ -231,6 +232,55 @@ def test_library_checker_testdata_hash(
 def test_library_checker_testdata_hash_unknown_problem():
     problem = LibraryCheckerProblem(problem_id="no_such_problem")
     assert problem.testdata_hash() is None
+    assert problem.cached_testdata_hash() is None
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize(
+    "change", ["input", "output", "missing", "extra", "manifest", "invalid_manifest"]
+)
+def test_library_checker_cached_testdata_hash(
+    library_checker_repo: pathlib.Path,
+    mocker: MockerFixture,
+    change: str,
+):
+    update = mocker.patch.object(LibraryCheckerProblem, "update_cloned_repository")
+    problem = LibraryCheckerProblem(problem_id="aplusb")
+    directory = problem.source_directory
+    (directory / "in").mkdir()
+    (directory / "out").mkdir()
+    input_path = directory / "in" / "example_00.in"
+    output_path = directory / "out" / "example_00.out"
+    manifest = json.dumps(
+        {
+            "example_00.in": hashlib.sha256(b"1 2\n").hexdigest(),
+            "example_00.out": hashlib.sha256(b"3\n").hexdigest(),
+        }
+    )
+    problem.hash_json.write_text(manifest)
+    assert problem.cached_testdata_hash() is None
+    input_path.write_bytes(b"1 2\n")
+    output_path.write_bytes(b"3\n")
+    expected = problem.testdata_hash()
+    assert expected is not None
+    assert problem.cached_testdata_hash() == expected
+
+    if change == "input":
+        input_path.write_bytes(b"1 3\n")
+    elif change == "output":
+        output_path.write_bytes(b"4\n")
+    elif change == "missing":
+        output_path.unlink()
+    elif change == "extra":
+        (directory / "in" / "extra.in").write_bytes(b"1 2\n")
+        (directory / "out" / "extra.out").write_bytes(b"3\n")
+    elif change == "manifest":
+        problem.hash_json.write_text(manifest.replace("example_00", "example_01"))
+    else:
+        problem.hash_json.write_text("invalid json")
+
+    assert problem.cached_testdata_hash() is None
+    update.assert_not_called()
 
 
 def test_library_checker_sync_testdata(mocker: MockerFixture):

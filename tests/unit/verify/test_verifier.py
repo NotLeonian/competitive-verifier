@@ -143,7 +143,7 @@ class MockInputContainer(InputContainer):
     def file_content_hash(self, path: Path) -> str | None:
         return self.file_hashes.get(path)
 
-    def file_testdata_hash(self, path: Path) -> str | None:
+    def file_testdata_hash(self, path: Path, *, cached: bool = False) -> str | None:
         return self.file_testdata_hashes.get(path)
 
 

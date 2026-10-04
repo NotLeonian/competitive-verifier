@@ -107,8 +107,10 @@ class InputContainer(ABC):
             json.dumps(cache_inputs, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
 
-    def file_testdata_hash(self, path: pathlib.Path) -> str | None:
-        """Digest of the test data of the file's verifications.
+    def file_testdata_hash(
+        self, path: pathlib.Path, *, cached: bool = False
+    ) -> str | None:
+        """Digest of the expected or cached test data of the file's verifications.
 
         Ignore checks without test data. ``None`` if no checks use test data or
         the test data of any problem verification can't be identified.
@@ -123,7 +125,7 @@ class InputContainer(ABC):
             return None
         digest = hashlib.sha256()
         for v in problem_verifications:
-            testdata_hash = v.testdata_hash()
+            testdata_hash = v.cached_testdata_hash() if cached else v.testdata_hash()
             if testdata_hash is None:
                 return None
             digest.update(testdata_hash.encode())
@@ -366,7 +368,7 @@ class BaseVerifier(InputContainer):
                 file_results[p] = FileResult(
                     verifications=verifications,
                     content_hash=file_hash,
-                    testdata_hash=self.file_testdata_hash(p),
+                    testdata_hash=self.file_testdata_hash(p, cached=True),
                 )
 
         sippable_file_results = self.skippable_results()
@@ -425,7 +427,7 @@ class BaseVerifier(InputContainer):
                 results[p] = FileResult(
                     verifications=verifications,
                     content_hash=file_hash,
-                    testdata_hash=self.file_testdata_hash(p),
+                    testdata_hash=self.file_testdata_hash(p, cached=True),
                     newest=True,
                 )
         return results

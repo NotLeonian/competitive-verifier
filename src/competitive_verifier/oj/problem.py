@@ -148,6 +148,20 @@ class LibraryCheckerProblem(Problem):
         except (OSError, RuntimeError):
             return None
 
+    def cached_testdata_hash(self) -> str | None:
+        try:
+            manifest = self.hash_json.read_bytes()
+            actual = {
+                path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                for case in self.iter_system_cases()
+                for path in (case.input_path, case.output_path)
+            }
+            if not actual or actual != json.loads(manifest):
+                return None
+            return hashlib.sha256(manifest).hexdigest()
+        except (OSError, RuntimeError, ValueError):
+            return None
+
     @property
     def source_directory(self):
         if self._source_directory is None:
