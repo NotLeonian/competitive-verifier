@@ -252,7 +252,8 @@ class BaseVerifier(InputContainer):
         *,
         download: bool,
         deadline: float,
-    ) -> list[VerificationResult]:
+    ) -> tuple[list[VerificationResult], str | None]:
+        """Run the checks and return their results and test data hash at execution."""
         logger.debug("%r", f)
         verifications = list[VerificationResult]()
         try:
@@ -272,7 +273,7 @@ class BaseVerifier(InputContainer):
                 self.create_command_result(ResultStatus.SKIPPED, time.perf_counter())
             )
             logger.warning("Skip[Timeout]: %s", p)
-            return verifications
+            return verifications, None
         except BaseException:
             verifications.append(
                 self.create_command_result(ResultStatus.FAILURE, time.perf_counter())
@@ -282,8 +283,9 @@ class BaseVerifier(InputContainer):
                 f.verification,
                 extra={"github": log.GitHubMessageParams()},
             )
-            return verifications
+            return verifications, None
 
+        testdata_hash = self.file_testdata_hash(p, cached=True)
         for ve in f.verification_list:
             logger.debug("command=%r", ve)
             prev_time = time.perf_counter()
@@ -326,7 +328,7 @@ class BaseVerifier(InputContainer):
                         name=ve.name,
                     )
                 )
-        return verifications
+        return verifications, testdata_hash
 
     def verify(self, *, download: bool = True) -> VerifyCommandResult:
         start_time = time.perf_counter()
@@ -356,7 +358,7 @@ class BaseVerifier(InputContainer):
         for p, f in current_verification_files.items():
             with log.group(f"Verify: {p.as_posix()}"):
                 file_hash = self.file_content_hash(p)
-                verifications = self._enumerate_verifications(
+                verifications, testdata_hash = self._enumerate_verifications(
                     p,
                     f,
                     download=download,
@@ -365,10 +367,14 @@ class BaseVerifier(InputContainer):
                 # Don't cache a result for sources that changed during verification.
                 if file_hash != self.file_content_hash(p):
                     file_hash = None
+                if testdata_hash != self.file_testdata_hash(p, cached=True):
+                    testdata_hash = None
+                    # Also force re-verification when the cases are now unavailable.
+                    file_hash = None
                 file_results[p] = FileResult(
                     verifications=verifications,
                     content_hash=file_hash,
-                    testdata_hash=self.file_testdata_hash(p, cached=True),
+                    testdata_hash=testdata_hash,
                 )
 
         sippable_file_results = self.skippable_results()
@@ -414,6 +420,7 @@ class BaseVerifier(InputContainer):
             for p, f in self.skippable_verification_files.items():
                 logger.info("Start skippable: %s", p)
                 file_hash = self.file_content_hash(p)
+                testdata_hash = self.file_testdata_hash(p, cached=True)
                 verifications = list[VerificationResult]()
                 prev_time = time.perf_counter()
 
@@ -424,10 +431,13 @@ class BaseVerifier(InputContainer):
                     )
                 if file_hash != self.file_content_hash(p):
                     file_hash = None
+                if testdata_hash != self.file_testdata_hash(p, cached=True):
+                    testdata_hash = None
+                    file_hash = None
                 results[p] = FileResult(
                     verifications=verifications,
                     content_hash=file_hash,
-                    testdata_hash=self.file_testdata_hash(p, cached=True),
+                    testdata_hash=testdata_hash,
                     newest=True,
                 )
         return results

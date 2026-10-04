@@ -14,6 +14,7 @@ from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import (
     ConstVerification,
     FileResult,
+    LocalProblemVerification,
     ProblemVerification,
     ResultStatus,
     Verification,
@@ -531,6 +532,89 @@ def test_verify_content_hash_during_execution(
     verifier.change_detection = "hash"
     assert verifier.file_need_verification(source, file_result) is (
         changed_file is not None
+    )
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("change_detection", ["timestamp", "hash"])
+@pytest.mark.parametrize("download", [False, True])
+@pytest.mark.parametrize("change", ["unchanged", "input", "output", "missing"])
+def test_verify_testdata_hash_during_execution(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    change_detection: ChangeDetection,
+    download: bool,
+    change: str,
+):
+    source = pathlib.Path("source.py")
+    source.write_bytes(b"source")
+    cases = pathlib.Path("cases")
+    input_path = cases / "a.in"
+    output_path = cases / "a.out"
+
+    def prepare_cases(*args: Any, **kwargs: Any) -> bool:
+        cases.mkdir()
+        input_path.write_bytes(b"1 2\n")
+        output_path.write_bytes(b"3\n")
+        return True
+
+    if not download:
+        prepare_cases()
+    download_cases = mocker.patch(
+        "competitive_verifier.verify.verifier.run_download", side_effect=prepare_cases
+    )
+    verifier = Verifier(
+        VerificationInput.model_validate(
+            {
+                "files": {
+                    source: {
+                        "verification": LocalProblemVerification(
+                            command="true", input=cases
+                        )
+                    }
+                }
+            }
+        ),
+        timeout=10,
+        default_tle=None,
+        default_mle=None,
+        prev_result=None,
+        split_state=None,
+        use_git_timestamp=False,
+        change_detection=change_detection,
+    )
+    executed_hashes: list[str] = []
+
+    def run_verification(*args: Any, **kwargs: Any) -> tuple[ResultStatus, None]:
+        testdata_hash = verifier.file_testdata_hash(source, cached=True)
+        assert testdata_hash is not None
+        executed_hashes.append(testdata_hash)
+        if change == "input":
+            input_path.write_bytes(b"1 3\n")
+        elif change == "output":
+            output_path.write_bytes(b"4\n")
+        elif change == "missing":
+            input_path.unlink()
+            output_path.unlink()
+            cases.rmdir()
+        return SUCCESS, None
+
+    run = mocker.patch.object(
+        verifier, "run_verification", side_effect=run_verification
+    )
+    result = verifier.verify(download=download)
+    assert result.is_success()
+    run.assert_called_once()
+    assert download_cases.call_count == int(download)
+    file_result = result.files[source]
+    if change == "unchanged":
+        assert file_result.testdata_hash == executed_hashes[0]
+    else:
+        assert file_result.testdata_hash is None
+
+    verifier.change_detection = "hash"
+    assert verifier.file_need_verification(source, file_result) is (
+        change != "unchanged"
     )
 
 
