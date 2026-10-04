@@ -1,3 +1,4 @@
+import json
 import os
 import pathlib
 import shutil
@@ -146,6 +147,35 @@ class TestCommandDownload:
                 ).returncode
                 == 0
             )
+
+        hash_json = problem.source_directory / "hash.json"
+        testdata_hash = problem.testdata_hash()
+        assert testdata_hash is not None
+        assert problem.cached_testdata_hash() == testdata_hash
+        assert set(json.loads(hash_json.read_text())) == {
+            f"{case.name}.{ext}" for case in testcases for ext in ("in", "out")
+        }
+
+        assert parsed.run()
+        assert problem.testdata_hash() == testdata_hash
+        assert problem.cached_testdata_hash() == testdata_hash
+
+        # A checker-only update must rebuild even when timestamps are preserved.
+        manifest = hash_json.read_bytes()
+        checker_source = problem.source_directory / "checker.cpp"
+        timestamps = checker_source.stat()
+        checker_source.write_text("int main() { return 1; }\n")
+        os.utime(checker_source, ns=(timestamps.st_atime_ns, timestamps.st_mtime_ns))
+        assert problem.testdata_hash() not in {None, testdata_hash}
+        assert problem.cached_testdata_hash() is None
+        assert parsed.run()
+        assert subprocess.run([str(problem.checker)], check=False).returncode == 1
+        assert hash_json.read_bytes() == manifest
+        testdata_hash = problem.testdata_hash()
+        assert problem.cached_testdata_hash() == testdata_hash
+
+        hash_json.write_text(hash_json.read_text() + "\n")
+        assert problem.testdata_hash() != testdata_hash
 
     @pytest.mark.integration
     @pytest.mark.skipif(

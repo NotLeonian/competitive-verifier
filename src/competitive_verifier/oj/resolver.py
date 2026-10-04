@@ -270,7 +270,7 @@ class OjResolver:
 
     def resolve(self, *, bundle: bool) -> VerificationInput:
         files: dict[pathlib.Path, VerificationFile] = {}
-        basedir = pathlib.Path()
+        basedir = pathlib.Path.cwd()
 
         for path in git.ls_files(*self.include):
             if self._match_exclude(path):
@@ -301,9 +301,12 @@ class OjResolver:
                         AdditionalSource(name="bundle error", path=dest_path)
                     )
 
+            # Generated commands must also work after moving the checkout.
             verifications = list(
                 chain.from_iterable(
-                    self.env_to_verifications(vs, attr=attr, path=path, basedir=basedir)
+                    self.env_to_verifications(
+                        vs, attr=attr, path=path, basedir=pathlib.Path()
+                    )
                     for vs in language.list_environments(path, basedir=basedir)
                 )
             )

@@ -39,6 +39,30 @@ class TestCaseProvider(ABC):
     def checker(self) -> pathlib.Path | None:
         return None
 
+    def sync_testdata(self) -> None:
+        """Fetch the latest upstream test data identity so ``testdata_hash`` reflects it.
+
+        Only for providers whose test data can change upstream; no-op otherwise.
+        """
+        return
+
+    def testdata_hash(self) -> str | None:
+        """Digest identifying the expected test data using locally available metadata.
+
+        Must not download anything. ``None`` if the provider never expects test
+        data to change, or it isn't downloaded yet; the hash-based prev-result
+        check then assumes the test data is unchanged.
+        """
+        return None
+
+    def cached_testdata_hash(self) -> str | None:
+        """Digest safe to record for the cached cases, or ``None`` if unknown or stale.
+
+        Providers with separate metadata and generated cases must check that the
+        cached cases match the metadata before returning its digest.
+        """
+        return self.testdata_hash()
+
 
 class Problem(TestCaseProvider):
     def __repr__(self) -> str:

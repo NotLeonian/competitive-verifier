@@ -474,7 +474,7 @@ class UserDefinedAndPythonData(IntegrationData):
                     "document_attributes": {"links": []},
                     "verification": [],
                 },
-            },
+            }
         }
 
     def expected_verify_result(self) -> dict[str, Any]:
@@ -483,6 +483,7 @@ class UserDefinedAndPythonData(IntegrationData):
             "files": {
                 "awk/aplusb.test.awk": {
                     "content_hash": "f12af15dc2097a2f3ee7ffc93343263c",
+                    "testdata_hash": "1c7cfe8ac1781522300e073b9a86964f",
                     "newest": True,
                     "verifications": [
                         {
@@ -571,6 +572,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "awk/aplusb_direct.awk": {
                     "content_hash": "3327d03aa99ad8992336d8d7825d38a6",
+                    "testdata_hash": "7b92cb6f916317ede792fb1d0d33cf50",
                     "newest": True,
                     "verifications": [
                         {
@@ -659,6 +661,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "awk/myaplusb1.test.awk": {
                     "content_hash": "1a590d2d33fdff207019d77d94dfb51f",
+                    "testdata_hash": "33f9564e85bbf3e052f6c95b593525ea",
                     "newest": True,
                     "verifications": [
                         {
@@ -771,6 +774,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "awk/myaplusb2.test.awk": {
                     "content_hash": "47a36f7a335201f42a4accfb4a8209f0",
+                    "testdata_hash": "442a5f7f2d552f319a5676e9fdbe781c",
                     "newest": True,
                     "verifications": [
                         {
@@ -883,6 +887,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "awk/myaplusb3.test.awk": {
                     "content_hash": "07664bcbdca591d1a1e059a2df52a2cb",
+                    "testdata_hash": "fae01e093f81402235407d422746abf9",
                     "newest": True,
                     "verifications": [
                         {
@@ -1007,6 +1012,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "python/failure.mle.py": {
                     "content_hash": "ba598be0710ea5187c969683bcf9818b",
+                    "testdata_hash": "fe25115fc1a3cc6015c9cc7ba41201bf",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1101,6 +1107,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "python/failure.wa.py": {
                     "content_hash": "6f80b28c113bd58f15d2d857c0143b2e",
+                    "testdata_hash": "b86d19120f8cc1463ca647d59a215e90",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1211,6 +1218,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "python/success1.py": {
                     "content_hash": "d9bb2406ae37acc331b348987966fdc2",
+                    "testdata_hash": "04e90a4efcccf472f9e08b374a515de7",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1299,6 +1307,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "python/success2.py": {
                     "content_hash": "5c07d1faa8bb0d89de4376ff8b18ee5d",
+                    "testdata_hash": "acc7ac878b39c621c6f3176859e23fa2",
                     "verifications": [
                         {
                             "verification_name": "Python",
@@ -1387,6 +1396,7 @@ class UserDefinedAndPythonData(IntegrationData):
                 },
                 "python/failure.re.py": {
                     "content_hash": "5321ef5e972b59729046162fdfda5d0c",
+                    "testdata_hash": "ea9d3372033b74553e5903b18add4c14",
                     "verifications": [
                         {
                             "verification_name": "Python",

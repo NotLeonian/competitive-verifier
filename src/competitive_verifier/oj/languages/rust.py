@@ -81,7 +81,6 @@ def _list_dependencies_by_crate(
     Raises:
         RuntimeError: If any cargo command fails
     """
-    basedir = basedir.resolve()
     path = basedir / path
 
     # We regard that a generated file does not depend on any files.
@@ -363,9 +362,9 @@ class RustLanguageEnvironment(LanguageEnvironment):
     def get_compile_command(
         self, path: pathlib.Path, *, basedir: pathlib.Path, tempdir: pathlib.Path
     ) -> ShellCommand:
-        abs_path = basedir.resolve() / path
-        metadata = _cargo_metadata(cwd=abs_path.parent)
-        target = _ensure_target(metadata, abs_path)
+        source_path = (basedir / path).resolve()
+        metadata = _cargo_metadata(cwd=source_path.parent)
+        target = _ensure_target(metadata, source_path)
         return ShellCommand(
             command=["cargo", "build", "--release", *_target_option(target)],
             cwd=(basedir / path).parent,
@@ -374,13 +373,13 @@ class RustLanguageEnvironment(LanguageEnvironment):
     def get_execute_command(
         self, path: pathlib.Path, *, basedir: pathlib.Path, tempdir: pathlib.Path
     ) -> str:
-        abs_basedir = basedir.resolve()
-        abs_path = abs_basedir / path
-        metadata = _cargo_metadata(cwd=abs_path.parent)
-        target = _ensure_target(metadata, abs_path)
+        absolute_basedir = basedir.resolve()
+        source_path = (basedir / path).resolve()
+        metadata = _cargo_metadata(cwd=source_path.parent)
+        target = _ensure_target(metadata, source_path)
         target_directory = pathlib.Path(metadata["target_directory"])
-        if target_directory.is_relative_to(abs_basedir):
-            target_directory = basedir / target_directory.relative_to(abs_basedir)
+        if target_directory.is_relative_to(absolute_basedir):
+            target_directory = basedir / target_directory.relative_to(absolute_basedir)
         return str(
             pathlib.Path(
                 target_directory,

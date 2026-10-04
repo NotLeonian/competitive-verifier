@@ -3,8 +3,16 @@ import pathlib
 from typing import Any
 
 import pytest
+from pytest_mock import MockerFixture
 
-from competitive_verifier.models import VerificationInput
+from competitive_verifier.models import (
+    FileResult,
+    ProblemVerification,
+    ResultStatus,
+    VerificationInput,
+    VerificationResult,
+)
+from competitive_verifier.oj.problem import LibraryCheckerProblem
 from competitive_verifier.verify.verifier import InputContainer, content_hash
 
 pytestmark = pytest.mark.allow_mkdir
@@ -71,6 +79,26 @@ def _file_content_hash(obj: dict[str, Any], path: str = "foo.py") -> str | None:
     return HashInputContainer(VerificationInput.model_validate(obj)).file_content_hash(
         pathlib.Path(path)
     )
+
+
+def _file_testdata_hash(obj: dict[str, Any], path: str = "foo.py") -> str | None:
+    return HashInputContainer(VerificationInput.model_validate(obj)).file_testdata_hash(
+        pathlib.Path(path)
+    )
+
+
+def _problem() -> dict[str, Any]:
+    return {
+        "files": {
+            "foo.py": {
+                "verification": {
+                    "type": "problem",
+                    "problem": "https://judge.yosupo.jp/problem/aplusb",
+                    "command": "true",
+                },
+            },
+        },
+    }
 
 
 def _input() -> dict[str, Any]:
@@ -167,7 +195,7 @@ def test_file_content_hash_none_for_missing_dependency():
     assert _file_content_hash(_input()) is None
 
 
-def test_file_content_hash_ignores_testdata():
+def test_file_content_hash_ignores_testdata(mocker: MockerFixture):
     cases = pathlib.Path("cases")
     cases.mkdir()
     (cases / "a.in").write_bytes(b"1 2\n")
@@ -175,3 +203,168 @@ def test_file_content_hash_ignores_testdata():
     before = _file_content_hash(_input())
     (cases / "a.out").write_bytes(b"4\n")
     assert _file_content_hash(_input()) == before
+
+    problem = _file_content_hash(_problem())
+    mocker.patch.object(ProblemVerification, "testdata_hash", return_value="v1")
+    assert _file_content_hash(_problem()) == problem
+
+
+def test_file_testdata_hash_changes_with_local_cases():
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    (cases / "a.in").write_bytes(b"1 2\n")
+    (cases / "a.out").write_bytes(b"3\n")
+    with_a = _file_testdata_hash(_input())
+    assert with_a is not None
+    assert with_a == _file_testdata_hash(_input())
+
+    (cases / "a.out").write_bytes(b"4\n")
+    with_a_changed = _file_testdata_hash(_input())
+    assert with_a_changed != with_a
+
+    (cases / "b.in").write_bytes(b"5 6\n")
+    (cases / "b.out").write_bytes(b"11\n")
+    with_a_b = _file_testdata_hash(_input())
+    assert len({with_a, with_a_changed, with_a_b}) == 3
+
+    (cases / "b.in").unlink()
+    (cases / "b.out").unlink()
+    assert _file_testdata_hash(_input()) == with_a_changed
+
+
+def test_file_testdata_hash_none_when_local_cases_missing():
+    assert _file_testdata_hash(_input()) is None
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    empty = _file_testdata_hash(_input())
+    assert empty is not None
+    (cases / "a.in").write_bytes(b"1 2\n")
+    (cases / "a.out").write_bytes(b"3\n")
+    assert _file_testdata_hash(_input()) not in {None, empty}
+
+
+def test_file_testdata_hash_combines_verifications(mocker: MockerFixture):
+    hashes: list[str | None] = []
+    for testdata_hash in ["version1", "version2"]:
+        mocker.patch.object(
+            ProblemVerification, "testdata_hash", return_value=testdata_hash
+        )
+        hashes.append(_file_testdata_hash(_problem()))
+        assert _file_testdata_hash(_problem()) == hashes[-1]
+    assert None not in hashes
+    assert len(set(hashes)) == len(hashes)
+
+    mocker.patch.object(ProblemVerification, "testdata_hash", return_value=None)
+    assert _file_testdata_hash(_problem()) is None
+
+    obj: dict[str, Any] = {
+        "files": {"foo.py": {"verification": {"type": "command", "command": "true"}}}
+    }
+    assert _file_testdata_hash(obj) is None
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"type": "command", "command": "true"},
+        {"type": "const", "status": "success"},
+        {
+            "type": "problem",
+            "command": "true",
+            "problem": "https://onlinejudge.u-aizu.ac.jp/problems/ITP1_1_A",
+        },
+    ],
+)
+@pytest.mark.parametrize("extra_first", [False, True])
+@pytest.mark.parametrize("local", [False, True])
+@pytest.mark.parametrize("cached", [False, True])
+def test_file_testdata_hash_preserves_problem_hash_with_other_checks(
+    mocker: MockerFixture,
+    extra: dict[str, str],
+    extra_first: bool,
+    local: bool,
+    cached: bool,
+):
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    (cases / "a.in").write_bytes(b"1 2\n")
+    output = cases / "a.out"
+    output.write_bytes(b"3\n")
+    problem_hash = mocker.patch.object(
+        LibraryCheckerProblem, "testdata_hash", return_value="initial"
+    )
+    mocker.patch.object(
+        LibraryCheckerProblem, "cached_testdata_hash", side_effect=problem_hash
+    )
+    obj = _input() if local else _problem()
+    verification = obj["files"]["foo.py"]["verification"]
+    obj["files"]["foo.py"]["verification"] = (
+        [extra, verification] if extra_first else [verification, extra]
+    )
+    container = HashInputContainer(VerificationInput.model_validate(obj))
+    container.change_detection = "hash"
+    source = pathlib.Path("foo.py")
+    previous = FileResult(
+        content_hash=container.file_content_hash(source),
+        testdata_hash=container.file_testdata_hash(source, cached=cached),
+        verifications=[VerificationResult(status=ResultStatus.SUCCESS, elapsed=0)],
+    )
+    assert previous.testdata_hash is not None
+    assert not container.file_need_verification(source, previous)
+
+    output.write_bytes(b"4\n")
+    problem_hash.return_value = "updated"
+    assert container.file_need_verification(source, previous)
+
+    output.unlink()
+    (cases / "a.in").unlink()
+    cases.rmdir()
+    problem_hash.return_value = None
+    assert container.file_testdata_hash(source, cached=cached) is None
+
+
+def test_file_testdata_hash_preserves_unknown_provider_positions(mocker: MockerFixture):
+    obj = _problem()
+    verification = obj["files"]["foo.py"]["verification"]
+    obj["files"]["foo.py"]["verification"] = [
+        verification,
+        {**verification, "problem": "https://judge.yosupo.jp/problem/many_aplusb"},
+    ]
+    mocker.patch.object(
+        ProblemVerification, "testdata_hash", side_effect=[None, "hash", "hash", None]
+    )
+    before = _file_testdata_hash(obj)
+    after = _file_testdata_hash(obj)
+    assert before is not None
+    assert after is not None
+    assert before != after
+
+
+def test_file_testdata_hash_does_not_reuse_partial_cached_hash(mocker: MockerFixture):
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    (cases / "a.in").write_bytes(b"1 2\n")
+    (cases / "a.out").write_bytes(b"3\n")
+    obj = _input()
+    obj["files"]["foo.py"]["verification"] = [
+        obj["files"]["foo.py"]["verification"],
+        _problem()["files"]["foo.py"]["verification"],
+    ]
+    mocker.patch.object(LibraryCheckerProblem, "testdata_hash", return_value="current")
+    cached = mocker.patch.object(
+        LibraryCheckerProblem, "cached_testdata_hash", return_value=None
+    )
+    container = HashInputContainer(VerificationInput.model_validate(obj))
+    container.change_detection = "hash"
+    source = pathlib.Path("foo.py")
+    previous = FileResult(
+        content_hash=container.file_content_hash(source),
+        testdata_hash=container.file_testdata_hash(source, cached=True),
+        verifications=[VerificationResult(status=ResultStatus.SUCCESS, elapsed=0)],
+    )
+    assert previous.testdata_hash is not None
+    assert container.file_need_verification(source, previous)
+
+    cached.return_value = "current"
+    previous.testdata_hash = container.file_testdata_hash(source, cached=True)
+    assert not container.file_need_verification(source, previous)

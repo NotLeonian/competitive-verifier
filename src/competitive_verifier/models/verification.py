@@ -52,6 +52,25 @@ class BaseVerification(BaseModel, ABC):
         """
         return True
 
+    def sync_testdata(self) -> None:
+        """Fetch the latest upstream test data identity so ``testdata_hash`` reflects it.
+
+        No-op unless the test data can change upstream (see
+        ``TestCaseProvider.sync_testdata``).
+        """
+
+    def testdata_hash(self) -> str | None:
+        """Digest identifying the verification's expected test data.
+
+        Must not download anything. ``None`` if the test data is never expected to
+        change, or it isn't downloaded yet (see ``TestCaseProvider.testdata_hash``).
+        """
+        return None
+
+    def cached_testdata_hash(self) -> str | None:
+        """Digest safe to record for the cached cases, or ``None`` if unknown or stale."""
+        return self.testdata_hash()
+
 
 class ConstVerification(BaseVerification):
     type: Literal["const"] = "const"
@@ -162,6 +181,23 @@ class BaseProblemVerification(BaseVerification, ABC):
     def is_testdata_cached(self) -> bool:
         problem = self._problem()
         return problem is None or problem.is_testdata_cached()
+
+    def sync_testdata(self) -> None:
+        problem = self._problem()
+        if problem is not None:
+            problem.sync_testdata()
+
+    def testdata_hash(self) -> str | None:
+        problem = self._problem()
+        if problem is None:
+            return None
+        return problem.testdata_hash()
+
+    def cached_testdata_hash(self) -> str | None:
+        problem = self._problem()
+        if problem is None:
+            return None
+        return problem.cached_testdata_hash()
 
     def run(
         self,

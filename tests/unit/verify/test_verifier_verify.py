@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+import json
 import logging
 import os
 import pathlib
@@ -12,6 +14,7 @@ from competitive_verifier.log import GitHubMessageParams
 from competitive_verifier.models import (
     ConstVerification,
     FileResult,
+    LocalProblemVerification,
     ProblemVerification,
     ResultStatus,
     Verification,
@@ -19,7 +22,7 @@ from competitive_verifier.models import (
     VerificationResult,
     VerifyCommandResult,
 )
-from competitive_verifier.oj.problem import YukicoderProblem
+from competitive_verifier.oj.problem import LibraryCheckerProblem, YukicoderProblem
 from competitive_verifier.verify.verifier import (
     BaseVerifier,
     ChangeDetection,
@@ -48,12 +51,14 @@ class MockVerifier(BaseVerifier):
         prev_result: VerifyCommandResult | None = None,
         split_state: SplitState | None = None,
         file_hashes: dict[str, str] | None = None,
+        change_detection: ChangeDetection = "timestamp",
     ) -> None:
         super().__init__(
             verifications=VerificationInput.model_validate(verifications),
             verification_time=verification_time,
             prev_result=prev_result,
             split_state=split_state,
+            change_detection=change_detection,
             default_tle=10,
             default_mle=256,
             timeout=10,
@@ -530,6 +535,226 @@ def test_verify_content_hash_during_execution(
     )
 
 
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("change_detection", ["timestamp", "hash"])
+@pytest.mark.parametrize("download", [False, True])
+@pytest.mark.parametrize("change", ["unchanged", "input", "output", "missing"])
+def test_verify_testdata_hash_during_execution(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    change_detection: ChangeDetection,
+    download: bool,
+    change: str,
+):
+    source = pathlib.Path("source.py")
+    source.write_bytes(b"source")
+    cases = pathlib.Path("cases")
+    input_path = cases / "a.in"
+    output_path = cases / "a.out"
+
+    def prepare_cases(*args: Any, **kwargs: Any) -> bool:
+        cases.mkdir()
+        input_path.write_bytes(b"1 2\n")
+        output_path.write_bytes(b"3\n")
+        return True
+
+    if not download:
+        prepare_cases()
+    download_cases = mocker.patch(
+        "competitive_verifier.verify.verifier.run_download", side_effect=prepare_cases
+    )
+    verifier = Verifier(
+        VerificationInput.model_validate(
+            {
+                "files": {
+                    source: {
+                        "verification": LocalProblemVerification(
+                            command="true", input=cases
+                        )
+                    }
+                }
+            }
+        ),
+        timeout=10,
+        default_tle=None,
+        default_mle=None,
+        prev_result=None,
+        split_state=None,
+        use_git_timestamp=False,
+        change_detection=change_detection,
+    )
+    executed_hashes: list[str] = []
+
+    def run_verification(*args: Any, **kwargs: Any) -> tuple[ResultStatus, None]:
+        testdata_hash = verifier.file_testdata_hash(source, cached=True)
+        assert testdata_hash is not None
+        executed_hashes.append(testdata_hash)
+        if change == "input":
+            input_path.write_bytes(b"1 3\n")
+        elif change == "output":
+            output_path.write_bytes(b"4\n")
+        elif change == "missing":
+            input_path.unlink()
+            output_path.unlink()
+            cases.rmdir()
+        return SUCCESS, None
+
+    run = mocker.patch.object(
+        verifier, "run_verification", side_effect=run_verification
+    )
+    result = verifier.verify(download=download)
+    assert result.is_success()
+    run.assert_called_once()
+    assert download_cases.call_count == int(download)
+    file_result = result.files[source]
+    if change == "unchanged":
+        assert file_result.testdata_hash == executed_hashes[0]
+    else:
+        assert file_result.testdata_hash is None
+
+    verifier.change_detection = "hash"
+    assert verifier.file_need_verification(source, file_result) is (
+        change != "unchanged"
+    )
+
+
+@pytest.mark.allow_mkdir
+def test_verify_rechecks_local_cases_with_nul_bytes(
+    testtemp: pathlib.Path, mocker: MockerFixture
+):
+    source = pathlib.Path("source.py")
+    source.write_text("source")
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    input_path = cases / "a.in"
+    output_path = cases / "a.out"
+    input_path.write_bytes(b"a\0b")
+    output_path.write_bytes(b"c")
+    verifications = VerificationInput.model_validate(
+        {
+            "files": {
+                source: {
+                    "verification": LocalProblemVerification(
+                        command="true", input=cases
+                    )
+                }
+            }
+        }
+    )
+
+    def verify(previous: VerifyCommandResult | None = None) -> VerifyCommandResult:
+        return Verifier(
+            verifications,
+            timeout=10,
+            default_tle=None,
+            default_mle=None,
+            prev_result=previous,
+            split_state=None,
+            use_git_timestamp=False,
+            change_detection="hash",
+        ).verify(download=False)
+
+    run = mocker.patch.object(
+        Verifier, "run_verification", return_value=(SUCCESS, None)
+    )
+    previous = verify()
+    assert previous.is_success()
+    assert previous.files[source].testdata_hash is not None
+    reused = verify(previous)
+    assert not reused.files[source].newest
+    run.assert_called_once()
+
+    input_path.write_bytes(b"a")
+    output_path.write_bytes(b"b\0c")
+    current = verify(reused)
+    assert current.is_success()
+    assert current.files[source].newest
+    assert current.files[source].testdata_hash != previous.files[source].testdata_hash
+    assert run.call_count == 2
+    assert not verify(current).files[source].newest
+    assert run.call_count == 2
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("with_previous_result", [False, True])
+def test_verify_continues_after_local_case_read_error(
+    testtemp: pathlib.Path, mocker: MockerFixture, with_previous_result: bool
+):
+    source = pathlib.Path("source.py")
+    other_source = pathlib.Path("other.py")
+    source.write_text("source")
+    other_source.write_text("other source")
+    cases = pathlib.Path("cases")
+    cases.mkdir()
+    input_path = cases / "a.in"
+    input_path.write_bytes(b"1 2\n")
+    (cases / "a.out").write_bytes(b"3\n")
+    verifications = VerificationInput.model_validate(
+        {
+            "files": {
+                source: {
+                    "verification": LocalProblemVerification(
+                        command="true", input=cases
+                    )
+                },
+                other_source: {
+                    "verification": NotSkippableConstVerification(status=SUCCESS)
+                },
+            }
+        }
+    )
+
+    def create_verifier(previous: VerifyCommandResult | None = None) -> Verifier:
+        return Verifier(
+            verifications,
+            timeout=10,
+            default_tle=None,
+            default_mle=None,
+            prev_result=previous,
+            split_state=None,
+            use_git_timestamp=False,
+            change_detection="hash",
+        )
+
+    def run_verification(
+        verification: Verification, *, deadline: float = float("inf")
+    ) -> tuple[ResultStatus, None]:
+        if isinstance(verification, LocalProblemVerification):
+            input_path.read_bytes()
+        return SUCCESS, None
+
+    run = mocker.patch.object(
+        Verifier, "run_verification", side_effect=run_verification
+    )
+    previous = (
+        create_verifier().verify(download=False) if with_previous_result else None
+    )
+    if previous is not None:
+        assert previous.is_success()
+        assert previous.files[source].testdata_hash is not None
+        other_source.write_text("changed source")
+    run.reset_mock()
+    original_read_bytes = pathlib.Path.read_bytes
+
+    def read_bytes(path: pathlib.Path) -> bytes:
+        if path == input_path:
+            raise PermissionError("Cannot read local input")
+        return original_read_bytes(path)
+
+    mocker.patch.object(
+        pathlib.Path, "read_bytes", autospec=True, side_effect=read_bytes
+    )
+    result = create_verifier(previous).verify(download=False)
+
+    assert not result.is_success()
+    assert result.files[source].newest
+    assert result.files[source].verifications[0].status == FAILURE
+    assert result.files[source].testdata_hash is None
+    assert result.files[other_source].newest
+    assert result.files[other_source].verifications[0].status == SUCCESS
+    assert run.call_count == 2
+
+
 @pytest.mark.parametrize(
     "change",
     [
@@ -607,6 +832,154 @@ def test_verify_reuses_only_matching_configuration(
     assert subsequent_run.call_count == (
         0 if change == "unchanged" else len(verification_list)
     )
+
+
+@pytest.mark.allow_mkdir
+@pytest.mark.parametrize("download", [False, True])
+@pytest.mark.parametrize(
+    "cache_change",
+    [
+        "input",
+        "output",
+        "missing_input",
+        "missing_output",
+        "checker_source",
+        "common_header",
+        "judging_config",
+        "checker_binary",
+    ],
+)
+def test_verify_regenerates_stale_library_checker_cases_after_no_download(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    download: bool,
+    cache_change: str,
+):
+    monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, str(testtemp / "config"))
+    problem = LibraryCheckerProblem(problem_id="aplusb")
+    directory = problem.repo_path / "sample" / "aplusb"
+    (directory / "in").mkdir(parents=True)
+    (directory / "out").mkdir()
+    (directory / "info.toml").write_text("")
+    for path in [
+        directory / "checker.cpp",
+        problem.repo_path / "generate.py",
+        problem.repo_path / "common/testlib.h",
+    ]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("original judging source")
+    input_path = directory / "in" / "example_00.in"
+    input_path.write_bytes(b"1 2\n")
+    output = directory / "out" / "example_00.out"
+    output.write_bytes(b"stale output\n")
+    manifest = json.dumps(
+        {
+            "example_00.in": hashlib.sha256(b"1 2\n").hexdigest(),
+            "example_00.out": hashlib.sha256(b"3\n").hexdigest(),
+        }
+    )
+    problem.hash_json.write_text(manifest)
+    source = pathlib.Path("source.py")
+    source.write_text("source")
+    verifications = VerificationInput.model_validate(
+        {
+            "files": {
+                source: {
+                    "verification": ProblemVerification(
+                        command="true", problem=problem.url
+                    )
+                }
+            }
+        }
+    )
+
+    def create_verifier(previous: VerifyCommandResult | None = None) -> Verifier:
+        return Verifier(
+            verifications,
+            timeout=10,
+            default_tle=None,
+            default_mle=None,
+            prev_result=previous,
+            split_state=None,
+            use_git_timestamp=False,
+            change_detection="hash",
+        )
+
+    def generate_cases(*args: object, **kwargs: object) -> None:
+        input_path.write_bytes(b"1 2\n")
+        output.write_bytes(b"3\n")
+        problem.hash_json.write_text(manifest)
+        if not problem.checker.exists():
+            problem.checker.write_text(f"compiled checker: {problem.testdata_hash()}")
+
+    mocker.patch.object(LibraryCheckerProblem, "update_cloned_repository")
+    generate = mocker.patch(
+        "competitive_verifier.oj.problem.subprocess.check_call",
+        side_effect=generate_cases,
+    )
+    run = mocker.patch.object(
+        Verifier, "run_verification", return_value=(SUCCESS, None)
+    )
+    previous = create_verifier().verify(download=False)
+    assert previous.is_success()
+    assert previous.files[source].testdata_hash is None
+    assert output.read_bytes() == b"stale output\n"
+    generate.assert_not_called()
+    run.assert_called_once()
+
+    current = create_verifier(previous).verify()
+    assert current.is_success()
+    assert current.files[source].newest
+    assert current.files[source].testdata_hash is not None
+    assert output.read_bytes() == b"3\n"
+    generate.assert_called_once()
+    assert run.call_count == 2
+
+    reused = create_verifier(current).verify()
+    assert not reused.files[source].newest
+    generate.assert_called_once()
+    assert run.call_count == 2
+
+    if cache_change == "input":
+        input_path.write_bytes(b"modified input\n")
+    elif cache_change == "output":
+        output.write_bytes(b"modified output\n")
+    elif cache_change == "missing_input":
+        input_path.unlink()
+    elif cache_change == "missing_output":
+        output.unlink()
+    else:
+        changed_path = {
+            "checker_source": directory / "checker.cpp",
+            "common_header": problem.repo_path / "common/testlib.h",
+            "judging_config": directory / "info.toml",
+            "checker_binary": problem.checker,
+        }[cache_change]
+        changed_path.write_bytes(b"changed judging source or binary")
+    reverified = create_verifier(reused).verify(download=download)
+    assert reverified.files[source].newest
+    if download:
+        assert reverified.is_success()
+        assert generate.call_count == 2
+    else:
+        assert reverified.files[source].testdata_hash is None
+        assert reverified.is_success() is (
+            cache_change not in {"missing_input", "missing_output"}
+        )
+        generate.assert_called_once()
+        reverified = create_verifier(reverified).verify()
+        assert reverified.is_success()
+        assert generate.call_count == 2
+    assert reverified.files[
+        source
+    ].testdata_hash == create_verifier().file_testdata_hash(source)
+    assert (
+        reverified.files[source].testdata_hash != current.files[source].testdata_hash
+    ) is (cache_change in {"checker_source", "common_header", "judging_config"})
+    reused = create_verifier(reverified).verify()
+    assert not reused.files[source].newest
+    assert generate.call_count == 2
 
 
 test_verify_timeout_params: list[
@@ -1241,3 +1614,73 @@ def test_failure_result():
             }
         },
     }
+
+
+@pytest.mark.usefixtures("mock_perf_counter")
+@pytest.mark.parametrize(
+    ("download", "change_detection", "synced"),
+    [
+        (True, "hash", True),
+        (False, "hash", False),
+        (True, "timestamp", False),
+    ],
+)
+def test_verify_syncs_testdata_before_skip_selection(
+    mocker: MockerFixture,
+    download: bool,
+    change_detection: ChangeDetection,
+    synced: bool,
+):
+    mocker.patch.object(pathlib.Path, "exists", return_value=True)
+    update = mocker.patch.object(LibraryCheckerProblem, "update_cloned_repository")
+    run_download = mocker.patch(
+        "competitive_verifier.verify.verifier.run_download", return_value=True
+    )
+    synced_before_hash: list[int] = []
+
+    def file_testdata_hash(path: pathlib.Path, *, cached: bool = False) -> str:
+        synced_before_hash.append(update.call_count)
+        return "testdata-foo"
+
+    mocker.patch.object(
+        MockVerifier, "file_testdata_hash", side_effect=file_testdata_hash
+    )
+
+    verifier = MockVerifier(
+        {
+            "files": {
+                "test/foo.py": {
+                    "verification": ProblemVerification(
+                        command="false",
+                        problem="https://judge.yosupo.jp/problem/aplusb",
+                    ),
+                },
+            }
+        },
+        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        prev_result=VerifyCommandResult(
+            total_seconds=1.0,
+            files={
+                pathlib.Path("test/foo.py"): FileResult(
+                    content_hash="hash-foo",
+                    testdata_hash="testdata-foo",
+                    verifications=[
+                        VerificationResult(
+                            status=SUCCESS,
+                            elapsed=1.0,
+                            last_execution_time=datetime.datetime(2006, 1, 2),
+                        )
+                    ],
+                )
+            },
+        ),
+        file_hashes={"test/foo.py": "hash-foo"},
+        change_detection=change_detection,
+    )
+    result = verifier.verify(download=download)
+
+    assert result.files[pathlib.Path("test/foo.py")].verifications[0].status == SUCCESS
+    assert update.call_count == (1 if synced else 0)
+    if synced:
+        assert synced_before_hash == [1, 1]
+    run_download.assert_not_called()

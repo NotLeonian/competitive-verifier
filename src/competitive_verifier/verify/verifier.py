@@ -13,6 +13,7 @@ from competitive_verifier import git, log
 from competitive_verifier.download import download_files as run_download
 from competitive_verifier.models import (
     FileResult,
+    NeedVerification,
     ResultStatus,
     Verification,
     VerificationFile,
@@ -21,6 +22,7 @@ from competitive_verifier.models import (
     VerificationTimeoutError,
     VerifyCommandResult,
 )
+from competitive_verifier.models.verification import BaseProblemVerification
 from competitive_verifier.resource import try_ulimit_stack
 from competitive_verifier.verify.split_state import SplitState
 
@@ -106,6 +108,28 @@ class InputContainer(ABC):
             json.dumps(cache_inputs, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
 
+    def file_testdata_hash(
+        self, path: pathlib.Path, *, cached: bool = False
+    ) -> str | None:
+        """Digest of the expected or cached test data of the file's verifications.
+
+        Ignore checks without test data. Unknown identities retain their position
+        without suppressing known hashes. ``None`` if all identities are unknown.
+        """
+        f = self.verifications.files.get(path)
+        if f is None:
+            return None
+        hashes = [
+            v.cached_testdata_hash() if cached else v.testdata_hash()
+            for v in f.verification_list
+            if isinstance(v, BaseProblemVerification)
+        ]
+        if all(value is None for value in hashes):
+            return None
+        return hashlib.sha256(
+            json.dumps(hashes, separators=(",", ":")).encode()
+        ).hexdigest()
+
     def file_need_verification(
         self,
         path: pathlib.Path,
@@ -118,8 +142,16 @@ class InputContainer(ABC):
             reason = file_result.get_verification_reason(base_time=base_time)
         elif self.change_detection == "hash":
             reason = file_result.get_verification_reason(
-                content_hash=self.file_content_hash(path)
+                content_hash=self.file_content_hash(path),
+                testdata_hash=self.file_testdata_hash(path),
             )
+            if (
+                not reason
+                and file_result.testdata_hash is not None
+                and file_result.testdata_hash
+                != self.file_testdata_hash(path, cached=True)
+            ):
+                reason = NeedVerification.TESTDATA_CHANGED
         else:
             raise AssertionError(f"Unknown change_detection: {self.change_detection}")
         if reason:
@@ -211,6 +243,15 @@ class BaseVerifier(InputContainer):
         self._input = verifications
         self.timeout = timeout
         self._result = None
+        self._testdata_sync_errors: dict[pathlib.Path, Exception] = {}
+
+    def file_need_verification(
+        self, path: pathlib.Path, file_result: FileResult
+    ) -> bool:
+        if path in self._testdata_sync_errors:
+            logger.info("%s needs verification: failed to sync test data", path)
+            return True
+        return super().file_need_verification(path, file_result)
 
     @property
     def is_first(self) -> bool:
@@ -225,12 +266,15 @@ class BaseVerifier(InputContainer):
         *,
         download: bool,
         deadline: float,
-    ) -> list[VerificationResult]:
+    ) -> tuple[list[VerificationResult], str | None]:
+        """Run the checks and return their results and test data hash at execution."""
         logger.debug("%r", f)
         verifications = list[VerificationResult]()
         try:
             if time.perf_counter() > deadline:
                 raise VerificationTimeoutError  # noqa: TRY301
+            if error := self._testdata_sync_errors.get(p):
+                raise error  # noqa: TRY301
             if download:
                 run_download(f, check=True, group_log=False)
             else:
@@ -245,7 +289,7 @@ class BaseVerifier(InputContainer):
                 self.create_command_result(ResultStatus.SKIPPED, time.perf_counter())
             )
             logger.warning("Skip[Timeout]: %s", p)
-            return verifications
+            return verifications, None
         except BaseException:
             verifications.append(
                 self.create_command_result(ResultStatus.FAILURE, time.perf_counter())
@@ -255,8 +299,9 @@ class BaseVerifier(InputContainer):
                 f.verification,
                 extra={"github": log.GitHubMessageParams()},
             )
-            return verifications
+            return verifications, None
 
+        testdata_hash = self.file_testdata_hash(p, cached=True)
         for ve in f.verification_list:
             logger.debug("command=%r", ve)
             prev_time = time.perf_counter()
@@ -299,11 +344,14 @@ class BaseVerifier(InputContainer):
                         name=ve.name,
                     )
                 )
-        return verifications
+        return verifications, testdata_hash
 
     def verify(self, *, download: bool = True) -> VerifyCommandResult:
         start_time = time.perf_counter()
         deadline = start_time + self.timeout
+
+        if download and self.change_detection == "hash":
+            self.sync_testdata()
 
         with log.group("current_verification_files"):
             current_verification_files = self.current_verification_files
@@ -326,7 +374,7 @@ class BaseVerifier(InputContainer):
         for p, f in current_verification_files.items():
             with log.group(f"Verify: {p.as_posix()}"):
                 file_hash = self.file_content_hash(p)
-                verifications = self._enumerate_verifications(
+                verifications, testdata_hash = self._enumerate_verifications(
                     p,
                     f,
                     download=download,
@@ -335,9 +383,14 @@ class BaseVerifier(InputContainer):
                 # Don't cache a result for sources that changed during verification.
                 if file_hash != self.file_content_hash(p):
                     file_hash = None
+                if testdata_hash != self.file_testdata_hash(p, cached=True):
+                    testdata_hash = None
+                    # Also force re-verification when the cases are now unavailable.
+                    file_hash = None
                 file_results[p] = FileResult(
                     verifications=verifications,
                     content_hash=file_hash,
+                    testdata_hash=testdata_hash,
                 )
 
         sippable_file_results = self.skippable_results()
@@ -370,6 +423,21 @@ class BaseVerifier(InputContainer):
             return rs, "Failed to test"
         return rs, None
 
+    def sync_testdata(self) -> None:
+        """Sync test data sources, deferring per-file failures to verification."""
+        self._testdata_sync_errors.clear()
+        for p, f in self.verification_files.items():
+            try:
+                for v in f.verification_list:
+                    v.sync_testdata()
+            except Exception as error:  # noqa: PERF203
+                self._testdata_sync_errors[p] = error
+                logger.exception(
+                    "Failed to sync test data: %s",
+                    p,
+                    extra={"github": log.GitHubMessageParams(file=p)},
+                )
+
     def skippable_results(self) -> dict[pathlib.Path, FileResult]:
         """Run skippable verification."""
         results = dict[pathlib.Path, FileResult]()
@@ -377,6 +445,7 @@ class BaseVerifier(InputContainer):
             for p, f in self.skippable_verification_files.items():
                 logger.info("Start skippable: %s", p)
                 file_hash = self.file_content_hash(p)
+                testdata_hash = self.file_testdata_hash(p, cached=True)
                 verifications = list[VerificationResult]()
                 prev_time = time.perf_counter()
 
@@ -387,9 +456,13 @@ class BaseVerifier(InputContainer):
                     )
                 if file_hash != self.file_content_hash(p):
                     file_hash = None
+                if testdata_hash != self.file_testdata_hash(p, cached=True):
+                    testdata_hash = None
+                    file_hash = None
                 results[p] = FileResult(
                     verifications=verifications,
                     content_hash=file_hash,
+                    testdata_hash=testdata_hash,
                     newest=True,
                 )
         return results
