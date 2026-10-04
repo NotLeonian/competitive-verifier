@@ -296,20 +296,21 @@ def _related_source_files(
         ):
             dep_info = read_text_normalized(dep_info_path)
             for line in dep_info.splitlines():
-                ss = line.split(": ")
+                parts = line.split(": ")
                 if (
-                    len(ss) == 2
-                    and pathlib.Path(metadata["workspace_root"], ss[0]) == dep_info_path
+                    len(parts) == 2
+                    and pathlib.Path(metadata["workspace_root"], parts[0])
+                    == dep_info_path
                 ):
                     paths: list[pathlib.Path] = []
-                    it = iter(ss[1].split())
+                    it = iter(parts[1].split())
                     for s in it:
-                        ss = s
-                        while ss.endswith("\\"):
-                            ss = ss.rstrip("\\") + " " + next(it)
-                        path = pathlib.Path(metadata["workspace_root"], s).resolve(
-                            strict=True
-                        )
+                        source_path = s
+                        while source_path.endswith("\\"):
+                            source_path = source_path.rstrip("\\") + " " + next(it)
+                        path = pathlib.Path(
+                            metadata["workspace_root"], source_path
+                        ).resolve(strict=True)
                         # Ignores paths that don't start with the `basedir`. (e.g. `/dev/null`, `/usr/local/share/foo/bar`)
                         if path.is_relative_to(basedir):
                             paths.append(path)

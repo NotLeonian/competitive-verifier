@@ -33,12 +33,12 @@ def _asserrepr_log_comparer(
     size = min(len(left), len(right))
     if size == 0:
         return None
+    left_comparers = [LogComparer.from_record(record) for record in left]
+    right_comparers = list(right)
     for i in range(size):
-        ll = LogComparer.from_record(left[i])
-        left[i] = ll  # pyright: ignore[reportArgumentType, reportCallIssue]
-        right[i] = right[i].fill(ll)
+        right_comparers[i] = right[i].fill(left_comparers[i])
     rt = config.hook.pytest_assertrepr_compare(
-        config=config, op="==", left=left, right=right
+        config=config, op="==", left=left_comparers, right=right_comparers
     )
     return rt[0]
 

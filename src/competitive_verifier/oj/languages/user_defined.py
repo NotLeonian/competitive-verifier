@@ -10,7 +10,12 @@ from pydantic import BaseModel
 from competitive_verifier.models import ShellCommand, ShellCommandLike
 
 from . import special_comments
-from .base import Language, LanguageEnvironment, OjVerifyUserDefinedConfig
+from .base import (
+    Language,
+    LanguageEnvironment,
+    OjVerifyCommandConfig,
+    OjVerifyUserDefinedConfig,
+)
 
 logger = getLogger(__name__)
 
@@ -90,9 +95,9 @@ class UserDefinedLanguageEnvironment(LanguageEnvironment):
         ).format_command(self.config.execute)
 
 
-class UserDefinedLanguage(Language):
+class CommandLanguage(Language):
     extension: str
-    config: OjVerifyUserDefinedConfig
+    config: OjVerifyCommandConfig[ShellCommandLike] | OjVerifyCommandConfig[None]
 
     def list_attributes(
         self, path: pathlib.Path, *, basedir: pathlib.Path
@@ -148,6 +153,10 @@ class UserDefinedLanguage(Language):
                 .exec_command(text=False, capture_output=True)
                 .stdout
             )
+
+
+class UserDefinedLanguage(CommandLanguage):
+    config: OjVerifyUserDefinedConfig  # pyright: ignore[reportIncompatibleVariableOverride]
 
     def list_environments(
         self, path: pathlib.Path, *, basedir: pathlib.Path

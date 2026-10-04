@@ -90,4 +90,4 @@ class Download(OptionalVerifyFilesJsonArguments, VerboseArguments):
                 ).files.values()
             )
 
-        return download_files(files + self.urls, group_log=True)
+        return download_files([*files, *self.urls], group_log=True)

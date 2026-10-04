@@ -63,7 +63,8 @@ def test_to_human_str_mega_bytes(megabytes: float, expected: str):
 
 
 class MockWriteSummaryArguments(WriteSummaryArguments):
-    def run(self) -> bool: ...
+    def run(self) -> bool:
+        raise NotImplementedError
 
 
 def test_no_summary(mocker: MockerFixture):

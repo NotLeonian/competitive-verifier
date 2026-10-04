@@ -41,7 +41,10 @@ jobs:
           cache: "poetry"
 
       - name: Install dependencies
-        run: poetry install --with test
+        run: poetry install --with test,dev
+
+      - name: Run Mypy
+        run: poetry run poe mypy
 
       - name: Install dependencies (Java)
         uses: actions/setup-java@v6

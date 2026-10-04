@@ -47,6 +47,9 @@ poethepoet = "^0.48.0"
 ruff = "^0.16.9"
 pyright = "^1.1.414"
 types-requests = "^2.33.0.20260906"
+mypy = "^2.4.0"
+types-colorama = "^0.4.15.20260508"
+types-pyyaml = "^6.0.12.20260906"
 
 [tool.poe]
 envfile.optional = [".env"]
@@ -55,13 +58,14 @@ envfile.optional = [".env"]
 ruff-check = "ruff check --fix"
 ruff-format = "ruff format"
 pyright = "pyright src/competitive_verifier tests"
-format = ["ruff-format", "ruff-check", "pyright"]
+mypy = "mypy"
+format = ["ruff-format", "ruff-check", "pyright", "mypy"]
 "lint:check" = "ruff check"
 "lint:format" = "ruff format --check"
-lint.parallel = ["lint:check", "lint:format", "pyright"]
-test = "pytest"
-test-quick = "pytest -m 'not integration'"
-test-integration = "pytest -m integration"
+lint.parallel = ["lint:check", "lint:format", "pyright", "mypy"]
+test = { cmd = "pytest", deps = ["mypy"] }
+test-quick = { cmd = "pytest -m 'not integration'", deps = ["mypy"] }
+test-integration = { cmd = "pytest -m integration", deps = ["mypy"] }
 test-use-prev-dest = "poe test --use-prev-dest"
 
 test-cov = { cmd = 'pytest -m="${mark}" --cov=${cov} --cov-branch --cov-report=html ${FILE_PATHS}', args = [
@@ -290,6 +294,8 @@ reportMissingTypeStubs = false
 
 [tool.mypy]
 python_version = "3.10"
+files = ["src", "tests"]
+check_untyped_defs = true
 mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 namespace_packages = true
 explicit_package_bases = true
@@ -298,7 +304,8 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["yaml.*"]
+# importlab does not provide type annotations or a separate stub package.
+module = ["importlab.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

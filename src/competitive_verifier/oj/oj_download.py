@@ -24,11 +24,10 @@ def main(url: str, *, group_log: bool = False) -> bool:
         )
         return False
 
-    with (
-        log.group(f"download[Run]: {url}")
-        if group_log
-        else nullcontext(logger.info("download[Run]: %s", url))
-    ):
+    if not group_log:
+        logger.info("download[Run]: %s", url)
+
+    with log.group(f"download[Run]: {url}") if group_log else nullcontext():
         try:
             _run(problem=problem)
         except Exception as e:

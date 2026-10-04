@@ -5,14 +5,14 @@ from typing import Any, Literal
 
 from pydantic import Field, ValidationInfo, field_validator
 
-from .base import LanguageEnvironment, OjVerifyUserDefinedConfig
-from .user_defined import UserDefinedLanguage
+from .base import LanguageEnvironment, OjVerifyCommandConfig
+from .user_defined import CommandLanguage
 
 logger = getLogger(__name__)
 
 
-class OjVerifyJavaConfig(OjVerifyUserDefinedConfig):
-    execute: None = None  # pyright: ignore[reportIncompatibleVariableOverride]
+class OjVerifyJavaConfig(OjVerifyCommandConfig[None]):
+    execute: None = None
 
     @field_validator("execute", "compile", mode="before")
     @classmethod
@@ -40,7 +40,7 @@ class JavaLanguageEnvironment(LanguageEnvironment):
         return ["java", class_path]
 
 
-class JavaLanguage(UserDefinedLanguage):
+class JavaLanguage(CommandLanguage):
     extension: Literal["java"] = "java"  # pyright: ignore[reportIncompatibleVariableOverride]
     config: OjVerifyJavaConfig = Field(default_factory=OjVerifyJavaConfig)  # pyright: ignore[reportIncompatibleVariableOverride]
 
