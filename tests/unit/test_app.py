@@ -11,6 +11,11 @@ from competitive_verifier.arg import COMPETITIVE_VERIFY_FILES_PATH
 from competitive_verifier.config import COMPETITIVE_VERIFY_CONFIG_PATH
 
 
+@pytest.fixture(autouse=True)
+def inherited_verify_files_path(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(COMPETITIVE_VERIFY_FILES_PATH, "ambient-verify.json")
+
+
 def test_app_help(capsys: pytest.CaptureFixture[str]):
     assert app.main([]) == 2
 
@@ -436,6 +441,11 @@ def test_parse_args(
 test_parse_args_error_params: list[tuple[dict[str, str] | None, list[str], str]] = [
     (None, ["verify"], "the following arguments are required: --verify-json"),
     (
+        {COMPETITIVE_VERIFY_CONFIG_PATH: "custom-config"},
+        ["verify"],
+        "the following arguments are required: --verify-json",
+    ),
+    (
         None,
         ["docs"],
         "the following arguments are required: --verify-json, result_json",
@@ -453,6 +463,20 @@ test_parse_args_error_params: list[tuple[dict[str, str] | None, list[str], str]]
 
 class ParseError(Exception):
     pass
+
+
+@pytest.mark.parametrize(
+    "mockenv",
+    [None, {}, {COMPETITIVE_VERIFY_FILES_PATH: None}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mockenv")
+def test_parse_docs_preserves_config_path(tmp_path: pathlib.Path):
+    parsed = app.ArgumentParser().parse(
+        ["docs", "--verify-json", "verify.json", "result.json"]
+    )
+    assert isinstance(parsed, app.Docs)
+    assert parsed.destination == tmp_path / "_jekyll"
 
 
 @pytest.mark.parametrize(

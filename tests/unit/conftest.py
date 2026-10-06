@@ -1,3 +1,4 @@
+import os
 import pathlib
 import tempfile
 from collections.abc import Generator
@@ -35,9 +36,13 @@ def mock_perf_counter(mocker: MockerFixture, request: pytest.FixtureRequest):
 
 @pytest.fixture
 def mockenv(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
+    # Keep the autouse config path while isolating all other environment variables.
+    for key in tuple(os.environ):
+        if key != COMPETITIVE_VERIFY_CONFIG_PATH:
+            monkeypatch.delenv(key)
     for k, v in cast("dict[str, str | None]", request.param or {}).items():
         if v is None:
-            monkeypatch.delenv(k)
+            monkeypatch.delenv(k, raising=False)
         else:
             monkeypatch.setenv(k, v)
 
