@@ -143,22 +143,23 @@ class InputContainer(ABC):
         if not path.exists():
             return False
         if self.change_detection == "timestamp":
-            base_time = min(self.verification_time, self.get_file_timestamp(path))
-            reason = file_result.get_verification_reason(base_time=base_time)
+            reason = file_result.get_verification_reason(
+                base_time=min(self.verification_time, self.get_file_timestamp(path)),
+                testdata_hash=self.file_testdata_hash(path),
+            )
         elif self.change_detection == "hash":
             reason = file_result.get_verification_reason(
                 content_hash=self.file_content_hash(path),
                 testdata_hash=self.file_testdata_hash(path),
             )
-            if (
-                not reason
-                and file_result.testdata_hash is not None
-                and file_result.testdata_hash
-                != self.file_testdata_hash(path, cached=True)
-            ):
-                reason = NeedVerification.TESTDATA_CHANGED
         else:
             raise AssertionError(f"Unknown change_detection: {self.change_detection}")
+        if (
+            not reason
+            and file_result.testdata_hash is not None
+            and file_result.testdata_hash != self.file_testdata_hash(path, cached=True)
+        ):
+            reason = NeedVerification.TESTDATA_CHANGED
         if reason:
             logger.info("%s needs verification: %s", path, reason.value)
         else:
@@ -358,7 +359,7 @@ class BaseVerifier(InputContainer):
         start_time = time.perf_counter()
         deadline = start_time + self.timeout
 
-        if download and self.change_detection == "hash":
+        if download:
             self.sync_testdata()
 
         with log.group("current_verification_files"):
