@@ -1,8 +1,8 @@
-import os
 import pathlib
 import tempfile
 from collections.abc import Generator
 from contextlib import nullcontext
+from typing import cast
 
 import pytest
 from pytest_mock import MockerFixture
@@ -14,8 +14,13 @@ _mkdir = pathlib.Path.mkdir
 
 
 @pytest.fixture(autouse=True)
-def tmp_config_path(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, "./dummy")
+def config_path(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    request: pytest.FixtureRequest,
+):
+    p = getattr(request, "param", None) or tmp_path.as_posix()
+    monkeypatch.setenv(COMPETITIVE_VERIFY_CONFIG_PATH, p)
 
 
 @pytest.fixture
@@ -29,8 +34,12 @@ def mock_perf_counter(mocker: MockerFixture, request: pytest.FixtureRequest):
 
 
 @pytest.fixture
-def mockenv(mocker: MockerFixture, request: pytest.FixtureRequest):
-    mocker.patch.dict(os.environ, request.param or {}, clear=True)
+def mockenv(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
+    for k, v in cast("dict[str, str | None]", request.param or {}).items():
+        if v is None:
+            monkeypatch.delenv(k)
+        else:
+            monkeypatch.setenv(k, v)
 
 
 @pytest.fixture(autouse=True)
