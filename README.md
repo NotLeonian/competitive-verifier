@@ -2,7 +2,7 @@
 
 [![Actions Status](https://github.com/NotLeonian/competitive-verifier/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/NotLeonian/competitive-verifier/actions/workflows/verify.yml?query=branch%3Amain) [![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=competitive-verifier+&color=brightgreen&logo=github)](https://notleonian.github.io/competitive-verifier)
 
-upstream の PyPI: [![PyPI](https://img.shields.io/pypi/v/competitive-verifier)](https://pypi.org/project/competitive-verifier/)
+Upstream PyPI package: [![PyPI](https://img.shields.io/pypi/v/competitive-verifier)](https://pypi.org/project/competitive-verifier/)
 
 This is [Not_Leonian](https://github.com/NotLeonian)'s fork of [competitive-verifier/competitive-verifier](https://github.com/competitive-verifier/competitive-verifier).
 
@@ -18,23 +18,29 @@ This is [Not_Leonian](https://github.com/NotLeonian)'s fork of [competitive-veri
 See [GitHub Pages](https://notleonian.github.io/competitive-verifier/installer.html).
 [日本語](https://notleonian.github.io/competitive-verifier/installer.ja.html)
 
+To use this fork with the generated workflow, specify the fork's package in every `competitive-verifier/actions/setup@v2` step:
+
+```yaml
+- name: Set up competitive-verifier
+  uses: competitive-verifier/actions/setup@v2
+  with:
+    cache-pip: true
+    package: git+https://github.com/NotLeonian/competitive-verifier.git@main
+```
+
 ### Use in local
 
 #### Install(local)
 
-Needs Python 3.9 or greater.
+Needs Python 3.10 or greater.
 
-```sh
-pip install competitive-verifier
-```
-
-Or
+`pip install competitive-verifier` installs the upstream package. To install this fork, use:
 
 ```sh
 pip install git+https://github.com/NotLeonian/competitive-verifier.git@main
 ```
 
-末尾の `main` の代わりに、main ブランチの最新のコミットの SHA を指定するとより堅実である。
+To pin the installed version, replace `main` at the end of the URL with the SHA of the latest commit on the `main` branch.
 
 **Migrate from verification-helper**
 
