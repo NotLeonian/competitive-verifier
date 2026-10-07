@@ -30,7 +30,7 @@ colorama = "^0.4.6"
 pydantic = "^2.13.5"
 pyyaml = "^6.0.3"
 importlab = "^0.8.1"
-charset-normalizer = "^3.5.1"
+charset-normalizer = "^3.5.2"
 tomli = { version = "^2.0.1", python = "<3.11" }
 requests = "^2.34.2"
 appdirs = "^1.4.4"
@@ -44,7 +44,7 @@ pytest-cov = "^7.1.0"
 
 [tool.poetry.group.dev.dependencies]
 poethepoet = "^0.48.0"
-ruff = "^0.16.9"
+ruff = "^0.16.10"
 pyright = "^1.1.414"
 types-requests = "^2.33.0.20260906"
 mypy = "^2.4.0"
