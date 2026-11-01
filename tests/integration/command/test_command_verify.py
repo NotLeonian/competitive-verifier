@@ -1,5 +1,5 @@
 import contextlib
-import datetime
+import datetime as dt
 import json
 import os
 import pathlib
@@ -161,7 +161,7 @@ class TestCommandVerify:
                                 verification_name="name1",
                                 elapsed=random.randint(10, 242),
                                 status=ResultStatus.SUCCESS,
-                                last_execution_time=datetime.datetime.fromtimestamp(
+                                last_execution_time=dt.datetime.fromtimestamp(
                                     random.randint(1000000000, 3000000000)
                                 ),
                             ),
@@ -171,7 +171,7 @@ class TestCommandVerify:
                                 status=ResultStatus.SKIPPED,
                                 heaviest=random.randint(1000, 3000),
                                 slowest=random.randint(234, 1234),
-                                last_execution_time=datetime.datetime.fromtimestamp(
+                                last_execution_time=dt.datetime.fromtimestamp(
                                     random.randint(1000000000, 3000000000)
                                 ),
                                 testcases=[
@@ -209,7 +209,7 @@ class TestCommandVerify:
                                 verification_name="name1",
                                 elapsed=random.randint(10, 242),
                                 status=ResultStatus.SUCCESS,
-                                last_execution_time=datetime.datetime.fromtimestamp(
+                                last_execution_time=dt.datetime.fromtimestamp(
                                     random.randint(1000000000, 3000000000)
                                 ),
                             ),

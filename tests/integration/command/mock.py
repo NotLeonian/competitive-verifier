@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import pathlib
 import shutil
 import subprocess
@@ -54,9 +54,9 @@ class MockVerifyCommandResult(verifier.VerifyCommandResult):
                 ]
 
             random_time = md5_number(seed + b"last_execution_time")
-            verification.last_execution_time = datetime.datetime.fromtimestamp(
+            verification.last_execution_time = dt.datetime.fromtimestamp(
                 random_time % 300000000000 / 100,
-                tz=datetime.timezone(datetime.timedelta(hours=random_time % 25 - 12)),
+                tz=dt.timezone(dt.timedelta(hours=random_time % 25 - 12)),
             )
 
             return verification

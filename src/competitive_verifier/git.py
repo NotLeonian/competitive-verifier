@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import pathlib
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
@@ -9,13 +9,13 @@ if TYPE_CHECKING:
     from _typeshed import StrPath
 
 
-def get_commit_time(files: Iterable[pathlib.Path]) -> datetime.datetime:
+def get_commit_time(files: Iterable[pathlib.Path]) -> dt.datetime:
     code = ["git", "log", "-1", "--date=iso", "--pretty=%ad", "--", *map(str, files)]
     stdout = command_stdout(code)
     timestamp = stdout.strip()
     if not timestamp:
-        return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
-    return datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S %z")
+        return dt.datetime.min.replace(tzinfo=dt.timezone.utc)
+    return dt.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S %z")
 
 
 def ls_files(*args: "StrPath") -> set[pathlib.Path]:

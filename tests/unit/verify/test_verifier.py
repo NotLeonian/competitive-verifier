@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import pathlib
 from pathlib import Path
 from typing import Any, NamedTuple, cast
@@ -56,21 +56,21 @@ def test_get_file_timestamp_git_timestamp(mocker: MockerFixture):
 
     get_commit_time = mocker.patch(
         "competitive_verifier.git.get_commit_time",
-        return_value=datetime.datetime.max,
+        return_value=dt.datetime.max,
     )
 
-    assert verifier.get_file_timestamp(pathlib.Path("foo")) == datetime.datetime.max
+    assert verifier.get_file_timestamp(pathlib.Path("foo")) == dt.datetime.max
     get_commit_time.assert_called_once_with({pathlib.Path("foo"), pathlib.Path("bar")})
 
 
 def test_get_file_timestamp_local(mocker: MockerFixture):
     class MockPath(NamedTuple):
         name: str
-        time: datetime.datetime
+        time: dt.datetime
 
         @property
         def st_mtime(self) -> float:
-            assert self.time.tzinfo == datetime.timezone.utc
+            assert self.time.tzinfo == dt.timezone.utc
             return self.time.timestamp()
 
         def stat(self):
@@ -88,18 +88,16 @@ def test_get_file_timestamp_local(mocker: MockerFixture):
 
     foo_path = MockPath(
         "foo",
-        datetime.datetime.fromisoformat("2001-02-03T04:05:05.789789+00:00"),
+        dt.datetime.fromisoformat("2001-02-03T04:05:05.789789+00:00"),
     )
     bar_path = MockPath(
         "bar",
-        datetime.datetime.fromisoformat("2001-02-03T04:05:06.789789+00:00"),
+        dt.datetime.fromisoformat("2001-02-03T04:05:06.789789+00:00"),
     )
 
     mocker.patch(
         "competitive_verifier.verify.verifier._now",
-        return_value=datetime.datetime.fromisoformat(
-            "2010-08-31T15:26:56.456797+06:30"
-        ),
+        return_value=dt.datetime.fromisoformat("2010-08-31T15:26:56.456797+06:30"),
     )
     mocker.patch.dict(
         verifier.verifications.transitive_depends_on,
@@ -110,7 +108,7 @@ def test_get_file_timestamp_local(mocker: MockerFixture):
 
     assert verifier.get_file_timestamp(
         cast("pathlib.Path", foo_path)
-    ) == datetime.datetime.fromisoformat("2001-02-03T10:35:06+06:30")
+    ) == dt.datetime.fromisoformat("2001-02-03T10:35:06+06:30")
     get_commit_time.assert_not_called()
 
 
@@ -120,8 +118,8 @@ class MockInputContainer(InputContainer):
         obj: Any = None,
         *,
         prev_result: VerifyCommandResult | None = None,
-        verification_time: datetime.datetime | None = None,
-        file_timestamps: dict[Path, datetime.datetime] | None = None,
+        verification_time: dt.datetime | None = None,
+        file_timestamps: dict[Path, dt.datetime] | None = None,
         file_hashes: dict[Path, str] | None = None,
         file_testdata_hashes: dict[Path, str] | None = None,
         split_state: SplitState | None = None,
@@ -131,7 +129,7 @@ class MockInputContainer(InputContainer):
             verifications=VerificationInput.model_validate(obj)
             if obj
             else VerificationInput(),
-            verification_time=verification_time or datetime.datetime.now(),
+            verification_time=verification_time or dt.datetime.now(),
             prev_result=prev_result,
             split_state=split_state,
             change_detection=change_detection
@@ -142,7 +140,7 @@ class MockInputContainer(InputContainer):
         self.file_hashes = file_hashes or {}
         self.file_testdata_hashes = file_testdata_hashes or {}
 
-    def get_file_timestamp(self, path: Path) -> datetime.datetime:
+    def get_file_timestamp(self, path: Path) -> dt.datetime:
         assert self.file_timestamps is not None
         dt = self.file_timestamps.get(path)
         assert dt is not None
@@ -256,9 +254,9 @@ test_file_need_verification_params: list[
     # Timestamp mode (default): older file than last execution is skipped.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_timestamps={
-                Path("foo"): datetime.datetime(2015, 12, 25),
+                Path("foo"): dt.datetime(2015, 12, 25),
             },
         ),
         Path("foo"),
@@ -267,7 +265,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ]
         ),
@@ -276,9 +274,9 @@ test_file_need_verification_params: list[
     # Timestamp mode: newer file than last execution is re-verified.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_timestamps={
-                Path("foo"): datetime.datetime(2017, 12, 25),
+                Path("foo"): dt.datetime(2017, 12, 25),
             },
         ),
         Path("foo"),
@@ -287,7 +285,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ]
         ),
@@ -296,9 +294,9 @@ test_file_need_verification_params: list[
     # Timestamp mode: previous failure is re-verified.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_timestamps={
-                Path("foo"): datetime.datetime(2015, 12, 25),
+                Path("foo"): dt.datetime(2015, 12, 25),
             },
         ),
         Path("foo"),
@@ -307,7 +305,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.FAILURE,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ]
         ),
@@ -316,7 +314,7 @@ test_file_need_verification_params: list[
     # No content hash (result from a version without hashing): re-verify.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -327,7 +325,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ]
         ),
@@ -336,7 +334,7 @@ test_file_need_verification_params: list[
     # Matching hash and previous success: skip.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -348,7 +346,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -357,7 +355,7 @@ test_file_need_verification_params: list[
     # Changed hash: re-verify.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -369,7 +367,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -378,7 +376,7 @@ test_file_need_verification_params: list[
     # Matching hash but previous failure: re-verify.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -390,7 +388,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.FAILURE,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -399,7 +397,7 @@ test_file_need_verification_params: list[
     # Matching hash but previous skip: re-verify.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -411,7 +409,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SKIPPED,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -420,7 +418,7 @@ test_file_need_verification_params: list[
     # Matching content and test data hashes: skip.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -436,7 +434,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -445,7 +443,7 @@ test_file_need_verification_params: list[
     # Matching content hash but changed test data: re-verify.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -461,7 +459,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -470,7 +468,7 @@ test_file_need_verification_params: list[
     # Previous test data unknown but now known: re-verify to stamp it.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -485,7 +483,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -494,7 +492,7 @@ test_file_need_verification_params: list[
     # Previously identified test data is no longer available: re-verify.
     (
         MockInputContainer(
-            verification_time=datetime.datetime(2018, 12, 25),
+            verification_time=dt.datetime(2018, 12, 25),
             file_hashes={
                 Path("foo"): "hash-foo",
             },
@@ -507,7 +505,7 @@ test_file_need_verification_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime.datetime(2016, 12, 24),
+                    last_execution_time=dt.datetime(2016, 12, 24),
                 ),
             ],
         ),
@@ -584,7 +582,7 @@ test_remaining_verification_files_params: list[
                     "baz": {"verification": {"type": "command", "command": "true"}},
                 },
             },
-            verification_time=datetime.datetime(9999, 5, 22),
+            verification_time=dt.datetime(9999, 5, 22),
             prev_result=VerifyCommandResult(
                 total_seconds=1.5,
                 files={
@@ -593,7 +591,7 @@ test_remaining_verification_files_params: list[
                             VerificationResult(
                                 elapsed=1.5,
                                 status=ResultStatus.SUCCESS,
-                                last_execution_time=datetime.datetime(2018, 7, 22),
+                                last_execution_time=dt.datetime(2018, 7, 22),
                             )
                         ]
                     )

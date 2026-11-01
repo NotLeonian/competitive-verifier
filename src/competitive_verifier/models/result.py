@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import enum
 import pathlib
 from logging import getLogger
@@ -85,8 +85,8 @@ class VerificationResult(BaseModel):
     """The results of each test case.
     """
 
-    last_execution_time: datetime.datetime = Field(
-        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
+    last_execution_time: dt.datetime = Field(
+        default_factory=lambda: dt.datetime.now(dt.timezone.utc),
         description="The time at which the last validation was performed.",
     )
     """The time at which the last validation was performed.
@@ -97,7 +97,7 @@ class VerificationResult(BaseModel):
     def verification_list(cls, v: object) -> object:
         return v.lower() if isinstance(v, str) else v
 
-    def need_reverifying(self, base_time: datetime.datetime) -> bool:
+    def need_reverifying(self, base_time: dt.datetime) -> bool:
         if self.status != ResultStatus.SUCCESS:
             return True
 
@@ -154,7 +154,7 @@ class FileResult(BaseModel):
 
     def need_verification(
         self,
-        base_time: datetime.datetime | None = None,
+        base_time: dt.datetime | None = None,
         *,
         content_hash: str | None = None,
         testdata_hash: str | None = None,
@@ -176,7 +176,7 @@ class FileResult(BaseModel):
     def get_verification_reason(
         self,
         *,
-        base_time: datetime.datetime | None = None,
+        base_time: dt.datetime | None = None,
         content_hash: str | None = None,
         testdata_hash: str | None = None,
     ) -> NeedVerification:
@@ -194,9 +194,7 @@ class FileResult(BaseModel):
             return self._need_verification_by_time(base_time)
         return self._need_verification_by_hash(content_hash)
 
-    def _need_verification_by_time(
-        self, base_time: datetime.datetime
-    ) -> NeedVerification:
+    def _need_verification_by_time(self, base_time: dt.datetime) -> NeedVerification:
         if any(r.status != ResultStatus.SUCCESS for r in self.verifications):
             return NeedVerification.NOT_SUCCESS
         if any(r.last_execution_time < base_time for r in self.verifications):

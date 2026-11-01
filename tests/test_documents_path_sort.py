@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import pathlib
 
 import yaml
@@ -49,7 +49,7 @@ def _make_page_render_job(
             is_verification=False,
             verification_status=StatusIcon.LIBRARY_NO_TESTS,
             file_input=VerificationFile(),
-            timestamp=datetime.datetime(2026, 1, 1),
+            timestamp=dt.datetime(2026, 1, 1),
             depends_on=depends_on or set(),
             required_by=set(),
             verified_with=set(),

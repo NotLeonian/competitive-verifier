@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import enum
 import pathlib
 from abc import ABC, abstractmethod
@@ -230,7 +230,7 @@ class SourceCodeStat(BaseModel):
     is_verification: bool
     verification_status: StatusIcon
     file_input: VerificationFile
-    timestamp: datetime.datetime
+    timestamp: dt.datetime
     depends_on: SortedPathSet
     required_by: SortedPathSet
     verified_with: SortedPathSet

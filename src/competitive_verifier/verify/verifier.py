@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import hashlib
 import json
 import pathlib
@@ -29,8 +29,8 @@ from competitive_verifier.verify.split_state import SplitState
 logger = getLogger(__name__)
 
 
-def _now() -> datetime.datetime:
-    return datetime.datetime.now(datetime.timezone.utc).astimezone()
+def _now() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc).astimezone()
 
 
 def _check_deadline(current_time: float, deadline: float) -> None:
@@ -61,7 +61,7 @@ ChangeDetection = Literal["timestamp", "hash"]
 
 class InputContainer(ABC):
     verifications: VerificationInput
-    verification_time: datetime.datetime
+    verification_time: dt.datetime
     prev_result: VerifyCommandResult | None
     change_detection: ChangeDetection
     split_state: SplitState | None
@@ -72,7 +72,7 @@ class InputContainer(ABC):
         self,
         *,
         verifications: VerificationInput,
-        verification_time: datetime.datetime,
+        verification_time: dt.datetime,
         prev_result: VerifyCommandResult | None,
         split_state: SplitState | None,
         change_detection: ChangeDetection = "timestamp",
@@ -88,7 +88,7 @@ class InputContainer(ABC):
         self.default_mle = default_mle
 
     @abstractmethod
-    def get_file_timestamp(self, path: pathlib.Path) -> datetime.datetime: ...
+    def get_file_timestamp(self, path: pathlib.Path) -> dt.datetime: ...
 
     def file_content_hash(self, path: pathlib.Path) -> str | None:
         """Digest of the sources and verification settings for the file.
@@ -234,7 +234,7 @@ class BaseVerifier(InputContainer):
         default_mle: float | None,
         prev_result: VerifyCommandResult | None,
         split_state: SplitState | None,
-        verification_time: datetime.datetime | None = None,
+        verification_time: dt.datetime | None = None,
         change_detection: ChangeDetection = "timestamp",
     ) -> None:
         super().__init__(
@@ -509,7 +509,7 @@ class Verifier(BaseVerifier):
         default_mle: float | None,
         prev_result: VerifyCommandResult | None,
         split_state: SplitState | None,
-        verification_time: datetime.datetime | None = None,
+        verification_time: dt.datetime | None = None,
         change_detection: ChangeDetection = "timestamp",
         use_git_timestamp: bool,
     ) -> None:
@@ -525,7 +525,7 @@ class Verifier(BaseVerifier):
         )
         self.use_git_timestamp = use_git_timestamp
 
-    def get_file_timestamp(self, path: pathlib.Path) -> datetime.datetime:
+    def get_file_timestamp(self, path: pathlib.Path) -> dt.datetime:
         dependencies = self.verifications.transitive_depends_on[path]
 
         if self.use_git_timestamp:
@@ -535,6 +535,6 @@ class Verifier(BaseVerifier):
         system_local_timezone = _now().tzinfo
 
         # microsecond=0 is required because it's erased in git commit
-        return datetime.datetime.fromtimestamp(
-            timestamp, tz=system_local_timezone
-        ).replace(microsecond=0)
+        return dt.datetime.fromtimestamp(timestamp, tz=system_local_timezone).replace(
+            microsecond=0
+        )

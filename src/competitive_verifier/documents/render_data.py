@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import enum
 from collections.abc import Sequence
 from typing import Annotated, Any
@@ -104,7 +104,7 @@ class PageRenderData(RenderBaseModel):
     embedded: list[EmbeddedCode]
 
     timestamp: Annotated[
-        datetime.datetime,
+        dt.datetime,
         PlainSerializer(str, return_type=str, when_used="json"),
     ]
     attributes: dict[str, Any]
