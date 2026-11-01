@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import pathlib
 from typing import Any
 
@@ -65,12 +65,12 @@ class HashInputContainer(InputContainer):
     def __init__(self, verifications: VerificationInput) -> None:
         super().__init__(
             verifications=verifications,
-            verification_time=datetime.datetime.now(),
+            verification_time=dt.datetime.now(),
             prev_result=None,
             split_state=None,
         )
 
-    def get_file_timestamp(self, path: pathlib.Path) -> datetime.datetime:
+    def get_file_timestamp(self, path: pathlib.Path) -> dt.datetime:
         raise NotImplementedError
 
 

@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import hashlib
 import json
 import logging
@@ -54,7 +54,7 @@ class MockVerifier(BaseVerifier):
         self,
         verifications: Any = None,
         *,
-        verification_time: datetime.datetime,
+        verification_time: dt.datetime,
         prev_result: VerifyCommandResult | None = None,
         split_state: SplitState | None = None,
         file_hashes: dict[str, str] | None = None,
@@ -72,8 +72,8 @@ class MockVerifier(BaseVerifier):
         )
         self.file_hashes = file_hashes
 
-    def get_file_timestamp(self, path: pathlib.Path) -> datetime.datetime:
-        return datetime.datetime(2005, 1, 2, 15, 4, 5)
+    def get_file_timestamp(self, path: pathlib.Path) -> dt.datetime:
+        return dt.datetime(2005, 1, 2, 15, 4, 5)
 
     def file_content_hash(self, path: pathlib.Path) -> str | None:
         if self.file_hashes is None:
@@ -101,7 +101,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
         ),
         {
             "total_seconds": 8.0,
@@ -112,7 +112,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -122,7 +122,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -166,7 +166,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
             split_state=SplitState(size=2, index=0),
         ),
         {
@@ -178,7 +178,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -188,7 +188,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -198,7 +198,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -242,7 +242,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
             split_state=SplitState(size=2, index=1),
         ),
         {
@@ -254,7 +254,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -264,7 +264,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -319,7 +319,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                                 VerificationResult(
                                     status=ResultStatus.SUCCESS,
                                     elapsed=1.0,
-                                    last_execution_time=datetime.datetime(
+                                    last_execution_time=dt.datetime(
                                         2005, 12, 2, 15, 4, 5
                                     ),
                                 ),
@@ -332,7 +332,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                                 VerificationResult(
                                     status=ResultStatus.SUCCESS,
                                     elapsed=1.0,
-                                    last_execution_time=datetime.datetime(
+                                    last_execution_time=dt.datetime(
                                         2005, 12, 2, 15, 4, 5
                                     ),
                                 ),
@@ -345,7 +345,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                                 VerificationResult(
                                     status=ResultStatus.SUCCESS,
                                     elapsed=1.0,
-                                    last_execution_time=datetime.datetime(
+                                    last_execution_time=dt.datetime(
                                         2005, 12, 2, 15, 4, 5
                                     ),
                                 ),
@@ -358,7 +358,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                                 VerificationResult(
                                     status=ResultStatus.SUCCESS,
                                     elapsed=1.0,
-                                    last_execution_time=datetime.datetime(
+                                    last_execution_time=dt.datetime(
                                         2000, 1, 2, 15, 4, 5
                                     ),
                                 ),
@@ -371,7 +371,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                                 VerificationResult(
                                     status=ResultStatus.SUCCESS,
                                     elapsed=1.0,
-                                    last_execution_time=datetime.datetime(
+                                    last_execution_time=dt.datetime(
                                         2000, 1, 2, 15, 4, 5
                                     ),
                                 ),
@@ -380,7 +380,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                     },
                 }
             ),
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
             file_hashes={
                 "test/foo.py": "hash:test/foo.py",
                 "test/foo1.py": "hash:test/foo1.py",
@@ -399,9 +399,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(
-                                2005, 12, 2, 15, 4, 5
-                            ),
+                            last_execution_time=dt.datetime(2005, 12, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -412,9 +410,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(
-                                2005, 12, 2, 15, 4, 5
-                            ),
+                            last_execution_time=dt.datetime(2005, 12, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -425,9 +421,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(
-                                2005, 12, 2, 15, 4, 5
-                            ),
+                            last_execution_time=dt.datetime(2005, 12, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -438,7 +432,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -449,7 +443,7 @@ test_verify_params: list[tuple[MockVerifier, dict[str, Any]]] = [
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -1012,7 +1006,7 @@ test_verify_timeout_params: list[
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
         ),
         [0.0, 11.0, 12.0, 13.0, 14.0],
         {
@@ -1024,7 +1018,7 @@ test_verify_timeout_params: list[
                         VerificationResult(
                             status=ResultStatus.SKIPPED,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -1044,7 +1038,7 @@ test_verify_timeout_params: list[
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
         ),
         [0.0, 5.0, 11.0, 12.0, 13.0],
         {
@@ -1056,7 +1050,7 @@ test_verify_timeout_params: list[
                         VerificationResult(
                             status=ResultStatus.SKIPPED,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -1076,7 +1070,7 @@ test_verify_timeout_params: list[
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
         ),
         [0.0, 5.0, 6.0, 11.0, 12.0, 13.0],
         {
@@ -1088,7 +1082,7 @@ test_verify_timeout_params: list[
                         VerificationResult(
                             status=ResultStatus.SKIPPED,
                             elapsed=6.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -1114,7 +1108,7 @@ test_verify_timeout_params: list[
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
         ),
         [0.0, 5.0, 6.0, 7.0, 8.0, 11.0, 12.0, 13.0, 14.0],
         {
@@ -1126,7 +1120,7 @@ test_verify_timeout_params: list[
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -1136,7 +1130,7 @@ test_verify_timeout_params: list[
                         VerificationResult(
                             status=ResultStatus.SKIPPED,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -1157,7 +1151,7 @@ test_verify_timeout_params: list[
                     },
                 }
             },
-            verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+            verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
         ),
         [0.0, 5.0, 6.0, 7.0, 8.0, 11.0, 12.0, 13.0],
         {
@@ -1169,12 +1163,12 @@ test_verify_timeout_params: list[
                         VerificationResult(
                             status=ResultStatus.SUCCESS,
                             elapsed=2.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                         VerificationResult(
                             status=ResultStatus.SKIPPED,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+                            last_execution_time=dt.datetime(2007, 1, 2, 15, 4, 5),
                         ),
                     ],
                 ),
@@ -1234,7 +1228,7 @@ def test_verify_download_error(
                 },
             }
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
     )
     result = verifier.verify(download=True)
     assert result.model_dump(exclude_none=True) == {
@@ -1245,7 +1239,7 @@ def test_verify_download_error(
                 "verifications": [
                     {
                         "elapsed": 1.0,
-                        "last_execution_time": datetime.datetime(2007, 1, 2, 15, 4, 5),
+                        "last_execution_time": dt.datetime(2007, 1, 2, 15, 4, 5),
                         "status": ResultStatus.FAILURE,
                     },
                 ],
@@ -1287,7 +1281,7 @@ def test_verify_not_downloaded(
                 },
             }
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
     )
     result = verifier.verify(download=False)
     assert result.model_dump(exclude_none=True) == {
@@ -1298,7 +1292,7 @@ def test_verify_not_downloaded(
                 "verifications": [
                     {
                         "elapsed": 1.0,
-                        "last_execution_time": datetime.datetime(2007, 1, 2, 15, 4, 5),
+                        "last_execution_time": dt.datetime(2007, 1, 2, 15, 4, 5),
                         "status": ResultStatus.FAILURE,
                     },
                 ],
@@ -1336,7 +1330,7 @@ def test_verify_rejects_incomplete_testdata_cache(
                 },
             },
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
     )
     download = mocker.patch("competitive_verifier.verify.verifier.run_download")
     run = mocker.patch.object(
@@ -1394,7 +1388,7 @@ def test_verify_compile_error(
                 },
             }
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
     )
     result = verifier.verify(download=False)
     assert result.model_dump(exclude_none=True) == {
@@ -1406,13 +1400,13 @@ def test_verify_compile_error(
                     {
                         "verification_name": "foo",
                         "elapsed": 1.0,
-                        "last_execution_time": datetime.datetime(2007, 1, 2, 15, 4, 5),
+                        "last_execution_time": dt.datetime(2007, 1, 2, 15, 4, 5),
                         "status": ResultStatus.FAILURE,
                     },
                     {
                         "verification_name": "bar",
                         "elapsed": 1.0,
-                        "last_execution_time": datetime.datetime(2007, 1, 2, 15, 4, 5),
+                        "last_execution_time": dt.datetime(2007, 1, 2, 15, 4, 5),
                         "status": ResultStatus.FAILURE,
                     },
                 ],
@@ -1479,7 +1473,7 @@ def test_verify_error(
                 },
             }
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
     )
     result = verifier.verify(download=False)
     assert result.model_dump(exclude_none=True) == {
@@ -1491,7 +1485,7 @@ def test_verify_error(
                     {
                         "verification_name": "foo",
                         "elapsed": 2.0,
-                        "last_execution_time": datetime.datetime(2007, 1, 2, 15, 4, 5),
+                        "last_execution_time": dt.datetime(2007, 1, 2, 15, 4, 5),
                         "status": ResultStatus.FAILURE,
                     },
                 ],
@@ -1545,7 +1539,7 @@ def test_verify_failure(
                 },
             }
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
     )
     result = verifier.verify(download=False)
     assert result.model_dump(exclude_none=True) == {
@@ -1557,7 +1551,7 @@ def test_verify_failure(
                     {
                         "verification_name": "foo",
                         "elapsed": 2.0,
-                        "last_execution_time": datetime.datetime(2007, 1, 2, 15, 4, 5),
+                        "last_execution_time": dt.datetime(2007, 1, 2, 15, 4, 5),
                         "status": ResultStatus.FAILURE,
                     },
                 ],
@@ -1593,7 +1587,7 @@ def test_failure_result():
                 verification_name="mockresult",
                 status=self.status,
                 elapsed=1.2,
-                last_execution_time=datetime.datetime(2007, 1, 2, 10, 4, 5),
+                last_execution_time=dt.datetime(2007, 1, 2, 10, 4, 5),
             )
 
     verifier = MockVerifier(
@@ -1613,7 +1607,7 @@ def test_failure_result():
                 },
             }
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
     )
     result = verifier.verify(download=False)
     assert result.model_dump(exclude_none=True) == {
@@ -1625,7 +1619,7 @@ def test_failure_result():
                     {
                         "verification_name": "mockresult",
                         "elapsed": 1.2,
-                        "last_execution_time": datetime.datetime(2007, 1, 2, 10, 4, 5),
+                        "last_execution_time": dt.datetime(2007, 1, 2, 10, 4, 5),
                         "status": ResultStatus.FAILURE,
                     },
                 ],
@@ -1691,7 +1685,7 @@ def test_verify_syncs_testdata_before_skip_selection(
                 },
             }
         },
-        verification_time=datetime.datetime(2007, 1, 2, 15, 4, 5),
+        verification_time=dt.datetime(2007, 1, 2, 15, 4, 5),
         prev_result=VerifyCommandResult(
             total_seconds=1.0,
             files={
@@ -1702,7 +1696,7 @@ def test_verify_syncs_testdata_before_skip_selection(
                         VerificationResult(
                             status=SUCCESS,
                             elapsed=1.0,
-                            last_execution_time=datetime.datetime(2006, 1, 2),
+                            last_execution_time=dt.datetime(2006, 1, 2),
                         )
                     ],
                 )

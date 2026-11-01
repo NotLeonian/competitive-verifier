@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 from pathlib import Path
 from typing import Any
 from unittest import mock
@@ -38,7 +38,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "success",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -63,10 +63,10 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                     {
                         "status": "success",
                         "elapsed": 1,
-                        "last_execution_time": datetime.datetime(2020, 2, 15),
+                        "last_execution_time": dt.datetime(2020, 2, 15),
                     },
                 ],
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": set(),
                 "verified_with": set(),
@@ -76,7 +76,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/a.py", "c1/b2.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_ALL_AC,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b2.py", "c1/a.py"},
                 "required_by": {"c1/b2.py"},
                 "verified_with": {"c1/test.py"},
@@ -86,7 +86,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/b1.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_ALL_AC,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -96,7 +96,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_ALL_AC,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": set(),
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -129,7 +129,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "failure",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -154,10 +154,10 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                     {
                         "status": "failure",
                         "elapsed": 1,
-                        "last_execution_time": datetime.datetime(2020, 2, 15),
+                        "last_execution_time": dt.datetime(2020, 2, 15),
                     },
                 ],
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": set(),
                 "verified_with": set(),
@@ -167,7 +167,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/a.py", "c1/b2.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_ALL_WA,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b2.py", "c1/a.py"},
                 "required_by": {"c1/b2.py"},
                 "verified_with": {"c1/test.py"},
@@ -177,7 +177,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/b1.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_ALL_WA,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -187,7 +187,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_ALL_WA,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": set(),
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -229,7 +229,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "success",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -238,7 +238,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "skipped",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -263,10 +263,10 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                     {
                         "status": "success",
                         "elapsed": 1,
-                        "last_execution_time": datetime.datetime(2020, 2, 15),
+                        "last_execution_time": dt.datetime(2020, 2, 15),
                     },
                 ],
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": set(),
                 "verified_with": set(),
@@ -288,10 +288,10 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                     {
                         "status": "skipped",
                         "elapsed": 1,
-                        "last_execution_time": datetime.datetime(2020, 2, 15),
+                        "last_execution_time": dt.datetime(2020, 2, 15),
                     },
                 ],
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": set(),
                 "verified_with": set(),
@@ -301,7 +301,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/a.py", "c1/b2.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_PARTIAL_AC,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b2.py", "c1/a.py"},
                 "required_by": {"c1/b2.py"},
                 "verified_with": {"c1/test.py", "c1/test2.py"},
@@ -311,7 +311,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/b1.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_PARTIAL_AC,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -321,7 +321,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_PARTIAL_AC,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": set(),
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -363,7 +363,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "success",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -372,7 +372,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "failure",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -397,10 +397,10 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                     {
                         "status": "success",
                         "elapsed": 1,
-                        "last_execution_time": datetime.datetime(2020, 2, 15),
+                        "last_execution_time": dt.datetime(2020, 2, 15),
                     },
                 ],
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": set(),
                 "verified_with": set(),
@@ -422,10 +422,10 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                     {
                         "status": "failure",
                         "elapsed": 1,
-                        "last_execution_time": datetime.datetime(2020, 2, 15),
+                        "last_execution_time": dt.datetime(2020, 2, 15),
                     },
                 ],
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": set(),
                 "verified_with": set(),
@@ -435,7 +435,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/a.py", "c1/b2.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_SOME_WA,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b2.py", "c1/a.py"},
                 "required_by": {"c1/b2.py"},
                 "verified_with": {"c1/test.py", "c1/test2.py"},
@@ -445,7 +445,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/b1.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_SOME_WA,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -455,7 +455,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_SOME_WA,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": set(),
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -479,7 +479,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "failure",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -492,7 +492,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/a.py", "c1/b2.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_NO_TESTS,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b2.py", "c1/a.py"},
                 "required_by": {"c1/b2.py"},
                 "verified_with": set(),
@@ -502,7 +502,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/b1.py"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_NO_TESTS,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/b1.py"},
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -512,7 +512,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_NO_TESTS,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": set(),
                 "required_by": {"c1/b1.py"},
                 "verified_with": set(),
@@ -545,7 +545,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                         {
                             "status": "success",
                             "elapsed": 1,
-                            "last_execution_time": datetime.datetime(2020, 2, 15),
+                            "last_execution_time": dt.datetime(2020, 2, 15),
                         },
                     ]
                 },
@@ -558,7 +558,7 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                 "file_input": {"dependencies": ["c1/hello.java", "c1/hello_test.java"]},
                 "is_verification": False,
                 "verification_status": StatusIcon.LIBRARY_ALL_AC,
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/hello_test.java"},
                 "required_by": set(),
                 "verified_with": {"c1/hello_test.java"},
@@ -580,10 +580,10 @@ test_resolve_dependency_params: list[tuple[str, Any, Any, Any, Any]] = [
                     {
                         "status": "success",
                         "elapsed": 1,
-                        "last_execution_time": datetime.datetime(2020, 2, 15),
+                        "last_execution_time": dt.datetime(2020, 2, 15),
                     }
                 ],
-                "timestamp": datetime.datetime(2010, 2, 15, 0, 0),
+                "timestamp": dt.datetime(2010, 2, 15, 0, 0),
                 "depends_on": {"c1/hello.java"},
                 "required_by": {"c1/hello.java"},
                 "verified_with": set(),
@@ -607,7 +607,7 @@ def test_resolve_dependency(
 ):
     with mock.patch(
         "competitive_verifier.git.get_commit_time",
-        return_value=datetime.datetime(2010, 2, 15),
+        return_value=dt.datetime(2010, 2, 15),
     ):
         dep_input = VerificationInput.model_validate(dep_input_obj)
         dep_result = VerifyCommandResult.model_validate(dep_result_obj)

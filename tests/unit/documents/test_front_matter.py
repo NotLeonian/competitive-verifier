@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import json
 import pathlib
 import textwrap
@@ -373,7 +373,7 @@ test_front_matter_dump_yml_params: list[tuple[FrontMatter, bytes]] = [
                         code="👍",
                     ),
                 ],
-                timestamp=datetime.datetime(
+                timestamp=dt.datetime(
                     2006,
                     1,
                     2,
@@ -381,7 +381,7 @@ test_front_matter_dump_yml_params: list[tuple[FrontMatter, bytes]] = [
                     46,
                     57,
                     433,
-                    tzinfo=datetime.timezone(datetime.timedelta(hours=9)),
+                    tzinfo=dt.timezone(dt.timedelta(hours=9)),
                 ),
                 attributes={
                     "PROBLEM": "http://example.com",
