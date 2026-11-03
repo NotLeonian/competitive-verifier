@@ -58,7 +58,6 @@ def _python_list_depending_files(
         result = subprocess.run(
             [
                 sys.executable,
-                "-I",
                 str(pathlib.Path(__file__).with_name("_python_dependencies.py")),
                 str(path),
                 str(basedir),
@@ -66,6 +65,12 @@ def _python_list_depending_files(
             capture_output=True,
             check=True,
             timeout=timeout,
+            # Keep user-site dependencies available without loading project PYTHONPATH.
+            env={
+                name: value
+                for name, value in os.environ.items()
+                if name != "PYTHONPATH"
+            },
         )
     except subprocess.TimeoutExpired as e:
         raise RuntimeError(

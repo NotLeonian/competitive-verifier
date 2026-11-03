@@ -1,6 +1,9 @@
 import pathlib
+import shutil
 import subprocess
 import sys
+import venv
+from importlib.metadata import distribution
 
 import pytest
 from pytest_mock import MockerFixture
@@ -194,6 +197,60 @@ def test_list_dependencies_limits_search_path(
         )
     ) == {source, dependency}
     assert sys.path == original_path
+
+
+@pytest.mark.allow_mkdir
+def test_list_dependencies_with_user_site(
+    testtemp: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+):
+    environment = testtemp / "venv"
+    venv.EnvBuilder(system_site_packages=True).create(environment)
+    interpreter = environment / (
+        "Scripts/python.exe" if sys.platform == "win32" else "bin/python"
+    )
+    monkeypatch.setenv("PYTHONUSERBASE", str(testtemp / "user-base"))
+    monkeypatch.delenv("PYTHONNOUSERSITE", raising=False)
+    monkeypatch.delenv("PYTHONPATH", raising=False)
+    user_site = pathlib.Path(
+        subprocess.run(
+            [str(interpreter), "-c", "import site; print(site.getusersitepackages())"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    )
+    user_site.mkdir(parents=True)
+    for package in ("modulegraph2", "objectgraph"):
+        shutil.copytree(
+            str(distribution(package).locate_file(package)), user_site / package
+        )
+    shutil.copyfile(
+        str(distribution("typing_extensions").locate_file("typing_extensions.py")),
+        user_site / "typing_extensions.py",
+    )
+    marker = testtemp / "user-site-imported"
+    initializer = user_site / "modulegraph2/__init__.py"
+    with initializer.open("a", encoding="utf-8") as stream:
+        stream.write(
+            f"\nwith open({str(marker)!r}, 'w', encoding='utf-8') as marker:\n"
+            "    marker.write('imported')\n"
+        )
+
+    source = testtemp / "main.py"
+    helper = testtemp / "helper.py"
+    source.write_text("from helper import value\n", encoding="utf-8")
+    helper.write_text("value = 42\n", encoding="utf-8")
+    (testtemp / "json.py").write_text(
+        "raise RuntimeError('PYTHONPATH code was executed')\n", encoding="utf-8"
+    )
+    monkeypatch.setenv("PYTHONPATH", str(testtemp))
+    monkeypatch.setattr(sys, "executable", str(interpreter))
+
+    assert set(PythonLanguage().list_dependencies(source, basedir=testtemp)) == {
+        source,
+        helper,
+    }
+    assert marker.read_text(encoding="utf-8") == "imported"
 
 
 def test_list_dependencies_invalid_source(testtemp: pathlib.Path):
