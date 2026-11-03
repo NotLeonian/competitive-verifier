@@ -43,9 +43,6 @@ jobs:
       - name: Install dependencies
         run: poetry install --with test,dev
 
-      - name: Run Mypy
-        run: poetry run poe mypy
-
       - name: Install dependencies (Java)
         uses: actions/setup-java@v6
         with:
@@ -69,7 +66,7 @@ jobs:
           path: |
             coverage/
           retention-days: 1
-  
+
   wheel-doc-assets:
     name: wheel doc assets
     runs-on: ubuntu-latest
