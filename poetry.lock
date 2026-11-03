@@ -488,21 +488,6 @@ files = [
 all = ["coverage (>=7.10.0)", "hypothesis (>=6.141.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.16.0)", "ty (>=0.0.37)"]
 
 [[package]]
-name = "importlab"
-version = "0.8.1"
-description = "A library to calculate python dependency graphs."
-optional = false
-python-versions = ">=3.6.0"
-groups = ["main"]
-files = [
-    {file = "importlab-0.8.1-py2.py3-none-any.whl", hash = "sha256:124cfa00e8a34fefe8aac1a5e94f56c781b178c9eb61a1d3f60f7e03b77338d3"},
-    {file = "importlab-0.8.1.tar.gz", hash = "sha256:b3893853b1f6eb027da509c3b40e6787e95dd66b4b66f1b3613aad77556e1465"},
-]
-
-[package.dependencies]
-networkx = ">=2"
-
-[[package]]
 name = "iniconfig"
 version = "2.3.1"
 description = "brain-dead simple config-ini parsing"
@@ -663,6 +648,22 @@ files = [
 ]
 
 [[package]]
+name = "modulegraph2"
+version = "2.3"
+description = "A module import dependency graph for Python projects."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "modulegraph2-2.3-py3-none-any.whl", hash = "sha256:e75e2997e45c584d4028a6b48b1efc050e2721939d6c243a81016157c5c706d4"},
+    {file = "modulegraph2-2.3.tar.gz", hash = "sha256:5d5eb5fe76eef84552c74b43f2d9e07033d9463fbccd2ef9755ed16a075cbc29"},
+]
+
+[package.dependencies]
+objectgraph = ">=1.0.5"
+typing_extensions = "*"
+
+[[package]]
 name = "mypy"
 version = "2.4.1"
 description = "Optional static typing for Python"
@@ -771,26 +772,6 @@ fast = ["fastnumbers (>=2.0.0)"]
 icu = ["PyICU (>=1.0.0)"]
 
 [[package]]
-name = "networkx"
-version = "3.4.2"
-description = "Python package for creating and manipulating graphs and networks"
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "networkx-3.4.2-py3-none-any.whl", hash = "sha256:df5d4365b724cf81b8c6a7312509d0c22386097011ad1abe274afd5e9d3bbc5f"},
-    {file = "networkx-3.4.2.tar.gz", hash = "sha256:307c3669428c5362aab27c8a1260aa8f47c4e91d3891f48be0141738d8d053e1"},
-]
-
-[package.extras]
-default = ["matplotlib (>=3.7)", "numpy (>=1.24)", "pandas (>=2.0)", "scipy (>=1.10,!=1.11.0,!=1.11.1)"]
-developer = ["changelist (==0.5)", "mypy (>=1.1)", "pre-commit (>=3.2)", "rtoml"]
-doc = ["intersphinx-registry", "myst-nb (>=1.1)", "numpydoc (>=1.8.0)", "pillow (>=9.4)", "pydata-sphinx-theme (>=0.15)", "sphinx (>=7.3)", "sphinx-gallery (>=0.16)", "texext (>=0.6.7)"]
-example = ["cairocffi (>=1.7)", "contextily (>=1.6)", "igraph (>=0.11)", "momepy (>=0.7.2)", "osmnx (>=1.9)", "scikit-learn (>=1.5)", "seaborn (>=0.13)"]
-extra = ["lxml (>=4.6)", "pydot (>=3.0.1)", "pygraphviz (>=1.14)", "sympy (>=1.10)"]
-test = ["pytest (>=7.2)", "pytest-cov (>=4.0)"]
-
-[[package]]
 name = "nodeenv"
 version = "1.11.0"
 description = "Node.js virtual environment builder"
@@ -804,6 +785,21 @@ files = [
 
 [package.extras]
 certifi = ["certifi"]
+
+[[package]]
+name = "objectgraph"
+version = "1.0.5"
+description = "A basic graph library"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "objectgraph-1.0.5-py3-none-any.whl", hash = "sha256:5a6b5056a2485639987cdbc4b937aac5153e171bca7deebf208a8f0899907bd3"},
+    {file = "objectgraph-1.0.5.tar.gz", hash = "sha256:93adac7f1caea230072e72c673b154dd5c4d4c65803f8c19a30c917a0d7de764"},
+]
+
+[package.dependencies]
+typing_extensions = "*"
 
 [[package]]
 name = "packaging"
@@ -1438,4 +1434,4 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "d02f79d441b1bf908602ef5d5481e94c22105b32b00aad1d8f927bb7e81d360d"
+content-hash = "7e4af1cf198cbb805377f6543fbd47a94841e75507f1b21106abdf18ac7fe378"
