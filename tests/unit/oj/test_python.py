@@ -3,12 +3,32 @@ import shutil
 import subprocess
 import sys
 import venv
+from collections.abc import Generator
 from importlib.metadata import distribution
 
 import pytest
 from pytest_mock import MockerFixture
 
-from competitive_verifier.oj.languages.python import PythonLanguage
+from competitive_verifier.oj.languages.python import (
+    PythonDependencyWorker,
+    PythonLanguage,
+)
+
+
+@pytest.fixture(autouse=True)
+def python_dependency_worker(
+    testtemp: pathlib.Path, mocker: MockerFixture
+) -> Generator[PythonDependencyWorker, None, None]:
+    worker = PythonDependencyWorker()
+    mocker.patch(
+        "competitive_verifier.oj.languages.python._python_dependency_worker",
+        return_value=worker,
+    )
+    try:
+        yield worker
+    finally:
+        # Stop temporary interpreters before testtemp removes their executable files.
+        worker.close()
 
 
 def test_list_dependencies(testtemp: pathlib.Path):
@@ -21,6 +41,45 @@ def test_list_dependencies(testtemp: pathlib.Path):
         source,
         dependency,
     }
+
+
+def test_list_dependencies_reuses_worker(testtemp: pathlib.Path, mocker: MockerFixture):
+    processes = mocker.spy(subprocess, "Popen")
+    helper = testtemp / "helper.py"
+    helper.write_text("value = 42\n", encoding="utf-8")
+    first = testtemp / "first.py"
+    second = testtemp / "second.py"
+    first.write_text("from helper import value\n", encoding="utf-8")
+    second.write_text("value = 0\n", encoding="utf-8")
+
+    language = PythonLanguage()
+    assert set(language.list_dependencies(first, basedir=testtemp)) == {first, helper}
+    assert language.list_dependencies(second, basedir=testtemp) == [second]
+    assert processes.call_count == 1
+
+
+@pytest.mark.allow_mkdir
+def test_list_dependencies_isolates_worker_requests(
+    testtemp: pathlib.Path, mocker: MockerFixture
+):
+    processes = mocker.spy(subprocess, "Popen")
+    for name in ("first", "second"):
+        basedir = testtemp / name
+        package = basedir / "pkg"
+        package.mkdir(parents=True)
+        source = basedir / "main.py"
+        initializer = package / "__init__.py"
+        helper = package / "helper.py"
+        source.write_text("from pkg.helper import value\n", encoding="utf-8")
+        initializer.write_text("raise RuntimeError('executed')\n", encoding="utf-8")
+        helper.write_text("value = 42\n", encoding="utf-8")
+
+        assert set(PythonLanguage().list_dependencies(source, basedir=basedir)) == {
+            source,
+            initializer,
+            helper,
+        }
+    assert processes.call_count == 1
 
 
 @pytest.mark.allow_mkdir
@@ -253,7 +312,10 @@ def test_list_dependencies_with_user_site(
     assert marker.read_text(encoding="utf-8") == "imported"
 
 
-def test_list_dependencies_invalid_source(testtemp: pathlib.Path):
+def test_list_dependencies_invalid_source(
+    testtemp: pathlib.Path, mocker: MockerFixture
+):
+    processes = mocker.spy(subprocess, "Popen")
     source = testtemp / "main.py"
     source.write_text("invalid python syntax!\n", encoding="utf-8")
 
@@ -262,17 +324,51 @@ def test_list_dependencies_invalid_source(testtemp: pathlib.Path):
     ) as e:
         PythonLanguage().list_dependencies(source, basedir=testtemp)
 
-    assert isinstance(e.value.__cause__, subprocess.CalledProcessError)
     assert "SyntaxError" in str(e.value)
+    source.write_text("value = 42\n", encoding="utf-8")
+    assert PythonLanguage().list_dependencies(source, basedir=testtemp) == [source]
+    assert processes.call_count == 1
 
 
-def test_list_dependencies_timeout(testtemp: pathlib.Path, mocker: MockerFixture):
+def test_list_dependencies_timeout(
+    testtemp: pathlib.Path,
+    mocker: MockerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    python_dependency_worker: PythonDependencyWorker,
+):
     source = testtemp / "main.py"
     source.write_text("value = 42\n", encoding="utf-8")
-    mocker.patch(
-        "competitive_verifier.oj.languages.python.subprocess.run",
-        side_effect=subprocess.TimeoutExpired(cmd="python", timeout=1.0),
+    processes = mocker.spy(subprocess, "Popen")
+    (testtemp / "_python_dependencies.py").write_text(
+        "import sys\nfor request in sys.stdin:\n    pass\n", encoding="utf-8"
+    )
+    with monkeypatch.context() as context:
+        context.setattr(
+            "competitive_verifier.oj.languages.python.__file__",
+            str(testtemp / "python.py"),
+        )
+        with pytest.raises(RuntimeError, match=r"Failed to analyze.*\(timeout\)"):
+            python_dependency_worker.list_dependencies(source, testtemp, timeout=0.1)
+
+    assert processes.spy_return.poll() is not None
+    assert PythonLanguage().list_dependencies(source, basedir=testtemp) == [source]
+    assert processes.call_count == 2
+
+
+def test_list_dependencies_recovers_from_worker_error(
+    testtemp: pathlib.Path, mocker: MockerFixture
+):
+    source = testtemp / "main.py"
+    source.write_text("value = 42\n", encoding="utf-8")
+    processes = mocker.spy(subprocess, "Popen")
+    malformed_request = mocker.patch(
+        "competitive_verifier.oj.languages.python.json.dumps", return_value="null"
     )
 
-    with pytest.raises(RuntimeError, match=r"Failed to analyze.*\(timeout\)"):
+    with pytest.raises(RuntimeError, match="TypeError"):
         PythonLanguage().list_dependencies(source, basedir=testtemp)
+
+    assert processes.spy_return.poll() is not None
+    mocker.stop(malformed_request)
+    assert PythonLanguage().list_dependencies(source, basedir=testtemp) == [source]
+    assert processes.call_count == 2

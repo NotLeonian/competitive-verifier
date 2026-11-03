@@ -5,6 +5,7 @@ import importlib.util
 import json
 import pathlib
 import sys
+import traceback
 from types import ModuleType
 from typing import Protocol, cast
 
@@ -81,8 +82,37 @@ def _list_dependencies(path: pathlib.Path, basedir: pathlib.Path) -> list[pathli
     return sorted(dependencies)
 
 
+def _serve() -> None:
+    original_path = sys.path.copy()
+    original_find_spec = importlib.util.find_spec
+    original_modules = sys.modules.copy()
+    for request in sys.stdin:
+        try:
+            path, basedir = (
+                pathlib.Path(value).resolve() for value in json.loads(request)
+            )
+            response: dict[str, list[str] | str] = {
+                "dependencies": [
+                    str(dependency) for dependency in _list_dependencies(path, basedir)
+                ]
+            }
+        except (ImportError, OSError, RuntimeError, SyntaxError, ValueError):
+            response = {"error": traceback.format_exc()}
+        finally:
+            # Every request starts with the worker's original import state.
+            sys.path[:] = original_path
+            importlib.util.find_spec = original_find_spec
+            for name in sys.modules.keys() - original_modules.keys():
+                del sys.modules[name]
+            sys.modules.update(original_modules)
+        print(json.dumps(response), flush=True)
+
+
 if __name__ == "__main__":
-    dependencies = _list_dependencies(
-        pathlib.Path(sys.argv[1]).resolve(), pathlib.Path(sys.argv[2]).resolve()
-    )
-    print(json.dumps([str(path) for path in dependencies]))
+    if len(sys.argv) == 1:
+        _serve()
+    else:
+        dependencies = _list_dependencies(
+            pathlib.Path(sys.argv[1]).resolve(), pathlib.Path(sys.argv[2]).resolve()
+        )
+        print(json.dumps([str(path) for path in dependencies]))
