@@ -1,37 +1,20 @@
 # Python Version: 3.x
-import concurrent.futures
 import functools
 import os
 import pathlib
 import platform
+import subprocess
 import sys
 from collections.abc import Sequence
 from logging import getLogger
-from typing import Protocol, cast
 
-import importlab.environment
-import importlab.fs
-import importlab.graph
+from pydantic import TypeAdapter
 
 from competitive_verifier.models import ShellCommand
 
 from .base import Language, LanguageEnvironment
 
 logger = getLogger(__name__)
-
-
-class _ImportGraph(Protocol):
-    def deps_list(self) -> list[tuple[str, list[str]]]: ...
-
-
-class _ImportGraphFactory(Protocol):
-    def create(
-        self,
-        env: importlab.environment.Environment,
-        filenames: list[str],
-        *,
-        trim: bool = False,
-    ) -> _ImportGraph: ...
 
 
 class PythonLanguageEnvironment(LanguageEnvironment):
@@ -68,51 +51,37 @@ class PythonLanguageEnvironment(LanguageEnvironment):
 def _python_list_depending_files(
     path: pathlib.Path, basedir: pathlib.Path
 ) -> list[pathlib.Path]:
-    # compute the dependency graph of the `path`
-    env = importlab.environment.Environment(
-        importlab.fs.Path([importlab.fs.OSFileSystem(str(basedir.resolve()))]),
-        (sys.version_info.major, sys.version_info.minor),
-    )
+    basedir = basedir.resolve()
+    timeout = 5.0 if platform.uname().system == "Windows" else 1.0
+    # 1.0 sec causes timeout on CI using Windows
     try:
-        executor = concurrent.futures.ThreadPoolExecutor()
-        graph_factory = cast("_ImportGraphFactory", importlab.graph.ImportGraph)
-        future = executor.submit(
-            graph_factory.create,
-            env,
-            [str(path)],
-            trim=True,
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                str(pathlib.Path(__file__).with_name("_python_dependencies.py")),
+                str(path),
+                str(basedir),
+            ],
+            capture_output=True,
+            check=True,
+            timeout=timeout,
         )
-
-        timeout = 5.0 if platform.uname().system == "Windows" else 1.0
-        # 1.0 sec causes timeout on CI using Windows
-
-        res_graph = future.result(timeout=timeout)
-    except concurrent.futures.TimeoutError as e:
+    except subprocess.TimeoutExpired as e:
         raise RuntimeError(
             f"Failed to analyze the dependency graph (timeout): {path}"
         ) from e
-    try:
-        node_deps_pairs: list[tuple[str, list[str]]] = res_graph.deps_list()
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
+        detail = e.stderr.decode("utf-8", errors="replace").strip()
         raise RuntimeError(
-            f"Failed to analyze the dependency graph (circular imports?): {path}"
+            f"Failed to analyze the dependency graph: {path}\n{detail}"
         ) from e
-    logger.debug("the dependency graph of %s: %s", path, node_deps_pairs)
 
-    # collect Python files which are depended by the `path` and under `basedir`
-    res_deps: list[pathlib.Path] = []
-    res_deps.append(path.resolve())
-    for node_, deps_ in node_deps_pairs:
-        node = pathlib.Path(node_)
-        deps = list(map(pathlib.Path, deps_))
-        if node.resolve() == path.resolve():
-            res_deps.extend(
-                dep.resolve()
-                for dep in deps
-                if basedir.resolve() in dep.resolve().parents
-            )
-            break
-    return list(set(res_deps))
+    res_deps = TypeAdapter[list[pathlib.Path]](list[pathlib.Path]).validate_json(
+        result.stdout
+    )
+    logger.debug("the dependencies of %s: %s", path, res_deps)
+    return res_deps
 
 
 class PythonLanguage(Language):

@@ -29,7 +29,7 @@ colorlog = "^6.12.0"
 colorama = "^0.4.6"
 pydantic = "^2.14.1"
 pyyaml = "^6.0.3"
-importlab = "^0.8.1"
+modulegraph2 = "^2.3"
 charset-normalizer = "^3.5.2"
 tomli = { version = "^2.5.0", python = "<3.11" }
 requests = "^2.34.2"
@@ -301,11 +301,6 @@ explicit_package_bases = true
 exclude = [
     '^integration_test_data/',
 ]
-
-[[tool.mypy.overrides]]
-# importlab does not provide type annotations or a separate stub package.
-module = ["importlab.*"]
-ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
