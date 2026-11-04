@@ -1,7 +1,5 @@
-import importlib
-import sys
-from collections.abc import Callable
-from typing import Any, BinaryIO, Protocol, cast
+import tomllib
+from typing import BinaryIO
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -38,20 +36,6 @@ from .rust import (
 from .user_defined import UserDefinedLanguage
 
 
-class _TomlModule(Protocol):
-    def load(
-        self, fp: BinaryIO, /, *, parse_float: Callable[[str], Any] = float
-    ) -> dict[str, Any]: ...
-
-
-if sys.version_info >= (3, 11):  # pragma: no cover
-    import tomllib
-
-    _tomli = cast("_TomlModule", tomllib)
-else:  # pragma: no cover
-    _tomli = cast("_TomlModule", importlib.import_module("tomli"))
-
-
 class OjVerifyLanguageConfigDict(BaseModel):
     model_config = ConfigDict(extra="allow")
     # Pydantic requires a plain dict annotation to validate extra language configs.
@@ -75,7 +59,7 @@ class VerificationConfig(BaseModel):
 
     @classmethod
     def load(cls, fp: BinaryIO) -> "VerificationConfig":
-        return VerificationConfig.model_validate(_tomli.load(fp))
+        return VerificationConfig.model_validate(tomllib.load(fp))
 
     def get_dict(self) -> dict[str, Language]:
         languages = self.languages

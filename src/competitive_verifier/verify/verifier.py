@@ -30,7 +30,7 @@ logger = getLogger(__name__)
 
 
 def _now() -> dt.datetime:
-    return dt.datetime.now(dt.timezone.utc).astimezone()
+    return dt.datetime.now(dt.UTC).astimezone()
 
 
 def _check_deadline(current_time: float, deadline: float) -> None:

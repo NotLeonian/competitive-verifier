@@ -2,7 +2,7 @@ import pathlib
 import shutil
 import subprocess
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -40,7 +40,7 @@ def mock_repo(mock_repo_make: pathlib.Path, monkeypatch: pytest.MonkeyPatch):
         ),
         (
             [pathlib.Path("files2")],
-            datetime(2025, 9, 20, 11, 34, 55, tzinfo=timezone.utc),
+            datetime(2025, 9, 20, 11, 34, 55, tzinfo=UTC),
         ),
         (
             [pathlib.Path("files1/foo.txt"), pathlib.Path("r1.txt")],
@@ -48,7 +48,7 @@ def mock_repo(mock_repo_make: pathlib.Path, monkeypatch: pytest.MonkeyPatch):
         ),
         (
             [pathlib.Path("notmatch")],
-            datetime.min.replace(tzinfo=timezone.utc),
+            datetime.min.replace(tzinfo=UTC),
         ),
     ],
 )

@@ -1,6 +1,6 @@
 import json
 import pathlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 import pytest
@@ -157,7 +157,7 @@ test_merge_result_params: list[
                                     9,
                                     11,
                                     63474,
-                                    tzinfo=timezone.utc,
+                                    tzinfo=UTC,
                                 ),
                                 elapsed=1.7,
                             ),
