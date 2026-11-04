@@ -14,7 +14,7 @@ def get_commit_time(files: Iterable[pathlib.Path]) -> dt.datetime:
     stdout = command_stdout(code)
     timestamp = stdout.strip()
     if not timestamp:
-        return dt.datetime.min.replace(tzinfo=dt.timezone.utc)
+        return dt.datetime.min.replace(tzinfo=dt.UTC)
     return dt.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S %z")
 
 

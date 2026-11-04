@@ -24,14 +24,13 @@ build-backend = "poetry.core.masonry.api"
 competitive-verifier = "competitive_verifier.app:main"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<4.0"
+python = ">=3.11,<4.0"
 colorlog = "^6.12.0"
 colorama = "^0.4.6"
 pydantic = "^2.14.1"
 pyyaml = "^6.0.3"
 modulegraph2 = "^2.3"
 charset-normalizer = "^3.5.2"
-tomli = { version = "^2.5.0", python = "<3.11" }
 requests = "^2.34.2"
 appdirs = "^1.4.4"
 natsort = "^8.4.0"
@@ -192,7 +191,7 @@ extend-ignore-identifiers-re = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 88
 
 exclude = [
@@ -229,6 +228,9 @@ ignore = [
     "TRY003",
     "FBT003",
     "LOG007",
+
+    # Preserve existing str/Enum formatting; StrEnum changes __str__.
+    "UP042",
 
     # Remove on Python 3.12
     "ARG002",
@@ -284,7 +286,7 @@ convention = "google"
 ]
 
 [tool.pyright]
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 typeCheckingMode = "strict"
 include = ["src", "tests"]
 ignore = ["src/competitive_verifier_resources/jekyll"]
@@ -292,7 +294,7 @@ reportMissingImports = true
 reportMissingTypeStubs = false
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 files = ["src", "tests"]
 check_untyped_defs = true
 mypy_path = "$MYPY_CONFIG_FILE_DIR/src"

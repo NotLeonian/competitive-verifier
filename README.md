@@ -32,7 +32,7 @@ To use this fork with the generated workflow, specify the fork's package in ever
 
 #### Install(local)
 
-Needs Python 3.10 or greater.
+Needs Python 3.11 or greater.
 
 `pip install competitive-verifier` installs the upstream package. To install this fork, use:
 

@@ -1,6 +1,6 @@
 import logging
 import pathlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -130,7 +130,7 @@ test_check_params: list[tuple[dict[str, VerifyCommandResult], str, bool]] = [
                                     9,
                                     11,
                                     63474,
-                                    tzinfo=timezone.utc,
+                                    tzinfo=UTC,
                                 ),
                                 elapsed=1.7,
                             ),

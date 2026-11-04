@@ -176,6 +176,24 @@ def test_list_dependencies_isolates_worker_requests(
             },
             {"main.py", "json.py", "helper.py"},
         ),
+        (
+            {
+                "main.py": "import helper\n",
+                "helper.py": "def load():\n    import leaf\n\nclass C:\n    import other\n",
+                "leaf.py": "value = 42\n",
+                "other.py": "value = 0\n",
+            },
+            {"main.py", "helper.py", "leaf.py", "other.py"},
+        ),
+        (
+            {
+                "main.py": "import helper\n",
+                "helper.py": "\n".join(f"value_{i} = {i}" for i in range(300))
+                + "\nimport leaf\n",
+                "leaf.py": "value = 42\n",
+            },
+            {"main.py", "helper.py", "leaf.py"},
+        ),
     ],
     ids=[
         "stdlib-and-missing-imports",
@@ -188,6 +206,8 @@ def test_list_dependencies_isolates_worker_requests(
         "does-not-execute-package-initializers",
         "nested-namespace-packages",
         "local-module-shadows-stdlib",
+        "nested-function-and-class-imports",
+        "many-constants",
     ],
 )
 def test_dependency_graph(

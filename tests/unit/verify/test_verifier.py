@@ -70,7 +70,7 @@ def test_get_file_timestamp_local(mocker: MockerFixture):
 
         @property
         def st_mtime(self) -> float:
-            assert self.time.tzinfo == dt.timezone.utc
+            assert self.time.tzinfo == dt.UTC
             return self.time.timestamp()
 
         def stat(self):

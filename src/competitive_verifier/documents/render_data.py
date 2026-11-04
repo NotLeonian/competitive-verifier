@@ -1,7 +1,7 @@
 import datetime as dt
 import enum
 from collections.abc import Sequence
-from typing import Annotated, Any
+from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, ConfigDict, PlainSerializer, model_validator
 from pydantic.alias_generators import to_camel
@@ -15,7 +15,7 @@ class FileType(enum.Enum):
 
 
 class StatusIcon(str, enum.Enum):
-    def __new__(cls, file_type: FileType, result: str) -> "StatusIcon":
+    def __new__(cls, file_type: FileType, result: str) -> Self:
         value = f"{file_type.name}_{result}"
         member = str.__new__(cls, value)
         member._value_ = value

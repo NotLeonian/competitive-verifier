@@ -1,6 +1,6 @@
 import json
 import pathlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 import pytest
@@ -65,9 +65,7 @@ test_parse_FileResult_params: list[
                 VerificationResult(
                     elapsed=1.5,
                     status=ResultStatus.SUCCESS,
-                    last_execution_time=datetime(
-                        2016, 12, 24, 15, 16, 34, tzinfo=timezone.utc
-                    ),
+                    last_execution_time=datetime(2016, 12, 24, 15, 16, 34, tzinfo=UTC),
                 )
             ],
         ),
@@ -87,7 +85,7 @@ test_parse_FileResult_params: list[
                     "status": "success",
                     "elapsed": 1.5,
                     "last_execution_time": datetime(
-                        2016, 12, 24, 15, 16, 34, tzinfo=timezone.utc
+                        2016, 12, 24, 15, 16, 34, tzinfo=UTC
                     ),
                 }
             ],

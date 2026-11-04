@@ -86,7 +86,7 @@ class VerificationResult(BaseModel):
     """
 
     last_execution_time: dt.datetime = Field(
-        default_factory=lambda: dt.datetime.now(dt.timezone.utc),
+        default_factory=lambda: dt.datetime.now(dt.UTC),
         description="The time at which the last validation was performed.",
     )
     """The time at which the last validation was performed.
